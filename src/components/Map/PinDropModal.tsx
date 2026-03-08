@@ -27,6 +27,8 @@ interface Props {
 const PinDropModal = ({ open, onClose, coords, iconType, lessonId }: Props) => {
   const { user } = useAuth();
   const addCustomPin = useMapStore((s) => s.addCustomPin);
+  const [lng, setLng] = useState(coords[0]);
+  const [lat, setLat] = useState(coords[1]);
   const [label, setLabel] = useState("");
   const [popupTitle, setPopupTitle] = useState("");
   const [popupBody, setPopupBody] = useState("");
