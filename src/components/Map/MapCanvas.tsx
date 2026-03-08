@@ -13,6 +13,7 @@ import { useOverlays } from "@/hooks/useOverlays";
 import { useOverlayLayers } from "@/hooks/useOverlayLayers";
 import { usePins } from "@/hooks/usePins";
 import { usePinMarkers } from "@/hooks/usePinMarkers";
+import { useToolInteractions } from "@/hooks/useToolInteractions";
 import { useMapStore } from "@/store/mapStore";
 
 const MAPBOX_TOKEN =
@@ -94,6 +95,9 @@ const MapCanvas = forwardRef<MapCanvasHandle>((_props, ref) => {
     selectedPinId,
     selectPin
   );
+
+  // Tool interactions (pin drop click, route drawing)
+  useToolInteractions(mapReady ? mapRef.current : null);
 
   const toggleSkin = useCallback(
     () => setSkin((prev) => (prev === "ancient" ? "satellite" : "ancient")),

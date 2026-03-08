@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import MapCanvas, { type MapCanvasHandle } from "@/components/Map/MapCanvas";
 import EraSelector from "@/components/Map/EraSelector";
 import OverlayToggles from "@/components/Map/OverlayToggles";
+import TeacherTools from "@/components/Map/TeacherTools";
 
 const MapPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -45,14 +46,7 @@ const MapPage = () => {
 
       {/* Right sidebar — tools */}
       <aside className="w-[200px] shrink-0 border-l border-border/40 bg-card flex flex-col">
-        <div className="px-4 py-3 border-b border-border/40">
-          <h2 className="text-sm font-serif font-semibold text-foreground tracking-wide">
-            Tools
-          </h2>
-        </div>
-        <div className="flex-1 px-4 py-4 text-xs text-muted-foreground">
-          <p>Pin tools, measurement, and export options will appear here.</p>
-        </div>
+        <TeacherTools />
       </aside>
     </div>
   );
