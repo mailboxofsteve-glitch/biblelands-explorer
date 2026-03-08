@@ -27,6 +27,8 @@ interface Props {
 const PinDropModal = ({ open, onClose, coords, iconType, lessonId }: Props) => {
   const { user } = useAuth();
   const addCustomPin = useMapStore((s) => s.addCustomPin);
+  const [lng, setLng] = useState(coords[0]);
+  const [lat, setLat] = useState(coords[1]);
   const [label, setLabel] = useState("");
   const [popupTitle, setPopupTitle] = useState("");
   const [popupBody, setPopupBody] = useState("");
@@ -50,7 +52,7 @@ const PinDropModal = ({ open, onClose, coords, iconType, lessonId }: Props) => {
       .insert({
         lesson_id: lessonId,
         icon_type: iconType,
-        coordinates: coords as unknown as Json,
+        coordinates: [lng, lat] as unknown as Json,
         label: label || "Pin",
         popup_title: popupTitle || label || "Pin",
         popup_body: popupBody || null,
@@ -82,9 +84,29 @@ const PinDropModal = ({ open, onClose, coords, iconType, lessonId }: Props) => {
         </DialogHeader>
 
         <div className="space-y-3 py-2">
-          <p className="text-[11px] text-muted-foreground">
-            📍 {coords[1].toFixed(4)}, {coords[0].toFixed(4)} · {iconType}
-          </p>
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <Label className="text-xs">Lat</Label>
+              <Input
+                type="number"
+                step="0.0001"
+                value={lat}
+                onChange={(e) => setLat(parseFloat(e.target.value) || 0)}
+                className="mt-1"
+              />
+            </div>
+            <div className="flex-1">
+              <Label className="text-xs">Lng</Label>
+              <Input
+                type="number"
+                step="0.0001"
+                value={lng}
+                onChange={(e) => setLng(parseFloat(e.target.value) || 0)}
+                className="mt-1"
+              />
+            </div>
+            <span className="text-[11px] text-muted-foreground pt-4">📍 {iconType}</span>
+          </div>
 
           <div>
             <Label className="text-xs">Label</Label>
