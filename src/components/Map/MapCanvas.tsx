@@ -86,7 +86,13 @@ const MapCanvas = forwardRef<MapCanvasHandle>((_props, ref) => {
     });
 
     map.addControl(new mapboxgl.NavigationControl(), "top-right");
-    map.on("load", () => setMapReady(true));
+    map.on("load", () => {
+      hideModernLayers(map);
+      setMapReady(true);
+    });
+    map.on("style.load", () => {
+      hideModernLayers(map);
+    });
 
     mapRef.current = map;
 
