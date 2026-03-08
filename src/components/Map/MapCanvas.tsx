@@ -9,8 +9,10 @@ import {
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import MapSkinToggle from "./MapSkinToggle";
-import { useOverlays, type OverlayRow } from "@/hooks/useOverlays";
+import { useOverlays } from "@/hooks/useOverlays";
 import { useOverlayLayers } from "@/hooks/useOverlayLayers";
+import { usePins } from "@/hooks/usePins";
+import { usePinMarkers } from "@/hooks/usePinMarkers";
 import { useMapStore } from "@/store/mapStore";
 
 const MAPBOX_TOKEN =
@@ -34,7 +36,10 @@ const MapCanvas = forwardRef<MapCanvasHandle>((_props, ref) => {
   const [skin, setSkin] = useState<MapSkin>("ancient");
 
   const { overlays } = useOverlays();
+  const { pins } = usePins();
   const activeOverlayIds = useMapStore((s) => s.activeOverlayIds);
+  const selectedPinId = useMapStore((s) => s.selectedPinId);
+  const selectPin = useMapStore((s) => s.selectPin);
 
   useImperativeHandle(ref, () => ({
     getMap: () => mapRef.current,
@@ -80,6 +85,14 @@ const MapCanvas = forwardRef<MapCanvasHandle>((_props, ref) => {
     mapReady ? mapRef.current : null,
     overlays,
     activeOverlayIds
+  );
+
+  // Pin markers
+  usePinMarkers(
+    mapReady ? mapRef.current : null,
+    pins,
+    selectedPinId,
+    selectPin
   );
 
   const toggleSkin = useCallback(
