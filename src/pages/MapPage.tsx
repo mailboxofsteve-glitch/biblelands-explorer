@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import MapCanvas, { type MapCanvasHandle } from "@/components/Map/MapCanvas";
 import EraSelector from "@/components/Map/EraSelector";
 import OverlayToggles from "@/components/Map/OverlayToggles";
+import TeacherTools from "@/components/Map/TeacherTools";
 
 const MapPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
