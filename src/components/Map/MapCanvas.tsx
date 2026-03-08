@@ -36,7 +36,10 @@ const MapCanvas = forwardRef<MapCanvasHandle>((_props, ref) => {
   const [skin, setSkin] = useState<MapSkin>("ancient");
 
   const { overlays } = useOverlays();
+  const { pins } = usePins();
   const activeOverlayIds = useMapStore((s) => s.activeOverlayIds);
+  const selectedPinId = useMapStore((s) => s.selectedPinId);
+  const selectPin = useMapStore((s) => s.selectPin);
 
   useImperativeHandle(ref, () => ({
     getMap: () => mapRef.current,
