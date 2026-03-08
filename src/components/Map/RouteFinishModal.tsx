@@ -86,8 +86,8 @@ const RouteFinishModal = ({ open, onClose, points, lessonId }: Props) => {
         category: "custom",
         era: currentEra,
         default_color: color,
-        default_style: defaultStyle,
-        geojson,
+        default_style: defaultStyle as Json,
+        geojson: geojson as unknown as Json,
         is_preloaded: false,
         created_by: user.id,
       })
