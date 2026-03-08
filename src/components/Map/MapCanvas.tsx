@@ -13,6 +13,7 @@ import { useOverlays } from "@/hooks/useOverlays";
 import { useOverlayLayers } from "@/hooks/useOverlayLayers";
 import { usePins } from "@/hooks/usePins";
 import { usePinMarkers } from "@/hooks/usePinMarkers";
+import { useToolInteractions } from "@/hooks/useToolInteractions";
 import { useMapStore } from "@/store/mapStore";
 
 const MAPBOX_TOKEN =
