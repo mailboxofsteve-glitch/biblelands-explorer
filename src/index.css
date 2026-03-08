@@ -76,3 +76,15 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Mapbox popup overrides for pin system */
+.pin-popup-container .mapboxgl-popup-content {
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  border-radius: 10px;
+}
+
+.pin-popup-container .mapboxgl-popup-tip {
+  border-top-color: #c8a020;
+}
