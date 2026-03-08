@@ -140,6 +140,53 @@ export type Database = {
         }
         Relationships: []
       }
+      pins: {
+        Row: {
+          coordinates: Json
+          created_at: string
+          created_by: string
+          icon_type: string
+          id: string
+          label: string
+          lesson_id: string
+          popup_body: string | null
+          popup_title: string
+          scripture_refs: string[] | null
+        }
+        Insert: {
+          coordinates?: Json
+          created_at?: string
+          created_by: string
+          icon_type?: string
+          id?: string
+          label?: string
+          lesson_id: string
+          popup_body?: string | null
+          popup_title?: string
+          scripture_refs?: string[] | null
+        }
+        Update: {
+          coordinates?: Json
+          created_at?: string
+          created_by?: string
+          icon_type?: string
+          id?: string
+          label?: string
+          lesson_id?: string
+          popup_body?: string | null
+          popup_title?: string
+          scripture_refs?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pins_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
