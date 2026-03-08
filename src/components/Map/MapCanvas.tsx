@@ -87,6 +87,14 @@ const MapCanvas = forwardRef<MapCanvasHandle>((_props, ref) => {
     activeOverlayIds
   );
 
+  // Pin markers
+  usePinMarkers(
+    mapReady ? mapRef.current : null,
+    pins,
+    selectedPinId,
+    selectPin
+  );
+
   const toggleSkin = useCallback(
     () => setSkin((prev) => (prev === "ancient" ? "satellite" : "ancient")),
     []
