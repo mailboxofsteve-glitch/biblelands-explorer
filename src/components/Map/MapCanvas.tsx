@@ -24,6 +24,30 @@ const STYLES = {
   satellite: "mapbox://styles/mapbox/satellite-streets-v12",
 } as const;
 
+const ROAD_KEYWORDS = ["road", "street", "bridge", "tunnel", "turning", "link", "motorway", "trunk", "path", "pedestrian"];
+const BORDER_KEYWORDS = ["boundary", "border", "admin"];
+const LABEL_KEYWORDS = ["label", "symbol", "place", "poi"];
+const WATER_KEYWORDS = ["water", "sea", "ocean", "lake", "river"];
+
+function hideModernLayers(map: mapboxgl.Map) {
+  const layers = map.getStyle()?.layers;
+  if (!layers) return;
+  for (const layer of layers) {
+    const id = layer.id.toLowerCase();
+    if (ROAD_KEYWORDS.some((k) => id.includes(k))) {
+      map.setLayoutProperty(layer.id, "visibility", "none");
+      continue;
+    }
+    if (BORDER_KEYWORDS.some((k) => id.includes(k))) {
+      map.setLayoutProperty(layer.id, "visibility", "none");
+      continue;
+    }
+    if (LABEL_KEYWORDS.some((k) => id.includes(k)) && !WATER_KEYWORDS.some((k) => id.includes(k))) {
+      map.setLayoutProperty(layer.id, "visibility", "none");
+    }
+  }
+}
+
 export type MapSkin = keyof typeof STYLES;
 
 export interface MapCanvasHandle {
@@ -62,7 +86,13 @@ const MapCanvas = forwardRef<MapCanvasHandle>((_props, ref) => {
     });
 
     map.addControl(new mapboxgl.NavigationControl(), "top-right");
-    map.on("load", () => setMapReady(true));
+    map.on("load", () => {
+      hideModernLayers(map);
+      setMapReady(true);
+    });
+    map.on("style.load", () => {
+      hideModernLayers(map);
+    });
 
     mapRef.current = map;
 
