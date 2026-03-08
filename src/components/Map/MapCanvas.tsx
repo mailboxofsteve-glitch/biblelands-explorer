@@ -9,8 +9,10 @@ import {
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import MapSkinToggle from "./MapSkinToggle";
-import { useOverlays, type OverlayRow } from "@/hooks/useOverlays";
+import { useOverlays } from "@/hooks/useOverlays";
 import { useOverlayLayers } from "@/hooks/useOverlayLayers";
+import { usePins } from "@/hooks/usePins";
+import { usePinMarkers } from "@/hooks/usePinMarkers";
 import { useMapStore } from "@/store/mapStore";
 
 const MAPBOX_TOKEN =
