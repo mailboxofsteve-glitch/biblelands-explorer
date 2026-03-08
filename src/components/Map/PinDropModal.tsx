@@ -50,7 +50,7 @@ const PinDropModal = ({ open, onClose, coords, iconType, lessonId }: Props) => {
       .insert({
         lesson_id: lessonId,
         icon_type: iconType,
-        coordinates: coords,
+        coordinates: coords as unknown as Json,
         label: label || "Pin",
         popup_title: popupTitle || label || "Pin",
         popup_body: popupBody || null,
