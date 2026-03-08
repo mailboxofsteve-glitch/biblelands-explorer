@@ -92,7 +92,7 @@ function addOverlay(map: mapboxgl.Map, overlay: OverlayRow) {
 
   map.addSource(src, {
     type: "geojson",
-    data: overlay.geojson as GeoJSON.GeoJSON,
+    data: overlay.geojson as unknown as GeoJSON.GeoJSON,
   });
 
   const style = overlay.default_style as Record<string, unknown>;
