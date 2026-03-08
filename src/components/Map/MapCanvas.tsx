@@ -96,6 +96,9 @@ const MapCanvas = forwardRef<MapCanvasHandle>((_props, ref) => {
     selectPin
   );
 
+  // Tool interactions (pin drop click, route drawing)
+  useToolInteractions(mapReady ? mapRef.current : null);
+
   const toggleSkin = useCallback(
     () => setSkin((prev) => (prev === "ancient" ? "satellite" : "ancient")),
     []
