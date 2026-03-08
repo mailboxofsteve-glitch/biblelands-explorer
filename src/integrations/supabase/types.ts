@@ -95,6 +95,51 @@ export type Database = {
         }
         Relationships: []
       }
+      overlays: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          default_color: string
+          default_style: Json
+          era: string
+          geojson: Json
+          id: string
+          is_preloaded: boolean
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          default_color?: string
+          default_style?: Json
+          era: string
+          geojson?: Json
+          id?: string
+          is_preloaded?: boolean
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          default_color?: string
+          default_style?: Json
+          era?: string
+          geojson?: Json
+          id?: string
+          is_preloaded?: boolean
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

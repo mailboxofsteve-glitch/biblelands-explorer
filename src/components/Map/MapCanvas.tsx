@@ -4,10 +4,14 @@ import {
   useState,
   forwardRef,
   useImperativeHandle,
+  useCallback,
 } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import MapSkinToggle from "./MapSkinToggle";
+import { useOverlays, type OverlayRow } from "@/hooks/useOverlays";
+import { useOverlayLayers } from "@/hooks/useOverlayLayers";
+import { useMapStore } from "@/store/mapStore";
 
 const MAPBOX_TOKEN =
   "pk.eyJ1Ijoic3JvZ2Vyczg2IiwiYSI6ImNtbWg0YXNiaTBjZjgycnB0c21mbzA1MDMifQ.snS_DuU14Far-Noo4WX_rA";
@@ -26,7 +30,11 @@ export interface MapCanvasHandle {
 const MapCanvas = forwardRef<MapCanvasHandle>((_props, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
+  const [mapReady, setMapReady] = useState(false);
   const [skin, setSkin] = useState<MapSkin>("ancient");
+
+  const { overlays } = useOverlays();
+  const activeOverlayIds = useMapStore((s) => s.activeOverlayIds);
 
   useImperativeHandle(ref, () => ({
     getMap: () => mapRef.current,
@@ -48,14 +56,15 @@ const MapCanvas = forwardRef<MapCanvasHandle>((_props, ref) => {
     });
 
     map.addControl(new mapboxgl.NavigationControl(), "top-right");
+    map.on("load", () => setMapReady(true));
 
     mapRef.current = map;
 
     return () => {
       map.remove();
       mapRef.current = null;
+      setMapReady(false);
     };
-    // We intentionally only run on mount; skin changes handled separately
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -66,8 +75,17 @@ const MapCanvas = forwardRef<MapCanvasHandle>((_props, ref) => {
     map.setStyle(STYLES[skin]);
   }, [skin]);
 
-  const toggleSkin = () =>
-    setSkin((prev) => (prev === "ancient" ? "satellite" : "ancient"));
+  // Overlay layer sync
+  useOverlayLayers(
+    mapReady ? mapRef.current : null,
+    overlays,
+    activeOverlayIds
+  );
+
+  const toggleSkin = useCallback(
+    () => setSkin((prev) => (prev === "ancient" ? "satellite" : "ancient")),
+    []
+  );
 
   return (
     <div className="relative h-full w-full">
