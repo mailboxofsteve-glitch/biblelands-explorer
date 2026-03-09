@@ -178,15 +178,25 @@ export default function LessonSettingsModal({
             />
           </div>
 
-          {/* Public toggle */}
+          {/* Publish to Community Library */}
           <div className="flex items-center justify-between">
             <div>
-              <Label className="text-xs">Public</Label>
+              <Label className="text-xs">Publish to Community Library</Label>
               <p className="text-[10px] text-muted-foreground">
-                Allow anyone with the link to view
+                Make this lesson browsable and copyable by other teachers
               </p>
             </div>
-            <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+            <Switch
+              checked={isPublic}
+              onCheckedChange={(checked) => {
+                setIsPublic(checked);
+                if (checked && !shareToken) {
+                  // Auto-generate share token when publishing
+                  const token = nanoid(12);
+                  setShareToken(token);
+                }
+              }}
+            />
           </div>
 
           {/* Share link */}

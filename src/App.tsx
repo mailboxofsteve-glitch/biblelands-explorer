@@ -32,6 +32,7 @@ const App = () => (
           <Route path="/lessons" element={<Lessons />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/share/:token" element={<SharedLesson />} />
+          <Route path="/library" element={<Library />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
