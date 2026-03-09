@@ -94,6 +94,7 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string }>(({ lessonId
     });
     map.on("style.load", () => {
       hideModernLayers(map);
+      setMapReady(true);
     });
 
     mapRef.current = map;
