@@ -41,7 +41,7 @@ const MapPage = () => {
 
       {/* Map */}
       <main className="flex-1 relative">
-        <MapCanvas ref={mapRef} />
+        <MapCanvas ref={mapRef} lessonId={lessonId} />
       </main>
 
       {/* Right sidebar — tools */}

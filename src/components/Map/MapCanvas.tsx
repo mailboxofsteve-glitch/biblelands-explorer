@@ -128,6 +128,15 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string }>(({ lessonId
     selectPin
   );
 
+  // Custom pins from the pins table
+  const { pins: customPins } = useCustomPins(lessonId);
+  useCustomPinMarkers(
+    mapReady ? mapRef.current : null,
+    customPins,
+    selectedPinId,
+    selectPin
+  );
+
   // Tool interactions (pin drop click, route drawing)
   useToolInteractions(mapReady ? mapRef.current : null);
 
