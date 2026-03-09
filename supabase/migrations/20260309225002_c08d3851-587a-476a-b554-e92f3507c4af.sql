@@ -1,0 +1,1 @@
+ALTER TABLE public.lesson_scenes ADD COLUMN auto_advance_seconds integer DEFAULT NULL;
