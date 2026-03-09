@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useMapStore } from "@/store/mapStore";
@@ -26,7 +26,6 @@ export function useOverlays() {
     const fetchOverlays = async () => {
       setLoading(true);
 
-      // Fetch preloaded overlays
       const { data: preloaded } = await supabase
         .from("overlays")
         .select("id, name, slug, category, era, default_color, default_style, geojson, is_preloaded")
@@ -42,9 +41,8 @@ export function useOverlays() {
         userOverlays = data;
       }
 
-      // Merge and deduplicate
       const merged = [...(preloaded ?? []), ...(userOverlays ?? [])];
-      const unique = Array.from(new Map(merged.map((o) => [o.id, o])).values());
+      const unique = Array.from(new window.Map(merged.map((o) => [o.id, o])).values());
       setAllOverlays(unique as OverlayRow[]);
       setLoading(false);
     };
@@ -52,8 +50,11 @@ export function useOverlays() {
     fetchOverlays();
   }, [user, customOverlayIds]);
 
-  // Filter to current era
-  const overlays = allOverlays.filter((o) => o.era === currentEra);
+  // Memoize filtered overlays and GeoJSON parsing
+  const overlays = useMemo(
+    () => allOverlays.filter((o) => o.era === currentEra),
+    [allOverlays, currentEra]
+  );
 
   return { overlays, loading };
 }

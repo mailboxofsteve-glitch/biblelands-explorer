@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMapStore } from "@/store/mapStore";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +9,7 @@ export function useScenes(lessonId: string | undefined) {
   const { user } = useAuth();
   const setScenes = useMapStore((s) => s.setScenes);
   const scenes = useMapStore((s) => s.scenes);
+  const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   // Load scenes on mount
   useEffect(() => {
@@ -52,28 +53,40 @@ export function useScenes(lessonId: string | undefined) {
     load();
   }, [lessonId, setScenes]);
 
+  // Debounced scene persist (500ms)
   const persistScene = useCallback(
     async (scene: LessonScene) => {
-      const { error } = await supabase.from("lesson_scenes").upsert({
-        id: scene.id,
-        lesson_id: scene.lesson_id,
-        created_by: scene.created_by,
-        title: scene.title,
-        scene_order: scene.scene_order,
-        center_lng: scene.center_lng,
-        center_lat: scene.center_lat,
-        zoom: scene.zoom,
-        bearing: scene.bearing,
-        pitch: scene.pitch,
-        active_overlay_ids: scene.active_overlay_ids,
-        visible_pin_ids: scene.visible_pin_ids,
-        highlighted_pin_id: scene.highlighted_pin_id,
-        animate_on_enter: scene.animate_on_enter,
-      });
-      if (error) {
-        console.error("Failed to save scene:", error);
-        toast.error("Failed to save scene");
+      // Clear existing timer for this scene
+      if (debounceTimers.current[scene.id]) {
+        clearTimeout(debounceTimers.current[scene.id]);
       }
+
+      debounceTimers.current[scene.id] = setTimeout(async () => {
+        const { error } = await supabase.from("lesson_scenes").upsert({
+          id: scene.id,
+          lesson_id: scene.lesson_id,
+          created_by: scene.created_by,
+          title: scene.title,
+          scene_order: scene.scene_order,
+          center_lng: scene.center_lng,
+          center_lat: scene.center_lat,
+          zoom: scene.zoom,
+          bearing: scene.bearing,
+          pitch: scene.pitch,
+          active_overlay_ids: scene.active_overlay_ids,
+          visible_pin_ids: scene.visible_pin_ids,
+          highlighted_pin_id: scene.highlighted_pin_id,
+          animate_on_enter: scene.animate_on_enter,
+          auto_advance_seconds: scene.auto_advance_seconds,
+        });
+        if (error) {
+          console.error("Failed to save scene:", error);
+          toast.error("Failed to save scene");
+        } else {
+          toast.success("Scene saved", { duration: 1500 });
+        }
+        delete debounceTimers.current[scene.id];
+      }, 500);
     },
     []
   );
@@ -110,6 +123,13 @@ export function useScenes(lessonId: string | undefined) {
     },
     []
   );
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(debounceTimers.current).forEach(clearTimeout);
+    };
+  }, []);
 
   return { persistScene, deleteSceneFromDb, persistOrder, updateTitle };
 }
