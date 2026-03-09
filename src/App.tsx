@@ -30,6 +30,7 @@ const App = () => (
           <Route path="/lesson/:lessonId" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
           <Route path="/lessons" element={<Lessons />} />
           <Route path="/explore" element={<Explore />} />
+          <Route path="/share/:token" element={<SharedLesson />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

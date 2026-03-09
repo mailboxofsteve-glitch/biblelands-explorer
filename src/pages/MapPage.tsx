@@ -102,6 +102,15 @@ const MapPage = () => {
       >
         <TeacherTools mapRef={mapRef} />
       </aside>
+
+      {/* Lesson Settings Modal */}
+      {lessonId && (
+        <LessonSettingsModal
+          open={showSettings}
+          onClose={() => setShowSettings(false)}
+          lessonId={lessonId}
+        />
+      )}
     </div>
   );
 };
