@@ -17,6 +17,7 @@ export type Database = {
       lesson_scenes: {
         Row: {
           active_overlay_ids: string[]
+          animate_on_enter: boolean
           bearing: number
           center_lat: number
           center_lng: number
@@ -34,6 +35,7 @@ export type Database = {
         }
         Insert: {
           active_overlay_ids?: string[]
+          animate_on_enter?: boolean
           bearing?: number
           center_lat?: number
           center_lng?: number
@@ -51,6 +53,7 @@ export type Database = {
         }
         Update: {
           active_overlay_ids?: string[]
+          animate_on_enter?: boolean
           bearing?: number
           center_lat?: number
           center_lng?: number

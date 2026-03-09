@@ -1,0 +1,1 @@
+ALTER TABLE public.lesson_scenes ADD COLUMN animate_on_enter BOOLEAN NOT NULL DEFAULT false;
