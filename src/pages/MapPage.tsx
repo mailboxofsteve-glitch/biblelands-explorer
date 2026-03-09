@@ -36,9 +36,20 @@ const MapPage = () => {
           <h2 className="text-sm font-serif font-semibold text-foreground tracking-wide">
             Controls
           </h2>
-          <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
-            Lesson: {lessonId ?? "—"}
-          </p>
+          <div className="flex items-center justify-between mt-0.5">
+            <p className="text-[10px] text-muted-foreground truncate">
+              Lesson: {lessonId ?? "—"}
+            </p>
+            {lessonId && (
+              <button
+                onClick={() => setShowSettings(true)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                title="Lesson Settings"
+              >
+                <Settings size={14} />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Era selector */}
