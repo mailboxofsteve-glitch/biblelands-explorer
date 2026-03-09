@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import type { LessonScene } from "@/types";
+import mapboxgl from "mapbox-gl";
 
 export const ERAS = [
   { id: "patriarchs", label: "Patriarchs" },
@@ -20,6 +22,14 @@ interface UndoEntry {
   pinId?: string;
 }
 
+interface CameraState {
+  center_lng: number;
+  center_lat: number;
+  zoom: number;
+  bearing: number;
+  pitch: number;
+}
+
 interface MapState {
   currentEra: EraId;
   activeOverlayIds: string[];
@@ -33,6 +43,10 @@ interface MapState {
   undoStack: UndoEntry[];
   customPinIds: string[];
   customOverlayIds: string[];
+
+  // Scene state
+  scenes: LessonScene[];
+  currentSceneIndex: number | null;
 
   setEra: (era: EraId) => void;
   toggleOverlay: (id: string) => void;
@@ -53,6 +67,14 @@ interface MapState {
   removeCustomPin: (id: string) => void;
   removeCustomOverlay: (id: string) => void;
   clearAllCustom: () => void;
+
+  // Scene actions
+  setScenes: (scenes: LessonScene[]) => void;
+  saveScene: (camera: CameraState, lessonId: string, userId: string) => LessonScene | null;
+  loadScene: (index: number, map: mapboxgl.Map) => void;
+  deleteScene: (id: string) => void;
+  reorderScenes: (newOrder: LessonScene[]) => void;
+  renameScene: (id: string, title: string) => void;
 }
 
 export const useMapStore = create<MapState>((set, get) => ({
@@ -66,6 +88,8 @@ export const useMapStore = create<MapState>((set, get) => ({
   undoStack: [],
   customPinIds: [],
   customOverlayIds: [],
+  scenes: [],
+  currentSceneIndex: null,
 
   setEra: (era) =>
     set({
@@ -161,5 +185,72 @@ export const useMapStore = create<MapState>((set, get) => ({
         (id) => !s.customOverlayIds.includes(id)
       ),
       undoStack: [],
+    })),
+
+  // Scene actions
+  setScenes: (scenes) => set({ scenes }),
+
+  saveScene: (camera, lessonId, userId) => {
+    const s = get();
+    const newScene: LessonScene = {
+      id: crypto.randomUUID(),
+      lesson_id: lessonId,
+      created_by: userId,
+      scene_order: s.scenes.length,
+      title: `Scene ${s.scenes.length + 1}`,
+      center_lng: camera.center_lng,
+      center_lat: camera.center_lat,
+      zoom: camera.zoom,
+      bearing: camera.bearing,
+      pitch: camera.pitch,
+      active_overlay_ids: [...s.activeOverlayIds],
+      visible_pin_ids: [...s.customPinIds],
+      highlighted_pin_id: s.selectedPinId,
+    };
+    set({
+      scenes: [...s.scenes, newScene],
+      currentSceneIndex: s.scenes.length,
+    });
+    return newScene;
+  },
+
+  loadScene: (index, map) => {
+    const s = get();
+    const scene = s.scenes[index];
+    if (!scene) return;
+
+    map.flyTo({
+      center: [scene.center_lng, scene.center_lat],
+      zoom: scene.zoom,
+      bearing: scene.bearing,
+      pitch: scene.pitch,
+      duration: 1200,
+    });
+
+    set({
+      activeOverlayIds: [...scene.active_overlay_ids],
+      currentSceneIndex: index,
+    });
+
+    if (scene.highlighted_pin_id) {
+      setTimeout(() => {
+        set({ selectedPinId: scene.highlighted_pin_id });
+      }, 1300);
+    }
+  },
+
+  deleteScene: (id) =>
+    set((s) => {
+      const filtered = s.scenes
+        .filter((sc) => sc.id !== id)
+        .map((sc, i) => ({ ...sc, scene_order: i }));
+      return { scenes: filtered, currentSceneIndex: null };
+    }),
+
+  reorderScenes: (newOrder) => set({ scenes: newOrder }),
+
+  renameScene: (id, title) =>
+    set((s) => ({
+      scenes: s.scenes.map((sc) => (sc.id === id ? { ...sc, title } : sc)),
     })),
 }));

@@ -14,6 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
+      lesson_scenes: {
+        Row: {
+          active_overlay_ids: string[]
+          bearing: number
+          center_lat: number
+          center_lng: number
+          created_at: string
+          created_by: string
+          highlighted_pin_id: string | null
+          id: string
+          lesson_id: string
+          pitch: number
+          scene_order: number
+          title: string
+          updated_at: string
+          visible_pin_ids: string[]
+          zoom: number
+        }
+        Insert: {
+          active_overlay_ids?: string[]
+          bearing?: number
+          center_lat?: number
+          center_lng?: number
+          created_at?: string
+          created_by: string
+          highlighted_pin_id?: string | null
+          id?: string
+          lesson_id: string
+          pitch?: number
+          scene_order?: number
+          title?: string
+          updated_at?: string
+          visible_pin_ids?: string[]
+          zoom?: number
+        }
+        Update: {
+          active_overlay_ids?: string[]
+          bearing?: number
+          center_lat?: number
+          center_lng?: number
+          created_at?: string
+          created_by?: string
+          highlighted_pin_id?: string | null
+          id?: string
+          lesson_id?: string
+          pitch?: number
+          scene_order?: number
+          title?: string
+          updated_at?: string
+          visible_pin_ids?: string[]
+          zoom?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_scenes_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lessons: {
         Row: {
           created_at: string

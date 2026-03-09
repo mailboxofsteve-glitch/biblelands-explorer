@@ -4,6 +4,7 @@ import MapCanvas, { type MapCanvasHandle } from "@/components/Map/MapCanvas";
 import EraSelector from "@/components/Map/EraSelector";
 import OverlayToggles from "@/components/Map/OverlayToggles";
 import TeacherTools from "@/components/Map/TeacherTools";
+import SceneList from "@/components/Map/SceneList";
 
 const MapPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -37,6 +38,9 @@ const MapPage = () => {
           </h3>
           <OverlayToggles />
         </div>
+
+        {/* Lesson Scenes */}
+        <SceneList mapRef={mapRef} />
       </aside>
 
       {/* Map */}
