@@ -19,10 +19,13 @@ import {
   X,
   Play,
   Square,
+  Camera,
+  FileText,
 } from "lucide-react";
 import PinDropModal from "./PinDropModal";
 import RouteFinishModal from "./RouteFinishModal";
 import { animateRoutesSequentially } from "@/lib/animateRoute";
+import { downloadMapScreenshot, generatePDFHandout } from "@/lib/exportUtils";
 import type { MapCanvasHandle } from "./MapCanvas";
 
 const PIN_ICONS = [
