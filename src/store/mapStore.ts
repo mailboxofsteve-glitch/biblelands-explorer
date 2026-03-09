@@ -206,6 +206,7 @@ export const useMapStore = create<MapState>((set, get) => ({
       active_overlay_ids: [...s.activeOverlayIds],
       visible_pin_ids: [...s.customPinIds],
       highlighted_pin_id: s.selectedPinId,
+      animate_on_enter: false,
     };
     set({
       scenes: [...s.scenes, newScene],

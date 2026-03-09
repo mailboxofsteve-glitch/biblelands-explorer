@@ -42,6 +42,7 @@ export function useScenes(lessonId: string | undefined) {
             active_overlay_ids: d.active_overlay_ids ?? [],
             visible_pin_ids: d.visible_pin_ids ?? [],
             highlighted_pin_id: d.highlighted_pin_id,
+            animate_on_enter: d.animate_on_enter ?? false,
           }))
         );
       }
