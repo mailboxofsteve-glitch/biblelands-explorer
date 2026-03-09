@@ -13,6 +13,7 @@ const MapPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
   const mapRef = useRef<MapCanvasHandle>(null);
   const [presenting, setPresenting] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const enterPresentation = useCallback(() => {
     setPresenting(true);
