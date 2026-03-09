@@ -83,7 +83,7 @@ const Library = () => {
           .in("user_id", Array.from(teacherIds));
 
         profiles?.forEach((p) => {
-          if (p.display_name) profileMap.set(p.user_id, p.display_name);
+          if (p.display_name) profileMap[p.user_id] = p.display_name;
         });
       }
 
