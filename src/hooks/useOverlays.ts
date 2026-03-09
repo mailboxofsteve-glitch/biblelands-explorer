@@ -18,6 +18,7 @@ export interface OverlayRow {
 export function useOverlays() {
   const { user } = useAuth();
   const currentEra = useMapStore((s) => s.currentEra);
+  const customOverlayIds = useMapStore((s) => s.customOverlayIds);
   const [allOverlays, setAllOverlays] = useState<OverlayRow[]>([]);
   const [loading, setLoading] = useState(true);
 
