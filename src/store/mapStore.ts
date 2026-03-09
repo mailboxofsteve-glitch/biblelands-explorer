@@ -208,6 +208,7 @@ export const useMapStore = create<MapState>((set, get) => ({
       visible_pin_ids: [...s.customPinIds],
       highlighted_pin_id: s.selectedPinId,
       animate_on_enter: false,
+      auto_advance_seconds: null,
     };
     set({
       scenes: [...s.scenes, newScene],
