@@ -92,6 +92,7 @@ export type Database = {
           scene_count: number
           share_token: string | null
           teacher_id: string
+          thumbnail_url: string | null
           title: string
           updated_at: string
         }
@@ -104,6 +105,7 @@ export type Database = {
           scene_count?: number
           share_token?: string | null
           teacher_id: string
+          thumbnail_url?: string | null
           title?: string
           updated_at?: string
         }
@@ -116,6 +118,7 @@ export type Database = {
           scene_count?: number
           share_token?: string | null
           teacher_id?: string
+          thumbnail_url?: string | null
           title?: string
           updated_at?: string
         }
