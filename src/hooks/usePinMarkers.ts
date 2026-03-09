@@ -95,7 +95,7 @@ export function usePinMarkers(
 
   // Sync markers
   useEffect(() => {
-    if (!map) return;
+    if (!map || !map.getContainer()) return;
 
     const currentIds = new Set(pins.map((p) => p.id));
     const existingIds = markersRef.current;
