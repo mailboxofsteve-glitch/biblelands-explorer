@@ -271,6 +271,15 @@ export default function LessonSettingsModal({
           </div>
         </div>
       </DialogContent>
+
+      {/* QR Code Modal */}
+      {shareUrl && (
+        <QRCodeModal
+          open={showQR}
+          onClose={() => setShowQR(false)}
+          url={shareUrl}
+        />
+      )}
     </Dialog>
   );
 }
