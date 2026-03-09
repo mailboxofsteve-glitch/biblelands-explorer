@@ -45,7 +45,6 @@ interface TeacherToolsProps {
 const TeacherTools = ({ mapRef }: TeacherToolsProps) => {
   const { lessonId } = useParams<{ lessonId: string }>();
   const { user } = useAuth();
-  const { user } = useAuth();
   const toolMode = useMapStore((s) => s.toolMode);
   const startPinDrop = useMapStore((s) => s.startPinDrop);
   const startDrawRoute = useMapStore((s) => s.startDrawRoute);
