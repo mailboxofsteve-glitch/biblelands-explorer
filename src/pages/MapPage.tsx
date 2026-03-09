@@ -13,8 +13,14 @@ const MapPage = () => {
   const mapRef = useRef<MapCanvasHandle>(null);
   const [presenting, setPresenting] = useState(false);
 
-  const enterPresentation = useCallback(() => setPresenting(true), []);
-  const exitPresentation = useCallback(() => setPresenting(false), []);
+  const enterPresentation = useCallback(() => {
+    setPresenting(true);
+    setTimeout(() => mapRef.current?.getMap()?.resize(), 350);
+  }, []);
+  const exitPresentation = useCallback(() => {
+    setPresenting(false);
+    setTimeout(() => mapRef.current?.getMap()?.resize(), 350);
+  }, []);
 
   return (
     <div className="h-screen flex overflow-hidden bg-background">
