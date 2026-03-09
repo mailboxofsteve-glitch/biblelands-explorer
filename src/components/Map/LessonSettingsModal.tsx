@@ -26,7 +26,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Copy, Trash2, Loader2 } from "lucide-react";
+import { Copy, Trash2, Loader2, QrCode } from "lucide-react";
+import QRCodeModal from "./QRCodeModal";
 
 interface LessonSettingsModalProps {
   open: boolean;
@@ -54,6 +55,7 @@ export default function LessonSettingsModal({
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showQR, setShowQR] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -191,14 +193,25 @@ export default function LessonSettingsModal({
           <div className="space-y-1.5">
             <Label className="text-xs">Share Link</Label>
             {shareUrl ? (
-              <div className="flex items-center gap-2">
-                <Input
-                  readOnly
-                  value={shareUrl}
-                  className="text-xs font-mono"
-                />
-                <Button variant="outline" size="icon" onClick={handleCopyLink}>
-                  <Copy size={14} />
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Input
+                    readOnly
+                    value={shareUrl}
+                    className="text-xs font-mono"
+                  />
+                  <Button variant="outline" size="icon" onClick={handleCopyLink}>
+                    <Copy size={14} />
+                  </Button>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs gap-1.5"
+                  onClick={() => setShowQR(true)}
+                >
+                  <QrCode size={14} />
+                  QR Code
                 </Button>
               </div>
             ) : (
@@ -258,6 +271,15 @@ export default function LessonSettingsModal({
           </div>
         </div>
       </DialogContent>
+
+      {/* QR Code Modal */}
+      {shareUrl && (
+        <QRCodeModal
+          open={showQR}
+          onClose={() => setShowQR(false)}
+          url={shareUrl}
+        />
+      )}
     </Dialog>
   );
 }

@@ -19,10 +19,13 @@ import {
   X,
   Play,
   Square,
+  Camera,
+  FileText,
 } from "lucide-react";
 import PinDropModal from "./PinDropModal";
 import RouteFinishModal from "./RouteFinishModal";
 import { animateRoutesSequentially } from "@/lib/animateRoute";
+import { downloadMapScreenshot, generatePDFHandout } from "@/lib/exportUtils";
 import type { MapCanvasHandle } from "./MapCanvas";
 
 const PIN_ICONS = [
@@ -233,6 +236,51 @@ const TeacherTools = ({ mapRef }: TeacherToolsProps) => {
             Animate Routes
           </button>
         )}
+      </div>
+
+      {/* Export */}
+      <div className="px-3 py-3 border-b border-border/40">
+        <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
+          Export
+        </h3>
+        <div className="space-y-1">
+          <button
+            onClick={() => {
+              const title = lessonId ? "lesson" : "map";
+              downloadMapScreenshot(title);
+              toast.success("Screenshot downloaded");
+            }}
+            className="w-full flex items-center gap-2 text-xs py-2 px-2 rounded text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+          >
+            <Camera size={14} />
+            Screenshot
+          </button>
+          <button
+            onClick={() => {
+              const activeNames = overlays
+                .filter((o) => activeOverlayIds.includes(o.id))
+                .map((o) => ({ name: o.name, color: o.default_color }));
+
+              // Gather visible pins from custom pins
+              supabase
+                .from("pins")
+                .select("id, label, popup_title, popup_body, icon_type, coordinates, scripture_refs")
+                .eq("lesson_id", lessonId ?? "")
+                .then(({ data }) => {
+                  const pins = (data ?? []).map((row) => ({
+                    ...row,
+                    coordinates: (Array.isArray(row.coordinates) ? row.coordinates : [0, 0]) as [number, number],
+                  }));
+                  generatePDFHandout("Lesson Handout", activeNames, pins);
+                  toast.success("PDF handout downloaded");
+                });
+            }}
+            className="w-full flex items-center gap-2 text-xs py-2 px-2 rounded text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+          >
+            <FileText size={14} />
+            PDF Handout
+          </button>
+        </div>
       </div>
 
       {/* Undo / Clear */}
