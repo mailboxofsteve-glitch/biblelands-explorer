@@ -54,13 +54,15 @@ export interface Lesson {
 export interface LessonScene {
   id: string;
   lesson_id: string;
+  created_by: string;
   scene_order: number;
   title: string;
-  narrative: string | null;
-  viewport: Viewport;
+  center_lng: number;
+  center_lat: number;
+  zoom: number;
+  bearing: number;
+  pitch: number;
   active_overlay_ids: string[];
   visible_pin_ids: string[];
   highlighted_pin_id: string | null;
-  animation: string | null;
-  transition: string | null;
 }
