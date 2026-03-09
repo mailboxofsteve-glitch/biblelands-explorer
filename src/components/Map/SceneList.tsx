@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useParams } from "react-router-dom";
 import {
   DndContext,
