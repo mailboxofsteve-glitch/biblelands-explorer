@@ -56,7 +56,7 @@ export interface MapCanvasHandle {
   getMap: () => mapboxgl.Map | null;
 }
 
-const MapCanvas = forwardRef<MapCanvasHandle>((_props, ref) => {
+const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string }>(({ lessonId }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const [mapReady, setMapReady] = useState(false);
