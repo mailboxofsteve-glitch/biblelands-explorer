@@ -11,6 +11,7 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import MapPage from "./pages/MapPage";
+import SharedLesson from "./pages/SharedLesson";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/lesson/:lessonId" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
           <Route path="/lessons" element={<Lessons />} />
           <Route path="/explore" element={<Explore />} />
+          <Route path="/share/:token" element={<SharedLesson />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

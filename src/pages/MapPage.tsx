@@ -6,12 +6,14 @@ import OverlayToggles from "@/components/Map/OverlayToggles";
 import TeacherTools from "@/components/Map/TeacherTools";
 import SceneList from "@/components/Map/SceneList";
 import PresentationHUD from "@/components/Map/PresentationHUD";
-import { Maximize } from "lucide-react";
+import LessonSettingsModal from "@/components/Map/LessonSettingsModal";
+import { Maximize, Settings } from "lucide-react";
 
 const MapPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
   const mapRef = useRef<MapCanvasHandle>(null);
   const [presenting, setPresenting] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const enterPresentation = useCallback(() => {
     setPresenting(true);
@@ -34,9 +36,20 @@ const MapPage = () => {
           <h2 className="text-sm font-serif font-semibold text-foreground tracking-wide">
             Controls
           </h2>
-          <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
-            Lesson: {lessonId ?? "—"}
-          </p>
+          <div className="flex items-center justify-between mt-0.5">
+            <p className="text-[10px] text-muted-foreground truncate">
+              Lesson: {lessonId ?? "—"}
+            </p>
+            {lessonId && (
+              <button
+                onClick={() => setShowSettings(true)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                title="Lesson Settings"
+              >
+                <Settings size={14} />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Era selector */}
@@ -89,6 +102,15 @@ const MapPage = () => {
       >
         <TeacherTools mapRef={mapRef} />
       </aside>
+
+      {/* Lesson Settings Modal */}
+      {lessonId && (
+        <LessonSettingsModal
+          open={showSettings}
+          onClose={() => setShowSettings(false)}
+          lessonId={lessonId}
+        />
+      )}
     </div>
   );
 };
