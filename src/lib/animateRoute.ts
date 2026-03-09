@@ -1,0 +1,273 @@
+import mapboxgl from "mapbox-gl";
+
+export interface AnimateRouteOptions {
+  color?: string;
+  duration?: number;
+  lineWidth?: number;
+  segmentIndices?: number[];
+  onComplete?: () => void;
+}
+
+interface AnimationState {
+  cancel: () => void;
+}
+
+let animCounter = 0;
+
+/**
+ * Progressively draws a LineString on the map with a glowing head marker.
+ * Returns { cancel } to abort mid-animation.
+ */
+export function animateRoute(
+  map: mapboxgl.Map,
+  geojson: GeoJSON.GeoJSON,
+  options: AnimateRouteOptions = {}
+): AnimationState {
+  const {
+    color = "#e6a817",
+    duration = 3000,
+    lineWidth = 3,
+    segmentIndices,
+    onComplete,
+  } = options;
+
+  const id = `anim-route-${++animCounter}`;
+  const sourceId = `${id}-src`;
+  const layerId = `${id}-line`;
+  const glowLayerId = `${id}-glow`;
+  const headSourceId = `${id}-head-src`;
+  const headLayerId = `${id}-head`;
+  const headGlowLayerId = `${id}-head-glow`;
+
+  // Extract coordinates from LineString features
+  const coords = extractCoordinates(geojson, segmentIndices);
+  if (coords.length < 2) {
+    onComplete?.();
+    return { cancel: () => {} };
+  }
+
+  let cancelled = false;
+  let rafId: number | null = null;
+
+  // Initial GeoJSON with just the first point
+  const lineData: GeoJSON.Feature<GeoJSON.LineString> = {
+    type: "Feature",
+    properties: {},
+    geometry: { type: "LineString", coordinates: [coords[0]] },
+  };
+
+  const headData: GeoJSON.Feature<GeoJSON.Point> = {
+    type: "Feature",
+    properties: {},
+    geometry: { type: "Point", coordinates: coords[0] },
+  };
+
+  // Add sources and layers
+  map.addSource(sourceId, { type: "geojson", data: lineData });
+  map.addSource(headSourceId, { type: "geojson", data: headData });
+
+  // Glow layer (wider, semi-transparent)
+  map.addLayer({
+    id: glowLayerId,
+    type: "line",
+    source: sourceId,
+    paint: {
+      "line-color": color,
+      "line-width": lineWidth * 3,
+      "line-opacity": 0.15,
+      "line-blur": 6,
+    },
+  });
+
+  // Main line
+  map.addLayer({
+    id: layerId,
+    type: "line",
+    source: sourceId,
+    paint: {
+      "line-color": color,
+      "line-width": lineWidth,
+      "line-opacity": 0.9,
+    },
+  });
+
+  // Head glow
+  map.addLayer({
+    id: headGlowLayerId,
+    type: "circle",
+    source: headSourceId,
+    paint: {
+      "circle-radius": 10,
+      "circle-color": color,
+      "circle-opacity": 0.25,
+      "circle-blur": 1,
+    },
+  });
+
+  // Head dot
+  map.addLayer({
+    id: headLayerId,
+    type: "circle",
+    source: headSourceId,
+    paint: {
+      "circle-radius": 4,
+      "circle-color": color,
+      "circle-opacity": 1,
+      "circle-stroke-width": 2,
+      "circle-stroke-color": "#ffffff",
+    },
+  });
+
+  const totalSegments = coords.length - 1;
+  const startTime = performance.now();
+
+  function tick(now: number) {
+    if (cancelled) return;
+
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+
+    // Determine how many full segments + partial
+    const floatIndex = progress * totalSegments;
+    const segIndex = Math.floor(floatIndex);
+    const segFraction = floatIndex - segIndex;
+
+    // Build coordinates up to current position
+    const drawn = coords.slice(0, segIndex + 1);
+
+    if (segIndex < totalSegments) {
+      // Interpolate current segment
+      const from = coords[segIndex];
+      const to = coords[segIndex + 1];
+      const interpPoint: [number, number] = [
+        from[0] + (to[0] - from[0]) * segFraction,
+        from[1] + (to[1] - from[1]) * segFraction,
+      ];
+      drawn.push(interpPoint);
+
+      // Update head position
+      headData.geometry.coordinates = interpPoint;
+    } else {
+      headData.geometry.coordinates = coords[coords.length - 1];
+    }
+
+    lineData.geometry.coordinates = drawn;
+
+    const lineSrc = map.getSource(sourceId) as mapboxgl.GeoJSONSource | undefined;
+    const headSrc = map.getSource(headSourceId) as mapboxgl.GeoJSONSource | undefined;
+
+    if (lineSrc) lineSrc.setData(lineData);
+    if (headSrc) headSrc.setData(headData);
+
+    if (progress < 1) {
+      rafId = requestAnimationFrame(tick);
+    } else {
+      // Fade out head after completion
+      setTimeout(() => {
+        cleanup(true);
+        onComplete?.();
+      }, 400);
+    }
+  }
+
+  rafId = requestAnimationFrame(tick);
+
+  function cleanup(keepLine = false) {
+    // Remove head layers/sources
+    if (map.getLayer(headGlowLayerId)) map.removeLayer(headGlowLayerId);
+    if (map.getLayer(headLayerId)) map.removeLayer(headLayerId);
+    if (map.getSource(headSourceId)) map.removeSource(headSourceId);
+
+    if (!keepLine) {
+      if (map.getLayer(glowLayerId)) map.removeLayer(glowLayerId);
+      if (map.getLayer(layerId)) map.removeLayer(layerId);
+      if (map.getSource(sourceId)) map.removeSource(sourceId);
+    }
+  }
+
+  return {
+    cancel: () => {
+      cancelled = true;
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      cleanup(false);
+    },
+  };
+}
+
+function extractCoordinates(
+  geojson: GeoJSON.GeoJSON,
+  segmentIndices?: number[]
+): [number, number][] {
+  const features: GeoJSON.Feature[] = [];
+
+  if (geojson.type === "FeatureCollection") {
+    if (segmentIndices && segmentIndices.length > 0) {
+      for (const i of segmentIndices) {
+        if (geojson.features[i]) features.push(geojson.features[i]);
+      }
+    } else {
+      features.push(...geojson.features);
+    }
+  } else if (geojson.type === "Feature") {
+    features.push(geojson);
+  }
+
+  const allCoords: [number, number][] = [];
+
+  for (const feature of features) {
+    const geom = feature.geometry;
+    if (geom.type === "LineString") {
+      allCoords.push(...(geom.coordinates as [number, number][]));
+    } else if (geom.type === "MultiLineString") {
+      for (const line of geom.coordinates) {
+        allCoords.push(...(line as [number, number][]));
+      }
+    }
+  }
+
+  return allCoords;
+}
+
+/**
+ * Animate multiple routes sequentially with a pause between each.
+ */
+export function animateRoutesSequentially(
+  map: mapboxgl.Map,
+  routes: { geojson: GeoJSON.GeoJSON; color: string }[],
+  options: { duration?: number; pauseMs?: number; onAllComplete?: () => void } = {}
+): { cancel: () => void } {
+  const { duration = 3000, pauseMs = 400, onAllComplete } = options;
+  let currentIndex = 0;
+  let currentAnim: AnimationState | null = null;
+  let cancelled = false;
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  function playNext() {
+    if (cancelled || currentIndex >= routes.length) {
+      if (!cancelled) onAllComplete?.();
+      return;
+    }
+
+    const route = routes[currentIndex];
+    currentIndex++;
+
+    currentAnim = animateRoute(map, route.geojson, {
+      color: route.color,
+      duration,
+      onComplete: () => {
+        if (cancelled) return;
+        timeoutId = setTimeout(playNext, pauseMs);
+      },
+    });
+  }
+
+  playNext();
+
+  return {
+    cancel: () => {
+      cancelled = true;
+      if (timeoutId !== null) clearTimeout(timeoutId);
+      currentAnim?.cancel();
+    },
+  };
+}
