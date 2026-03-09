@@ -6,7 +6,8 @@ import OverlayToggles from "@/components/Map/OverlayToggles";
 import TeacherTools from "@/components/Map/TeacherTools";
 import SceneList from "@/components/Map/SceneList";
 import PresentationHUD from "@/components/Map/PresentationHUD";
-import { Maximize } from "lucide-react";
+import LessonSettingsModal from "@/components/Map/LessonSettingsModal";
+import { Maximize, Settings } from "lucide-react";
 
 const MapPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
