@@ -11,6 +11,7 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import MapPage from "./pages/MapPage";
+import SharedLesson from "./pages/SharedLesson";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
