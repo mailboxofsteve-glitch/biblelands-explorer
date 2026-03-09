@@ -222,7 +222,7 @@ const Library = () => {
           </div>
         ) : filtered.length === 0 ? (
           <div className="rounded-lg border border-border/40 bg-card p-12 text-center space-y-4">
-            <Map className="h-12 w-12 text-accent mx-auto opacity-50" />
+            <MapIcon className="h-12 w-12 text-accent mx-auto opacity-50" />
             <p className="text-muted-foreground">
               {search || eraFilter !== "all"
                 ? "No lessons match your filters."
