@@ -193,14 +193,25 @@ export default function LessonSettingsModal({
           <div className="space-y-1.5">
             <Label className="text-xs">Share Link</Label>
             {shareUrl ? (
-              <div className="flex items-center gap-2">
-                <Input
-                  readOnly
-                  value={shareUrl}
-                  className="text-xs font-mono"
-                />
-                <Button variant="outline" size="icon" onClick={handleCopyLink}>
-                  <Copy size={14} />
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Input
+                    readOnly
+                    value={shareUrl}
+                    className="text-xs font-mono"
+                  />
+                  <Button variant="outline" size="icon" onClick={handleCopyLink}>
+                    <Copy size={14} />
+                  </Button>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs gap-1.5"
+                  onClick={() => setShowQR(true)}
+                >
+                  <QrCode size={14} />
+                  QR Code
                 </Button>
               </div>
             ) : (
