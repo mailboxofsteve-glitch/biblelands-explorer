@@ -13,6 +13,8 @@ import { useOverlays } from "@/hooks/useOverlays";
 import { useOverlayLayers } from "@/hooks/useOverlayLayers";
 import { usePins } from "@/hooks/usePins";
 import { usePinMarkers } from "@/hooks/usePinMarkers";
+import { useCustomPins } from "@/hooks/useCustomPins";
+import { useCustomPinMarkers } from "@/hooks/useCustomPinMarkers";
 import { useToolInteractions } from "@/hooks/useToolInteractions";
 import { useMapStore } from "@/store/mapStore";
 
