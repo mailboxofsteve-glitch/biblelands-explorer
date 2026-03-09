@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Plus, LogOut, Layers } from "lucide-react";
+import { BookOpen, Plus, LogOut, Layers, Library } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
@@ -97,9 +97,14 @@ const Dashboard = () => {
             </h1>
             <p className="text-muted-foreground text-sm mt-1">Your saved lessons</p>
           </div>
-          <Button onClick={createLesson}>
-            <Plus className="h-4 w-4 mr-1" /> New Lesson
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate("/library")}>
+              <Library className="h-4 w-4 mr-1" /> Community Library
+            </Button>
+            <Button onClick={createLesson}>
+              <Plus className="h-4 w-4 mr-1" /> New Lesson
+            </Button>
+          </div>
         </div>
 
         {/* Lessons grid */}

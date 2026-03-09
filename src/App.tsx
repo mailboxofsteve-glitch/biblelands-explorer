@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import MapPage from "./pages/MapPage";
 import SharedLesson from "./pages/SharedLesson";
+import Library from "./pages/Library";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
           <Route path="/lessons" element={<Lessons />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/share/:token" element={<SharedLesson />} />
+          <Route path="/library" element={<Library />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
