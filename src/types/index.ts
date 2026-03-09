@@ -65,4 +65,5 @@ export interface LessonScene {
   active_overlay_ids: string[];
   visible_pin_ids: string[];
   highlighted_pin_id: string | null;
+  animate_on_enter: boolean;
 }

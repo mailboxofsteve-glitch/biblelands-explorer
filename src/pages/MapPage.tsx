@@ -50,7 +50,7 @@ const MapPage = () => {
 
       {/* Right sidebar — tools */}
       <aside className="w-[200px] shrink-0 border-l border-border/40 bg-card flex flex-col">
-        <TeacherTools />
+        <TeacherTools mapRef={mapRef} />
       </aside>
     </div>
   );

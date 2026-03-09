@@ -75,6 +75,7 @@ interface MapState {
   deleteScene: (id: string) => void;
   reorderScenes: (newOrder: LessonScene[]) => void;
   renameScene: (id: string, title: string) => void;
+  toggleSceneAnimation: (id: string) => void;
 }
 
 export const useMapStore = create<MapState>((set, get) => ({
@@ -206,6 +207,7 @@ export const useMapStore = create<MapState>((set, get) => ({
       active_overlay_ids: [...s.activeOverlayIds],
       visible_pin_ids: [...s.customPinIds],
       highlighted_pin_id: s.selectedPinId,
+      animate_on_enter: false,
     };
     set({
       scenes: [...s.scenes, newScene],
@@ -252,5 +254,12 @@ export const useMapStore = create<MapState>((set, get) => ({
   renameScene: (id, title) =>
     set((s) => ({
       scenes: s.scenes.map((sc) => (sc.id === id ? { ...sc, title } : sc)),
+    })),
+
+  toggleSceneAnimation: (id) =>
+    set((s) => ({
+      scenes: s.scenes.map((sc) =>
+        sc.id === id ? { ...sc, animate_on_enter: !sc.animate_on_enter } : sc
+      ),
     })),
 }));
