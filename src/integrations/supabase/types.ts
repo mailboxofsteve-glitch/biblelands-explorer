@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           active_overlay_ids: string[]
           animate_on_enter: boolean
+          auto_advance_seconds: number | null
           bearing: number
           center_lat: number
           center_lng: number
@@ -36,6 +37,7 @@ export type Database = {
         Insert: {
           active_overlay_ids?: string[]
           animate_on_enter?: boolean
+          auto_advance_seconds?: number | null
           bearing?: number
           center_lat?: number
           center_lng?: number
@@ -54,6 +56,7 @@ export type Database = {
         Update: {
           active_overlay_ids?: string[]
           animate_on_enter?: boolean
+          auto_advance_seconds?: number | null
           bearing?: number
           center_lat?: number
           center_lng?: number
