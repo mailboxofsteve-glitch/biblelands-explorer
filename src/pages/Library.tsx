@@ -75,7 +75,7 @@ const Library = () => {
         fullData.forEach((l) => teacherIds.add(l.teacher_id));
       }
 
-      const profileMap = new Map<string, string>();
+      const profileMap: Record<string, string> = {};
       if (teacherIds.size > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
