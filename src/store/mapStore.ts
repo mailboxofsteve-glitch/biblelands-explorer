@@ -255,4 +255,11 @@ export const useMapStore = create<MapState>((set, get) => ({
     set((s) => ({
       scenes: s.scenes.map((sc) => (sc.id === id ? { ...sc, title } : sc)),
     })),
+
+  toggleSceneAnimation: (id) =>
+    set((s) => ({
+      scenes: s.scenes.map((sc) =>
+        sc.id === id ? { ...sc, animate_on_enter: !sc.animate_on_enter } : sc
+      ),
+    })),
 }));
