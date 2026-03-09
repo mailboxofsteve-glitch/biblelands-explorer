@@ -94,6 +94,7 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string }>(({ lessonId
     });
     map.on("style.load", () => {
       hideModernLayers(map);
+      setMapReady(true);
     });
 
     mapRef.current = map;
@@ -110,7 +111,9 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string }>(({ lessonId
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+    setMapReady(false);
     map.setStyle(STYLES[skin]);
+    // mapReady will be restored via the "style.load" handler
   }, [skin]);
 
   // Overlay layer sync
