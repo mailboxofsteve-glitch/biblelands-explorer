@@ -245,7 +245,7 @@ const Library = () => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <Map className="h-10 w-10 text-muted-foreground/30" />
+                    <MapIcon className="h-10 w-10 text-muted-foreground/30" />
                   )}
                 </div>
 
