@@ -50,7 +50,7 @@ export function useOverlays() {
     };
 
     fetchOverlays();
-  }, [user]);
+  }, [user, customOverlayIds]);
 
   // Filter to current era
   const overlays = allOverlays.filter((o) => o.era === currentEra);
