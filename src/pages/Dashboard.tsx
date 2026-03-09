@@ -25,6 +25,7 @@ interface LessonRow {
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useProfile();
   const [lessons, setLessons] = useState<LessonRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState<string | null>(null);
