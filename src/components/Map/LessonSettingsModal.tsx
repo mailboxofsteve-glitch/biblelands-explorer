@@ -55,6 +55,7 @@ export default function LessonSettingsModal({
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showQR, setShowQR] = useState(false);
 
   useEffect(() => {
     if (!open) return;
