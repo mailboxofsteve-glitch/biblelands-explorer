@@ -86,9 +86,16 @@ const Dashboard = () => {
           <BookOpen className="h-6 w-6 text-accent" />
           <span className="text-xl font-serif font-bold tracking-wide text-foreground">BibleLands</span>
         </div>
-        <Button variant="ghost" size="sm" onClick={handleSignOut}>
-          <LogOut className="h-4 w-4 mr-1" /> Sign Out
-        </Button>
+        <div className="flex gap-2">
+          {isAdmin && (
+            <Button variant="ghost" size="sm" onClick={() => navigate("/admin")}>
+              <Settings className="h-4 w-4 mr-1" /> Admin
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={handleSignOut}>
+            <LogOut className="h-4 w-4 mr-1" /> Sign Out
+          </Button>
+        </div>
       </header>
 
       <main className="flex-1 px-4 sm:px-6 py-8 sm:py-10 max-w-5xl mx-auto w-full space-y-6">

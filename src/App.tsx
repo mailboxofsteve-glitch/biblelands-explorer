@@ -45,6 +45,7 @@ const App = () => (
             <Route path="/explore" element={<Explore />} />
             <Route path="/share/:token" element={<SharedLesson />} />
             <Route path="/library" element={<Library />} />
+            <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
