@@ -13,6 +13,8 @@ import { useOverlays } from "@/hooks/useOverlays";
 import { useOverlayLayers } from "@/hooks/useOverlayLayers";
 import { usePins } from "@/hooks/usePins";
 import { usePinMarkers } from "@/hooks/usePinMarkers";
+import { useCustomPins } from "@/hooks/useCustomPins";
+import { useCustomPinMarkers } from "@/hooks/useCustomPinMarkers";
 import { useToolInteractions } from "@/hooks/useToolInteractions";
 import { useMapStore } from "@/store/mapStore";
 
@@ -54,7 +56,7 @@ export interface MapCanvasHandle {
   getMap: () => mapboxgl.Map | null;
 }
 
-const MapCanvas = forwardRef<MapCanvasHandle>((_props, ref) => {
+const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string }>(({ lessonId }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -122,6 +124,15 @@ const MapCanvas = forwardRef<MapCanvasHandle>((_props, ref) => {
   usePinMarkers(
     mapReady ? mapRef.current : null,
     pins,
+    selectedPinId,
+    selectPin
+  );
+
+  // Custom pins from the pins table
+  const { pins: customPins } = useCustomPins(lessonId);
+  useCustomPinMarkers(
+    mapReady ? mapRef.current : null,
+    customPins,
     selectedPinId,
     selectPin
   );
