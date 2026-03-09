@@ -7,9 +7,12 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Plus, LogOut, Layers, Library } from "lucide-react";
+import { BookOpen, Plus, LogOut, Library } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import LessonGridSkeleton from "@/components/LessonGridSkeleton";
+import OnboardingBanner from "@/components/OnboardingBanner";
+import TipOfTheDay from "@/components/TipOfTheDay";
 
 interface LessonRow {
   id: string;
@@ -30,7 +33,6 @@ const Dashboard = () => {
   useEffect(() => {
     if (!user) return;
 
-    // Fetch profile
     supabase
       .from("profiles")
       .select("display_name")
@@ -40,7 +42,6 @@ const Dashboard = () => {
         setDisplayName(data?.display_name ?? user.email ?? "Teacher");
       });
 
-    // Fetch lessons
     supabase
       .from("lessons")
       .select("id, title, description, scene_count, updated_at")
@@ -78,7 +79,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="border-b border-border/40 px-6 py-4 flex items-center justify-between">
+      <header className="border-b border-border/40 px-4 sm:px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BookOpen className="h-6 w-6 text-accent" />
           <span className="text-xl font-serif font-bold tracking-wide text-foreground">BibleLands</span>
@@ -88,33 +89,33 @@ const Dashboard = () => {
         </Button>
       </header>
 
-      <main className="flex-1 px-6 py-10 max-w-5xl mx-auto w-full space-y-8">
+      <main className="flex-1 px-4 sm:px-6 py-8 sm:py-10 max-w-5xl mx-auto w-full space-y-6">
         {/* Welcome */}
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-3xl font-serif font-bold text-foreground">
+            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground">
               Welcome back, {displayName}
             </h1>
             <p className="text-muted-foreground text-sm mt-1">Your saved lessons</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate("/library")}>
+          <div className="flex gap-2 flex-wrap">
+            <Button variant="outline" size="sm" onClick={() => navigate("/library")}>
               <Library className="h-4 w-4 mr-1" /> Community Library
             </Button>
-            <Button onClick={createLesson}>
+            <Button size="sm" onClick={createLesson}>
               <Plus className="h-4 w-4 mr-1" /> New Lesson
             </Button>
           </div>
         </div>
 
-        {/* Lessons grid */}
+        {/* Tip of the day */}
+        <TipOfTheDay />
+
+        {/* Content */}
         {loading ? (
-          <div className="text-muted-foreground animate-pulse font-serif">Loading lessons…</div>
+          <LessonGridSkeleton />
         ) : lessons.length === 0 ? (
-          <div className="rounded-lg border border-border/40 bg-card p-12 text-center space-y-4">
-            <Layers className="h-12 w-12 text-accent mx-auto opacity-50" />
-            <p className="text-muted-foreground">No lessons yet. Create your first one!</p>
-          </div>
+          <OnboardingBanner onCreateLesson={createLesson} />
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {lessons.map((lesson) => (
