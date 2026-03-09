@@ -26,7 +26,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Copy, Trash2, Loader2 } from "lucide-react";
+import { Copy, Trash2, Loader2, QrCode } from "lucide-react";
+import QRCodeModal from "./QRCodeModal";
 
 interface LessonSettingsModalProps {
   open: boolean;
