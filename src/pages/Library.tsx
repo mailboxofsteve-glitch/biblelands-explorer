@@ -23,7 +23,7 @@ import {
   ExternalLink,
   Loader2,
   Layers,
-  Map,
+  Map as MapIcon,
 } from "lucide-react";
 
 interface LibraryLesson {
