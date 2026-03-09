@@ -67,6 +67,7 @@ export function useScenes(lessonId: string | undefined) {
         active_overlay_ids: scene.active_overlay_ids,
         visible_pin_ids: scene.visible_pin_ids,
         highlighted_pin_id: scene.highlighted_pin_id,
+        animate_on_enter: scene.animate_on_enter,
       });
       if (error) {
         console.error("Failed to save scene:", error);
