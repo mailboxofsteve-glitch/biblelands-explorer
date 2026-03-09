@@ -96,7 +96,7 @@ const Library = () => {
         share_token: l.share_token,
         thumbnail_url: null,
         updated_at: l.updated_at,
-        teacher_display_name: profileMap.get(l.teacher_id) ?? "Teacher",
+        teacher_display_name: profileMap[l.teacher_id] ?? "Teacher",
       }));
 
       setLessons(mapped);
