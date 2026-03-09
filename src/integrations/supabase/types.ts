@@ -371,6 +371,45 @@ export type Database = {
         }
         Relationships: []
       }
+      locations_with_coords: {
+        Row: {
+          description: string | null
+          era_tags: string[] | null
+          id: string | null
+          lat: number | null
+          lng: number | null
+          location_type: string | null
+          name_ancient: string | null
+          name_hebrew: string | null
+          name_modern: string | null
+          primary_verse: string | null
+        }
+        Insert: {
+          description?: string | null
+          era_tags?: string[] | null
+          id?: string | null
+          lat?: never
+          lng?: never
+          location_type?: string | null
+          name_ancient?: string | null
+          name_hebrew?: string | null
+          name_modern?: string | null
+          primary_verse?: string | null
+        }
+        Update: {
+          description?: string | null
+          era_tags?: string[] | null
+          id?: string | null
+          lat?: never
+          lng?: never
+          location_type?: string | null
+          name_ancient?: string | null
+          name_hebrew?: string | null
+          name_modern?: string | null
+          primary_verse?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       _postgis_deprecate: {
