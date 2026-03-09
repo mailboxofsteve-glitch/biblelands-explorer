@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useMapStore } from "@/store/mapStore";
 import { useAuth } from "@/hooks/useAuth";
+import { useOverlays } from "@/hooks/useOverlays";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -16,9 +17,13 @@ import {
   Undo2,
   Trash2,
   X,
+  Play,
+  Square,
 } from "lucide-react";
 import PinDropModal from "./PinDropModal";
 import RouteFinishModal from "./RouteFinishModal";
+import { animateRoutesSequentially } from "@/lib/animateRoute";
+import type { MapCanvasHandle } from "./MapCanvas";
 
 const PIN_ICONS = [
   { type: "city", label: "City", icon: Building2 },
@@ -30,7 +35,11 @@ const PIN_ICONS = [
   { type: "event", label: "Event", icon: CalendarDays },
 ];
 
-const TeacherTools = () => {
+interface TeacherToolsProps {
+  mapRef?: React.RefObject<MapCanvasHandle | null>;
+}
+
+const TeacherTools = ({ mapRef }: TeacherToolsProps) => {
   const { lessonId } = useParams<{ lessonId: string }>();
   const { user } = useAuth();
   const toolMode = useMapStore((s) => s.toolMode);
@@ -44,9 +53,14 @@ const TeacherTools = () => {
   const routePoints = useMapStore((s) => s.routePoints);
   const customPinIds = useMapStore((s) => s.customPinIds);
   const customOverlayIds = useMapStore((s) => s.customOverlayIds);
+  const activeOverlayIds = useMapStore((s) => s.activeOverlayIds);
 
   const [showPinModal, setShowPinModal] = useState(false);
   const [showRouteModal, setShowRouteModal] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const cancelAnimRef = useRef<(() => void) | null>(null);
+
+  const { overlays } = useOverlays();
 
   // Open pin modal when coords are captured
   const handlePinModalOpen = pendingPinCoords && toolMode === "pin_drop";
@@ -67,6 +81,54 @@ const TeacherTools = () => {
     clearAllCustom();
     toast.success("Cleared all custom content");
   };
+
+  const handleAnimateRoutes = useCallback(() => {
+    const map = mapRef?.current?.getMap();
+    if (!map) {
+      toast.error("Map not ready");
+      return;
+    }
+
+    // Get active overlays with LineString geometry
+    const lineOverlays = overlays.filter((o) => {
+      if (!activeOverlayIds.includes(o.id)) return false;
+      const geojson = o.geojson as any;
+      const geomType = geojson?.type === "FeatureCollection"
+        ? geojson.features?.[0]?.geometry?.type
+        : geojson?.type === "Feature"
+          ? geojson.geometry?.type
+          : geojson?.type;
+      return geomType?.toLowerCase().includes("line");
+    });
+
+    if (lineOverlays.length === 0) {
+      toast.error("No active route overlays to animate");
+      return;
+    }
+
+    setIsAnimating(true);
+
+    const routes = lineOverlays.map((o) => ({
+      geojson: o.geojson as unknown as GeoJSON.GeoJSON,
+      color: o.default_color,
+    }));
+
+    const { cancel } = animateRoutesSequentially(map, routes, {
+      duration: 3000,
+      pauseMs: 400,
+      onAllComplete: () => setIsAnimating(false),
+    });
+
+    cancelAnimRef.current = () => {
+      cancel();
+      setIsAnimating(false);
+    };
+  }, [mapRef, overlays, activeOverlayIds]);
+
+  const handleStopAnimation = useCallback(() => {
+    cancelAnimRef.current?.();
+    cancelAnimRef.current = null;
+  }, []);
 
   return (
     <div className="flex flex-col h-full">
@@ -145,6 +207,30 @@ const TeacherTools = () => {
           >
             <Route size={14} />
             Draw Route
+          </button>
+        )}
+      </div>
+
+      {/* Animate routes */}
+      <div className="px-3 py-3 border-b border-border/40">
+        <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
+          Animation
+        </h3>
+        {isAnimating ? (
+          <button
+            onClick={handleStopAnimation}
+            className="w-full flex items-center justify-center gap-2 text-xs py-2 px-2 rounded bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+          >
+            <Square size={14} />
+            Stop Animation
+          </button>
+        ) : (
+          <button
+            onClick={handleAnimateRoutes}
+            className="w-full flex items-center gap-2 text-xs py-2 px-2 rounded text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+          >
+            <Play size={14} />
+            Animate Routes
           </button>
         )}
       </div>
