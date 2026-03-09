@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
 import NotFound from "./pages/NotFound";
 
 // Lazy-loaded heavy pages
@@ -17,6 +18,7 @@ const SharedLesson = lazy(() => import("./pages/SharedLesson"));
 const Library = lazy(() => import("./pages/Library"));
 const Lessons = lazy(() => import("./pages/Lessons"));
 const Explore = lazy(() => import("./pages/Explore"));
+const Admin = lazy(() => import("./pages/Admin"));
 
 const queryClient = new QueryClient();
 
