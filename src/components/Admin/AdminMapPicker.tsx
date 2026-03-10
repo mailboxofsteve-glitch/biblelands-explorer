@@ -2,8 +2,8 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Button } from "@/components/ui/button";
-import { Undo2, Trash2 } from "lucide-react";
-
+import { Undo2, Trash2, Scissors } from "lucide-react";
+import { toast } from "sonner";
 const MAPBOX_TOKEN =
   "pk.eyJ1Ijoic3JvZ2Vyczg2IiwiYSI6ImNtbWg0YXNiaTBjZjgycnB0c21mbzA1MDMifQ.snS_DuU14Far-Noo4WX_rA";
 
