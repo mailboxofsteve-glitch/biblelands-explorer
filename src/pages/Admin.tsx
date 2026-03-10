@@ -53,8 +53,8 @@ function LocationsTab() {
       era_tags: loc.era_tags ?? [],
       primary_verse: loc.primary_verse ?? "",
       description: loc.description ?? "",
-      lat: "32.0",
-      lng: "35.5",
+      lat: String(loc.lat ?? "32.0"),
+      lng: String(loc.lng ?? "35.5"),
     });
     setModalOpen(true);
   };
