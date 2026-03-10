@@ -31,7 +31,7 @@ function LocationsTab() {
   const [form, setForm] = useState({ name_ancient: "", name_modern: "", location_type: "city", era_tags: [] as string[], primary_verse: "", description: "", lat: "32.0", lng: "35.5" });
 
   const fetchLocations = useCallback(async () => {
-    const { data } = await supabase.from("locations").select("*").order("name_ancient");
+    const { data } = await supabase.from("locations_with_coords").select("*").order("name_ancient");
     setLocations(data ?? []);
     setLoading(false);
   }, []);
