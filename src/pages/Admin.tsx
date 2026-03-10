@@ -195,7 +195,7 @@ function OverlaysTab() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
-  const [form, setForm] = useState({ name: "", slug: "", era: ERAS[0].id, category: "route", default_color: "#c8a020", geojson: "", is_preloaded: true });
+  const [form, setForm] = useState({ name: "", slug: "", era: ERAS[0].id as string, category: "route", default_color: "#c8a020", geojson: "", is_preloaded: true });
 
   const fetchOverlays = useCallback(async () => {
     const { data } = await supabase.from("overlays").select("*").eq("is_preloaded", true).order("name");
