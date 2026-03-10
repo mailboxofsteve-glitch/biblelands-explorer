@@ -409,7 +409,7 @@ function LessonsTab() {
   const [lessons, setLessons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
-  const [newLesson, setNewLesson] = useState({ title: "", description: "", era: ERAS[0].id });
+  const [newLesson, setNewLesson] = useState({ title: "", description: "", era: ERAS[0].id as string });
 
   const fetchLessons = useCallback(async () => {
     const { data } = await supabase
