@@ -13,9 +13,11 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { BookOpen, LogOut, MapPin, Layers, GraduationCap, Users, Plus, Pencil, Trash2, ArrowLeft } from "lucide-react";
+import { BookOpen, LogOut, MapPin, Layers, GraduationCap, Users, Plus, Pencil, Trash2, ArrowLeft, Map } from "lucide-react";
 import { format } from "date-fns";
 import { ERAS } from "@/store/mapStore";
+import AdminMapPicker from "@/components/Admin/AdminMapPicker";
+
 const LOCATION_TYPES = ["city", "mountain", "river", "region", "sea", "desert", "road"];
 const OVERLAY_CATEGORIES = ["route", "territory", "empire", "region"];
 
@@ -98,6 +100,10 @@ function LocationsTab() {
     }));
   };
 
+  const handleMapPointChange = useCallback((lngLat: [number, number]) => {
+    setForm((f) => ({ ...f, lng: lngLat[0].toFixed(5), lat: lngLat[1].toFixed(5) }));
+  }, []);
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -146,7 +152,7 @@ function LocationsTab() {
       )}
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-serif">{editing ? "Edit Location" : "Add Location"}</DialogTitle>
           </DialogHeader>
@@ -167,6 +173,16 @@ function LocationsTab() {
                   <Badge key={era.id} variant={form.era_tags.includes(era.id) ? "default" : "outline"} className="cursor-pointer" onClick={() => toggleEra(era.id)}>{era.label}</Badge>
                 ))}
               </div>
+            </div>
+            <div>
+              <Label className="flex items-center gap-1.5 mb-1"><Map className="h-3.5 w-3.5" /> Pick on Map</Label>
+              {modalOpen && (
+                <AdminMapPicker
+                  mode="point"
+                  initialCenter={[parseFloat(form.lng) || 35.5, parseFloat(form.lat) || 32.0]}
+                  onPointChange={handleMapPointChange}
+                />
+              )}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div><Label>Latitude</Label><Input type="number" step="any" value={form.lat} onChange={(e) => setForm((f) => ({ ...f, lat: e.target.value }))} /></div>
@@ -195,6 +211,7 @@ function OverlaysTab() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
+  const [drawMode, setDrawMode] = useState(false);
   const [form, setForm] = useState({ name: "", slug: "", era: ERAS[0].id as string, category: "route", default_color: "#c8a020", geojson: "", is_preloaded: true });
 
   const fetchOverlays = useCallback(async () => {
@@ -207,12 +224,14 @@ function OverlaysTab() {
 
   const openAdd = () => {
     setEditing(null);
+    setDrawMode(false);
     setForm({ name: "", slug: "", era: ERAS[0].id, category: "route", default_color: "#c8a020", geojson: "", is_preloaded: true });
     setModalOpen(true);
   };
 
   const openEdit = (ov: any) => {
     setEditing(ov);
+    setDrawMode(false);
     setForm({
       name: ov.name,
       slug: ov.slug,
@@ -262,6 +281,24 @@ function OverlaysTab() {
     fetchOverlays();
   };
 
+  const drawPickerMode = (form.category === "route") ? "line" as const : "polygon" as const;
+
+  const handleDrawCoordinatesChange = useCallback((coords: number[][]) => {
+    if (coords.length < 2) return;
+    const isPolygon = drawPickerMode === "polygon";
+    const geojson: any = {
+      type: "FeatureCollection",
+      features: [{
+        type: "Feature",
+        properties: {},
+        geometry: isPolygon && coords.length >= 3
+          ? { type: "Polygon", coordinates: [[...coords, coords[0]]] }
+          : { type: "LineString", coordinates: coords },
+      }],
+    };
+    setForm((f) => ({ ...f, geojson: JSON.stringify(geojson, null, 2) }));
+  }, [drawPickerMode]);
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -302,7 +339,7 @@ function OverlaysTab() {
       )}
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="font-serif">{editing ? "Edit Overlay" : "Add Overlay"}</DialogTitle>
           </DialogHeader>
@@ -333,8 +370,20 @@ function OverlaysTab() {
               </div>
             </div>
             <div>
-              <Label>GeoJSON *</Label>
-              <Textarea value={form.geojson} onChange={(e) => setForm((f) => ({ ...f, geojson: e.target.value }))} rows={6} placeholder='{"type":"FeatureCollection","features":[...]}' className="font-mono text-xs" />
+              <div className="flex items-center justify-between mb-1">
+                <Label>GeoJSON *</Label>
+                <Button type="button" variant={drawMode ? "default" : "outline"} size="sm" onClick={() => setDrawMode((d) => !d)}>
+                  <Map className="h-3.5 w-3.5 mr-1" /> {drawMode ? "Hide Map" : "Draw on Map"}
+                </Button>
+              </div>
+              {drawMode && modalOpen && (
+                <AdminMapPicker
+                  mode={drawPickerMode}
+                  onCoordinatesChange={handleDrawCoordinatesChange}
+                  className="mb-2"
+                />
+              )}
+              <Textarea value={form.geojson} onChange={(e) => setForm((f) => ({ ...f, geojson: e.target.value }))} rows={drawMode ? 3 : 6} placeholder='{"type":"FeatureCollection","features":[...]}' className="font-mono text-xs" />
             </div>
             <div className="flex items-center gap-2">
               <Switch checked={form.is_preloaded} onCheckedChange={(v) => setForm((f) => ({ ...f, is_preloaded: v }))} />
@@ -356,8 +405,11 @@ function OverlaysTab() {
 /* ------------------------------------------------------------------ */
 function LessonsTab() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [lessons, setLessons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newLesson, setNewLesson] = useState({ title: "", description: "", era: ERAS[0].id });
 
   const fetchLessons = useCallback(async () => {
     const { data } = await supabase
@@ -379,9 +431,28 @@ function LessonsTab() {
     fetchLessons();
   };
 
+  const handleCreateLesson = async () => {
+    if (!user) return;
+    const { error } = await supabase.from("lessons").insert({
+      title: newLesson.title || "Untitled Lesson",
+      description: newLesson.description || null,
+      era: newLesson.era,
+      teacher_id: user.id,
+      is_public: true,
+    });
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: "Lesson created" });
+    setCreateOpen(false);
+    setNewLesson({ title: "", description: "", era: ERAS[0].id });
+    fetchLessons();
+  };
+
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-serif font-semibold text-foreground">Public Lessons</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-serif font-semibold text-foreground">Public Lessons</h2>
+        <Button size="sm" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-1" /> Create Lesson</Button>
+      </div>
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading…</p>
       ) : lessons.length === 0 ? (
@@ -412,6 +483,29 @@ function LessonsTab() {
           </TableBody>
         </Table>
       )}
+
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-serif">Create Lesson</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Title *</Label><Input value={newLesson.title} onChange={(e) => setNewLesson((f) => ({ ...f, title: e.target.value }))} placeholder="e.g. Abraham's Journey" /></div>
+            <div><Label>Description</Label><Textarea value={newLesson.description} onChange={(e) => setNewLesson((f) => ({ ...f, description: e.target.value }))} rows={2} /></div>
+            <div>
+              <Label>Era</Label>
+              <Select value={newLesson.era} onValueChange={(v) => setNewLesson((f) => ({ ...f, era: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{ERAS.map((e) => <SelectItem key={e.id} value={e.id}>{e.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button>
+            <Button onClick={handleCreateLesson} disabled={!newLesson.title}>Create</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
