@@ -397,6 +397,7 @@ function OverlaysTab() {
               {drawMode && modalOpen && (
                 <AdminMapPicker
                   mode={drawPickerMode}
+                  initialCoordinates={parsedInitialCoords}
                   onCoordinatesChange={handleDrawCoordinatesChange}
                   className="mb-2"
                 />
