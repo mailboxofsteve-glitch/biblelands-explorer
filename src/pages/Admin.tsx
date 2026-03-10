@@ -314,7 +314,7 @@ function OverlaysTab() {
                 <Label>Era</Label>
                 <Select value={form.era} onValueChange={(v) => setForm((f) => ({ ...f, era: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{ERAS.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
+                  <SelectContent>{ERAS.map((e) => <SelectItem key={e.id} value={e.id}>{e.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
