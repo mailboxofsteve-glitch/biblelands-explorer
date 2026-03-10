@@ -164,7 +164,7 @@ function LocationsTab() {
               <Label>Eras</Label>
               <div className="flex flex-wrap gap-1.5 mt-1">
                 {ERAS.map((era) => (
-                  <Badge key={era} variant={form.era_tags.includes(era) ? "default" : "outline"} className="cursor-pointer" onClick={() => toggleEra(era)}>{era}</Badge>
+                  <Badge key={era.id} variant={form.era_tags.includes(era.id) ? "default" : "outline"} className="cursor-pointer" onClick={() => toggleEra(era.id)}>{era.label}</Badge>
                 ))}
               </div>
             </div>
