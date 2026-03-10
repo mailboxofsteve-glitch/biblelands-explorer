@@ -175,6 +175,59 @@ export default function AdminMapPicker({
     if (mapRef.current) updateDrawSource(mapRef.current, [], mode);
   }, [mode]);
 
+  const [clipping, setClipping] = useState(false);
+
+  const handleClipToCoastline = useCallback(async () => {
+    if (coords.length < 3) return;
+    setClipping(true);
+    try {
+      const [{ default: intersect }, { polygon: turfPolygon, featureCollection }] = await Promise.all([
+        import("@turf/intersect"),
+        import("@turf/helpers"),
+      ]);
+      const landData = (await import("@/data/land-boundary.json")).default as GeoJSON.FeatureCollection;
+
+      const closedCoords = [...coords, coords[0]];
+      const drawnPoly = turfPolygon([closedCoords]);
+
+      let clippedCoords: number[][] | null = null;
+
+      for (const feature of landData.features) {
+        if (feature.geometry.type !== "Polygon" && feature.geometry.type !== "MultiPolygon") continue;
+        const result = intersect(featureCollection([drawnPoly, feature as GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiPolygon>]));
+        if (result) {
+          const geom = result.geometry;
+          if (geom.type === "Polygon") {
+            clippedCoords = geom.coordinates[0].slice(0, -1);
+          } else if (geom.type === "MultiPolygon") {
+            // Use the largest ring
+            let best: number[][] = [];
+            for (const poly of geom.coordinates) {
+              if (poly[0].length > best.length) best = poly[0];
+            }
+            clippedCoords = best.slice(0, -1);
+          }
+          break;
+        }
+      }
+
+      if (!clippedCoords || clippedCoords.length < 3) {
+        toast.warning("No land intersection found — the polygon may be entirely over water.");
+        return;
+      }
+
+      coordsRef.current = clippedCoords;
+      setCoords(clippedCoords);
+      if (mapRef.current) updateDrawSource(mapRef.current, clippedCoords, mode);
+      toast.success("Polygon clipped to coastline!");
+    } catch (err) {
+      console.error("Clip error:", err);
+      toast.error("Failed to clip polygon.");
+    } finally {
+      setClipping(false);
+    }
+  }, [coords, mode]);
+
   return (
     <div className={`relative rounded-md border border-border overflow-hidden ${className}`}>
       <div ref={containerRef} className="h-[280px] w-full" />
@@ -186,6 +239,11 @@ export default function AdminMapPicker({
           <Button type="button" variant="secondary" size="sm" onClick={handleClear}>
             <Trash2 className="h-3.5 w-3.5 mr-1" /> Clear
           </Button>
+          {mode === "polygon" && coords.length >= 3 && (
+            <Button type="button" variant="secondary" size="sm" onClick={handleClipToCoastline} disabled={clipping}>
+              <Scissors className="h-3.5 w-3.5 mr-1" /> {clipping ? "Clipping…" : "Clip to Coastline"}
+            </Button>
+          )}
         </div>
       )}
       {mode === "point" && (
