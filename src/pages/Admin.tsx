@@ -15,8 +15,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { BookOpen, LogOut, MapPin, Layers, GraduationCap, Users, Plus, Pencil, Trash2, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
-
-const ERAS = ["Patriarchs", "Exodus", "Conquest", "United Kingdom", "Divided Kingdom", "Exile", "NT Ministry", "Early Church"];
+import { ERAS } from "@/store/mapStore";
 const LOCATION_TYPES = ["city", "mountain", "river", "region", "sea", "desert", "road"];
 const OVERLAY_CATEGORIES = ["route", "territory", "empire", "region"];
 
