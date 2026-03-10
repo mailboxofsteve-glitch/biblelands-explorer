@@ -1,5 +1,8 @@
 import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
+import { supabase } from "@/integrations/supabase/client";
+import { useMapStore } from "@/store/mapStore";
+import { toast } from "sonner";
 import type { CustomPin } from "@/hooks/useCustomPins";
 
 const ICON_MAP: Record<string, string> = {
@@ -67,9 +70,12 @@ function createPopupHTML(pin: CustomPin): string {
 
   return `
     <div style="background:#1a1208;border:1px solid #c8a020;border-radius:10px;max-width:260px;padding:14px;color:#e8d5a0;font-family:serif;">
-      <div style="display:flex;justify-content:space-between;align-items:start;">
+      <div style="display:flex;justify-content:space-between;align-items:start;gap:8px;">
         <div style="font-size:15px;font-weight:600;color:#f0e0b0;">${pin.popup_title}</div>
-        <button class="custom-pin-popup-close" style="background:none;border:none;color:#a08a60;font-size:18px;cursor:pointer;padding:0 2px;line-height:1;">×</button>
+        <div style="display:flex;gap:4px;align-items:center;shrink:0;">
+          <button class="custom-pin-popup-delete" title="Delete pin" style="background:none;border:none;color:#e85050;font-size:14px;cursor:pointer;padding:2px;line-height:1;opacity:0.7;transition:opacity 0.15s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">🗑</button>
+          <button class="custom-pin-popup-close" style="background:none;border:none;color:#a08a60;font-size:18px;cursor:pointer;padding:0 2px;line-height:1;">×</button>
+        </div>
       </div>
       ${pin.popup_body ? `<p style="font-size:12px;margin-top:8px;line-height:1.5;color:#c8b888;">${pin.popup_body}</p>` : ""}
       ${refs}
@@ -135,6 +141,20 @@ export function useCustomPinMarkers(
           document.querySelector(".custom-pin-popup-close")?.addEventListener("click", () => {
             popup.remove();
             onSelectPin(null);
+          });
+
+          document.querySelector(".custom-pin-popup-delete")?.addEventListener("click", async () => {
+            const { error } = await supabase.from("pins").delete().eq("id", pin.id);
+            if (error) {
+              toast.error("Failed to delete pin");
+              return;
+            }
+            useMapStore.getState().removeCustomPin(pin.id);
+            marker.remove();
+            existing.delete(pin.id);
+            popup.remove();
+            onSelectPin(null);
+            toast.success(`Deleted "${pin.label}"`);
           });
         }, 0);
 
