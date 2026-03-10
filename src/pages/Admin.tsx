@@ -15,8 +15,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { BookOpen, LogOut, MapPin, Layers, GraduationCap, Users, Plus, Pencil, Trash2, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
-
-const ERAS = ["Patriarchs", "Exodus", "Conquest", "United Kingdom", "Divided Kingdom", "Exile", "NT Ministry", "Early Church"];
+import { ERAS } from "@/store/mapStore";
 const LOCATION_TYPES = ["city", "mountain", "river", "region", "sea", "desert", "road"];
 const OVERLAY_CATEGORIES = ["route", "territory", "empire", "region"];
 
@@ -32,7 +31,7 @@ function LocationsTab() {
   const [form, setForm] = useState({ name_ancient: "", name_modern: "", location_type: "city", era_tags: [] as string[], primary_verse: "", description: "", lat: "32.0", lng: "35.5" });
 
   const fetchLocations = useCallback(async () => {
-    const { data } = await supabase.from("locations").select("*").order("name_ancient");
+    const { data } = await supabase.from("locations_with_coords").select("*").order("name_ancient");
     setLocations(data ?? []);
     setLoading(false);
   }, []);
@@ -54,8 +53,8 @@ function LocationsTab() {
       era_tags: loc.era_tags ?? [],
       primary_verse: loc.primary_verse ?? "",
       description: loc.description ?? "",
-      lat: "32.0",
-      lng: "35.5",
+      lat: String(loc.lat ?? "32.0"),
+      lng: String(loc.lng ?? "35.5"),
     });
     setModalOpen(true);
   };
@@ -165,7 +164,7 @@ function LocationsTab() {
               <Label>Eras</Label>
               <div className="flex flex-wrap gap-1.5 mt-1">
                 {ERAS.map((era) => (
-                  <Badge key={era} variant={form.era_tags.includes(era) ? "default" : "outline"} className="cursor-pointer" onClick={() => toggleEra(era)}>{era}</Badge>
+                  <Badge key={era.id} variant={form.era_tags.includes(era.id) ? "default" : "outline"} className="cursor-pointer" onClick={() => toggleEra(era.id)}>{era.label}</Badge>
                 ))}
               </div>
             </div>
@@ -196,7 +195,7 @@ function OverlaysTab() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
-  const [form, setForm] = useState({ name: "", slug: "", era: ERAS[0], category: "route", default_color: "#c8a020", geojson: "", is_preloaded: true });
+  const [form, setForm] = useState({ name: "", slug: "", era: ERAS[0].id as string, category: "route", default_color: "#c8a020", geojson: "", is_preloaded: true });
 
   const fetchOverlays = useCallback(async () => {
     const { data } = await supabase.from("overlays").select("*").eq("is_preloaded", true).order("name");
@@ -208,7 +207,7 @@ function OverlaysTab() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ name: "", slug: "", era: ERAS[0], category: "route", default_color: "#c8a020", geojson: "", is_preloaded: true });
+    setForm({ name: "", slug: "", era: ERAS[0].id, category: "route", default_color: "#c8a020", geojson: "", is_preloaded: true });
     setModalOpen(true);
   };
 
@@ -315,7 +314,7 @@ function OverlaysTab() {
                 <Label>Era</Label>
                 <Select value={form.era} onValueChange={(v) => setForm((f) => ({ ...f, era: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{ERAS.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
+                  <SelectContent>{ERAS.map((e) => <SelectItem key={e.id} value={e.id}>{e.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
