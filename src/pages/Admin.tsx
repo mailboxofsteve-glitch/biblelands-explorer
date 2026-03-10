@@ -283,6 +283,24 @@ function OverlaysTab() {
 
   const drawPickerMode = (form.category === "route") ? "line" as const : "polygon" as const;
 
+  // Parse existing GeoJSON into coordinates for the map picker
+  const parsedInitialCoords = useMemo(() => {
+    try {
+      const parsed = JSON.parse(form.geojson);
+      if (parsed?.type === "FeatureCollection" && parsed.features?.length > 0) {
+        const geom = parsed.features[0]?.geometry;
+        if (geom?.type === "Polygon" && geom.coordinates?.[0]?.length > 1) {
+          // Remove closing duplicate point
+          return geom.coordinates[0].slice(0, -1) as number[][];
+        }
+        if (geom?.type === "LineString" && geom.coordinates?.length >= 2) {
+          return geom.coordinates as number[][];
+        }
+      }
+    } catch { /* invalid JSON, ignore */ }
+    return undefined;
+  }, [form.geojson]);
+
   const handleDrawCoordinatesChange = useCallback((coords: number[][]) => {
     if (coords.length < 2) return;
     const isPolygon = drawPickerMode === "polygon";
