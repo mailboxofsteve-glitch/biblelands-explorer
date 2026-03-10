@@ -98,5 +98,9 @@
 }
 
 .custom-pin-popup-container .mapboxgl-popup-tip {
-  border-top-color: #c8a020;
+  border-top-color: #1a1208;
+}
+
+.custom-pin-popup-container .mapboxgl-popup-tip-anchor-bottom .mapboxgl-popup-tip {
+  border-top-color: #1a1208;
 }
