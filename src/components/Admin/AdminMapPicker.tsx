@@ -185,7 +185,7 @@ export default function AdminMapPicker({
         import("@turf/intersect"),
         import("@turf/helpers"),
       ]);
-      const landData = (await import("@/data/land-boundary.json")).default as unknown as GeoJSON.FeatureCollection;
+      const landData = (await import("@/data/ne_50m_land_full.geojson")).default as unknown as GeoJSON.FeatureCollection;
 
       const closedCoords = [...coords, coords[0]];
       const drawnPoly = turfPolygon([closedCoords]);
