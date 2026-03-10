@@ -88,3 +88,15 @@
 .pin-popup-container .mapboxgl-popup-tip {
   border-top-color: #c8a020;
 }
+
+/* Custom pin popup overrides */
+.custom-pin-popup-container .mapboxgl-popup-content {
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  border-radius: 10px;
+}
+
+.custom-pin-popup-container .mapboxgl-popup-tip {
+  border-top-color: #c8a020;
+}
