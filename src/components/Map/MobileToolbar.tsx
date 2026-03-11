@@ -6,10 +6,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
 import EraSelector from "@/components/Map/EraSelector";
 import OverlayToggles from "@/components/Map/OverlayToggles";
 import SceneList from "@/components/Map/SceneList";
 import TeacherTools from "@/components/Map/TeacherTools";
+import { useMapStore } from "@/store/mapStore";
 import type { MapCanvasHandle } from "@/components/Map/MapCanvas";
 
 type MobilePanel = "controls" | "tools" | null;
