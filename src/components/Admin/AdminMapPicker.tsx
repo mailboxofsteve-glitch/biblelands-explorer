@@ -17,6 +17,7 @@ interface AdminMapPickerProps {
   initialCoordinates?: number[][]; // for line/polygon editing
   onPointChange?: (lngLat: [number, number]) => void;
   onCoordinatesChange?: (coords: number[][]) => void;
+  color?: string; // concrete color for map features (CSS vars don't work in Mapbox)
   className?: string;
 }
 
@@ -26,6 +27,7 @@ export default function AdminMapPicker({
   initialCoordinates,
   onPointChange,
   onCoordinatesChange,
+  color = "#6366f1",
   className = "",
 }: AdminMapPickerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -66,7 +68,7 @@ export default function AdminMapPicker({
     map.on("load", () => {
       // Point mode: add draggable marker
       if (mode === "point") {
-        const marker = new mapboxgl.Marker({ draggable: true, color: "hsl(var(--primary))" })
+        const marker = new mapboxgl.Marker({ draggable: true, color })
           .setLngLat(center as [number, number])
           .addTo(map);
         markerRef.current = marker;
@@ -89,7 +91,7 @@ export default function AdminMapPicker({
             id: "draw-fill",
             type: "fill",
             source: "draw-source",
-            paint: { "fill-color": "hsl(var(--primary))", "fill-opacity": 0.15 },
+            paint: { "fill-color": color, "fill-opacity": 0.15 },
             filter: ["==", "$type", "Polygon"],
           });
         }
@@ -99,7 +101,7 @@ export default function AdminMapPicker({
           type: "line",
           source: "draw-source",
           paint: {
-            "line-color": "hsl(var(--primary))",
+            "line-color": color,
             "line-width": 2.5,
             "line-dasharray": [2, 2],
           },
@@ -112,7 +114,7 @@ export default function AdminMapPicker({
           source: "draw-source",
           paint: {
             "circle-radius": 5,
-            "circle-color": "hsl(var(--primary))",
+            "circle-color": color,
             "circle-stroke-width": 2,
             "circle-stroke-color": "#fff",
           },
@@ -161,6 +163,17 @@ export default function AdminMapPicker({
       mapRef.current?.flyTo({ center: initialCenter, duration: 300 });
     }
   }, [initialCenter, mode]);
+
+  // Sync draw colors when color prop changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || mode === "point") return;
+    try {
+      if (map.getLayer("draw-fill")) map.setPaintProperty("draw-fill", "fill-color", color);
+      if (map.getLayer("draw-line")) map.setPaintProperty("draw-line", "line-color", color);
+      if (map.getLayer("draw-points")) map.setPaintProperty("draw-points", "circle-color", color);
+    } catch { /* layers not ready yet */ }
+  }, [color, mode]);
 
   const handleUndo = useCallback(() => {
     const next = coordsRef.current.slice(0, -1);
