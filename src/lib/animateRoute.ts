@@ -124,14 +124,15 @@ export function animateRoute(
     const progress = Math.min(elapsed / duration, 1);
 
     const floatIndex = progress * totalSegments;
-    const segIndex = Math.floor(floatIndex);
+    const segIndex = Math.min(Math.floor(floatIndex), totalSegments - 1);
     const segFraction = floatIndex - segIndex;
 
     const drawn = coords.slice(0, segIndex + 1);
 
-    if (segIndex < totalSegments) {
-      const from = coords[segIndex];
-      const to = coords[segIndex + 1];
+    const from = coords[segIndex];
+    const to = coords[segIndex + 1];
+
+    if (from && to) {
       const interpPoint: [number, number] = [
         from[0] + (to[0] - from[0]) * segFraction,
         from[1] + (to[1] - from[1]) * segFraction,
