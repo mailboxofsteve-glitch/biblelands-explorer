@@ -95,6 +95,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   undoStack: [],
   customPinIds: [],
   customOverlayIds: [],
+  showAllLabels: false,
   scenes: [],
   currentSceneIndex: null,
 
