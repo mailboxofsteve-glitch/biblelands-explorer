@@ -26,6 +26,8 @@ export default function MobileToolbar({
   onPresentationMode,
 }: MobileToolbarProps) {
   const [activePanel, setActivePanel] = useState<MobilePanel>(null);
+  const showAllLabels = useMapStore((s) => s.showAllLabels);
+  const toggleShowAllLabels = useMapStore((s) => s.toggleShowAllLabels);
 
   const toggle = (panel: MobilePanel) => {
     setActivePanel((prev) => (prev === panel ? null : panel));
