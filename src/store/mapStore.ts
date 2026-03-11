@@ -55,6 +55,9 @@ interface MapState {
   toggleOverlay: (id: string) => void;
   selectPin: (id: string | null) => void;
 
+  // Label actions
+  toggleShowAllLabels: () => void;
+
   // Tool actions
   startPinDrop: (iconType: string) => void;
   setPendingPinCoords: (coords: [number, number]) => void;
