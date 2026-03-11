@@ -23,6 +23,8 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
   const currentSceneIndex = useMapStore((s) => s.currentSceneIndex);
   const loadScene = useMapStore((s) => s.loadScene);
   const { overlays } = useOverlays();
+  const showAllLabels = useMapStore((s) => s.showAllLabels);
+  const toggleShowAllLabels = useMapStore((s) => s.toggleShowAllLabels);
 
   const [showNotes, setShowNotes] = useState(false);
   const [autoProgress, setAutoProgress] = useState(0);
