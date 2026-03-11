@@ -68,7 +68,7 @@ export default function AdminMapPicker({
     map.on("load", () => {
       // Point mode: add draggable marker
       if (mode === "point") {
-        const marker = new mapboxgl.Marker({ draggable: true, color: "hsl(var(--primary))" })
+        const marker = new mapboxgl.Marker({ draggable: true, color })
           .setLngLat(center as [number, number])
           .addTo(map);
         markerRef.current = marker;
