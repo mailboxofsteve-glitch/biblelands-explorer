@@ -37,7 +37,7 @@ interface SceneCardProps {
   onUpdate: (id: string) => void;
 }
 
-function SceneCard({ scene, index, onPlay, onDelete, onRenameTitle, onToggleAnimate }: SceneCardProps) {
+function SceneCard({ scene, index, onPlay, onDelete, onRenameTitle, onToggleAnimate, onUpdate }: SceneCardProps) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(scene.title);
   const currentSceneIndex = useMapStore((s) => s.currentSceneIndex);
