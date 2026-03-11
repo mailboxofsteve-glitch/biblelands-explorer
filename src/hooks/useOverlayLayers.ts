@@ -4,6 +4,7 @@ import type { OverlayRow } from "@/hooks/useOverlays";
 
 /**
  * Syncs active overlays as Mapbox sources/layers.
+ * Supports mixed-geometry FeatureCollections (e.g. LineString + Point).
  * When showAllLabels is true, adds symbol layers with overlay names.
  */
 export function useOverlayLayers(
@@ -21,7 +22,6 @@ export function useOverlayLayers(
       const activeSet = new Set(activeIds);
       const overlayMap = new Map(overlays.map((o) => [o.id, o]));
 
-      // Remove layers/sources no longer active
       for (const id of addedRef.current) {
         if (!activeSet.has(id)) {
           removeOverlay(map, overlayMap.get(id)?.slug ?? id);
@@ -29,7 +29,6 @@ export function useOverlayLayers(
         }
       }
 
-      // Add newly active overlays
       for (const id of activeIds) {
         if (addedRef.current.has(id)) continue;
         const overlay = overlayMap.get(id);
@@ -38,7 +37,6 @@ export function useOverlayLayers(
         addedRef.current.add(id);
       }
 
-      // Sync label layers
       syncLabelLayers(map, overlays, activeIds, addedRef.current, showAllLabels);
     };
 
@@ -85,6 +83,8 @@ export function useOverlayLayers(
   }, [map, overlays, activeIds, showAllLabels]);
 }
 
+/* ── helpers ─────────────────────────────────────────── */
+
 function sourceId(slug: string) {
   return `overlay-${slug}`;
 }
@@ -93,56 +93,45 @@ function labelLayerId(slug: string) {
   return `overlay-${slug}-label`;
 }
 
-function syncLabelLayers(
-  map: mapboxgl.Map,
-  overlays: OverlayRow[],
-  activeIds: string[],
-  addedIds: Set<string>,
-  showAllLabels: boolean
-) {
-  const overlayMap = new Map(overlays.map((o) => [o.id, o]));
+type GeomKind = "line" | "polygon" | "point" | "unknown";
 
-  for (const id of addedIds) {
-    const overlay = overlayMap.get(id);
-    if (!overlay) continue;
-    const src = sourceId(overlay.slug);
-    const lblId = labelLayerId(overlay.slug);
-
-    if (showAllLabels) {
-      if (map.getLayer(lblId)) continue; // already exists
-      if (!map.getSource(src)) continue;
-
-      const geojson = overlay.geojson as any;
-      const geometryType = getGeometryType(geojson);
-
-      map.addLayer({
-        id: lblId,
-        type: "symbol",
-        source: src,
-        layout: {
-          "text-field": overlay.name,
-          "text-size": 13,
-          "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
-          "symbol-placement": geometryType === "line" ? "line" : "point",
-          "text-allow-overlap": false,
-          "text-ignore-placement": false,
-          ...(geometryType === "line" ? { "text-max-angle": 30 } : {}),
-        },
-        paint: {
-          "text-color": "#f0e0b0",
-          "text-halo-color": "#1a1208",
-          "text-halo-width": 1.5,
-          "text-opacity": 0.9,
-        },
-      });
-    } else {
-      // Remove label layer if it exists
-      if (map.getLayer(lblId)) {
-        map.removeLayer(lblId);
-      }
-    }
-  }
+function classifyGeomType(type: string | undefined): GeomKind {
+  if (!type) return "unknown";
+  const lower = type.toLowerCase();
+  if (lower.includes("line")) return "line";
+  if (lower.includes("polygon")) return "polygon";
+  if (lower.includes("point")) return "point";
+  return "unknown";
 }
+
+/** Return the "primary" geometry kind for label placement (prefer line). */
+function getPrimaryGeometryType(geojson: any): GeomKind {
+  const features = geojson?.type === "FeatureCollection"
+    ? geojson.features ?? []
+    : geojson?.type === "Feature"
+      ? [geojson]
+      : [];
+
+  let hasLine = false;
+  let hasPolygon = false;
+  let hasPoint = false;
+
+  for (const f of features) {
+    const k = classifyGeomType(f?.geometry?.type);
+    if (k === "line") hasLine = true;
+    else if (k === "polygon") hasPolygon = true;
+    else if (k === "point") hasPoint = true;
+  }
+
+  if (hasLine) return "line";
+  if (hasPolygon) return "polygon";
+  if (hasPoint) return "point";
+
+  // Bare geometry (not wrapped in Feature)
+  return classifyGeomType(geojson?.type);
+}
+
+/* ── add / remove ────────────────────────────────────── */
 
 function addOverlay(map: mapboxgl.Map, overlay: OverlayRow) {
   const src = sourceId(overlay.slug);
@@ -155,52 +144,103 @@ function addOverlay(map: mapboxgl.Map, overlay: OverlayRow) {
 
   const style = overlay.default_style as Record<string, unknown>;
   const color = overlay.default_color;
-
   const geojson = overlay.geojson as any;
-  const geometryType = getGeometryType(geojson);
 
-  if (geometryType === "line") {
-    map.addLayer({
-      id: `${src}-line`,
-      type: "line",
-      source: src,
-      paint: {
-        "line-color": (style["line-color"] as string) ?? color,
-        "line-width": (style["line-width"] as number) ?? 2,
-        "line-opacity": (style["line-opacity"] as number) ?? 0.8,
-      },
-    });
-  } else if (geometryType === "polygon") {
-    map.addLayer({
-      id: `${src}-fill`,
-      type: "fill",
-      source: src,
-      paint: {
-        "fill-color": (style["fill-color"] as string) ?? color,
-        "fill-opacity": (style["fill-opacity"] as number) ?? 0.2,
-      },
-    });
-    map.addLayer({
-      id: `${src}-stroke`,
-      type: "line",
-      source: src,
-      paint: {
-        "line-color": (style["line-color"] as string) ?? color,
-        "line-width": (style["line-width"] as number) ?? 1.5,
-        "line-opacity": (style["line-opacity"] as number) ?? 0.7,
-      },
-    });
-  } else if (geometryType === "point") {
-    map.addLayer({
-      id: `${src}-circle`,
-      type: "circle",
-      source: src,
-      paint: {
-        "circle-color": (style["circle-color"] as string) ?? color,
-        "circle-radius": (style["circle-radius"] as number) ?? 5,
-        "circle-opacity": (style["circle-opacity"] as number) ?? 0.8,
-      },
-    });
+  // Collect features
+  const features: any[] =
+    geojson?.type === "FeatureCollection"
+      ? geojson.features ?? []
+      : geojson?.type === "Feature"
+        ? [geojson]
+        : [];
+
+  // Track which geometry kinds we've already added a layer for
+  let lineAdded = false;
+  let fillAdded = false;
+  let circleAdded = false;
+
+  for (const feature of features) {
+    const kind = classifyGeomType(feature?.geometry?.type);
+
+    if (kind === "line" && !lineAdded) {
+      lineAdded = true;
+      map.addLayer({
+        id: `${src}-line`,
+        type: "line",
+        source: src,
+        filter: ["any",
+          ["==", ["geometry-type"], "LineString"],
+          ["==", ["geometry-type"], "MultiLineString"],
+        ],
+        paint: {
+          "line-color": (style["line-color"] as string) ?? color,
+          "line-width": (style["line-width"] as number) ?? 2,
+          "line-opacity": (style["line-opacity"] as number) ?? 0.8,
+        },
+      });
+    } else if (kind === "polygon" && !fillAdded) {
+      fillAdded = true;
+      map.addLayer({
+        id: `${src}-fill`,
+        type: "fill",
+        source: src,
+        filter: ["any",
+          ["==", ["geometry-type"], "Polygon"],
+          ["==", ["geometry-type"], "MultiPolygon"],
+        ],
+        paint: {
+          "fill-color": (style["fill-color"] as string) ?? color,
+          "fill-opacity": (style["fill-opacity"] as number) ?? 0.2,
+        },
+      });
+      map.addLayer({
+        id: `${src}-stroke`,
+        type: "line",
+        source: src,
+        filter: ["any",
+          ["==", ["geometry-type"], "Polygon"],
+          ["==", ["geometry-type"], "MultiPolygon"],
+        ],
+        paint: {
+          "line-color": (style["line-color"] as string) ?? color,
+          "line-width": (style["line-width"] as number) ?? 1.5,
+          "line-opacity": (style["line-opacity"] as number) ?? 0.7,
+        },
+      });
+    } else if (kind === "point" && !circleAdded) {
+      circleAdded = true;
+      map.addLayer({
+        id: `${src}-circle`,
+        type: "circle",
+        source: src,
+        filter: ["any",
+          ["==", ["geometry-type"], "Point"],
+          ["==", ["geometry-type"], "MultiPoint"],
+        ],
+        paint: {
+          "circle-color": (style["circle-color"] as string) ?? color,
+          "circle-radius": (style["circle-radius"] as number) ?? 5,
+          "circle-opacity": (style["circle-opacity"] as number) ?? 0.8,
+        },
+      });
+    }
+  }
+
+  // Fallback: if FeatureCollection was empty or bare geometry
+  if (!lineAdded && !fillAdded && !circleAdded) {
+    const kind = classifyGeomType(geojson?.type);
+    if (kind === "line") {
+      map.addLayer({
+        id: `${src}-line`,
+        type: "line",
+        source: src,
+        paint: {
+          "line-color": (style["line-color"] as string) ?? color,
+          "line-width": (style["line-width"] as number) ?? 2,
+          "line-opacity": (style["line-opacity"] as number) ?? 0.8,
+        },
+      });
+    }
   }
 }
 
@@ -214,22 +254,53 @@ function removeOverlay(map: mapboxgl.Map, slug: string) {
   if (map.getSource(src)) map.removeSource(src);
 }
 
-function getGeometryType(geojson: any): "line" | "polygon" | "point" | "unknown" {
-  const type = geojson?.type;
-  let geomType: string | undefined;
+/* ── label layers ────────────────────────────────────── */
 
-  if (type === "FeatureCollection") {
-    geomType = geojson.features?.[0]?.geometry?.type;
-  } else if (type === "Feature") {
-    geomType = geojson.geometry?.type;
-  } else {
-    geomType = type;
+function syncLabelLayers(
+  map: mapboxgl.Map,
+  overlays: OverlayRow[],
+  _activeIds: string[],
+  addedIds: Set<string>,
+  showAllLabels: boolean
+) {
+  const overlayMap = new Map(overlays.map((o) => [o.id, o]));
+
+  for (const id of addedIds) {
+    const overlay = overlayMap.get(id);
+    if (!overlay) continue;
+    const src = sourceId(overlay.slug);
+    const lblId = labelLayerId(overlay.slug);
+
+    if (showAllLabels) {
+      if (map.getLayer(lblId)) continue;
+      if (!map.getSource(src)) continue;
+
+      const primaryType = getPrimaryGeometryType(overlay.geojson as any);
+
+      map.addLayer({
+        id: lblId,
+        type: "symbol",
+        source: src,
+        layout: {
+          "text-field": overlay.name,
+          "text-size": 13,
+          "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
+          "symbol-placement": primaryType === "line" ? "line" : "point",
+          "text-allow-overlap": false,
+          "text-ignore-placement": false,
+          ...(primaryType === "line" ? { "text-max-angle": 30 } : {}),
+        },
+        paint: {
+          "text-color": "#f0e0b0",
+          "text-halo-color": "#1a1208",
+          "text-halo-width": 1.5,
+          "text-opacity": 0.9,
+        },
+      });
+    } else {
+      if (map.getLayer(lblId)) {
+        map.removeLayer(lblId);
+      }
+    }
   }
-
-  if (!geomType) return "unknown";
-  const lower = geomType.toLowerCase();
-  if (lower.includes("line")) return "line";
-  if (lower.includes("polygon")) return "polygon";
-  if (lower.includes("point")) return "point";
-  return "unknown";
 }
