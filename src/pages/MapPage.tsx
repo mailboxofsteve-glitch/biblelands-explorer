@@ -30,6 +30,8 @@ const MapPage = () => {
   const saveScene = useMapStore((s) => s.saveScene);
   const setEra = useMapStore((s) => s.setEra);
   const activeOverlayIds = useMapStore((s) => s.activeOverlayIds);
+  const showAllLabels = useMapStore((s) => s.showAllLabels);
+  const toggleShowAllLabels = useMapStore((s) => s.toggleShowAllLabels);
   const { persistScene } = useScenes(lessonId);
   const { overlays } = useOverlays();
 
