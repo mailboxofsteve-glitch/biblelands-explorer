@@ -118,6 +118,8 @@ export const useMapStore = create<MapState>((set, get) => ({
 
   selectPin: (id) => set({ selectedPinId: id }),
 
+  toggleShowAllLabels: () => set((s) => ({ showAllLabels: !s.showAllLabels })),
+
   startPinDrop: (iconType) =>
     set({ toolMode: "pin_drop", pinDropIconType: iconType, pendingPinCoords: null }),
 
