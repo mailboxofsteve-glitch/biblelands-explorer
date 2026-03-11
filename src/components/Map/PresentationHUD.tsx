@@ -206,6 +206,17 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
 
           <div className="w-px h-5 bg-border/40 mx-1" />
 
+          <label className="flex items-center gap-1 cursor-pointer px-1" title="Show all labels">
+            <span className="text-[10px] text-muted-foreground">Labels</span>
+            <Switch
+              checked={showAllLabels}
+              onCheckedChange={toggleShowAllLabels}
+              className="scale-[0.6]"
+            />
+          </label>
+
+          <div className="w-px h-5 bg-border/40 mx-1" />
+
           <button
             onClick={() => setShowNotes(!showNotes)}
             className={`p-1.5 rounded transition-colors ${

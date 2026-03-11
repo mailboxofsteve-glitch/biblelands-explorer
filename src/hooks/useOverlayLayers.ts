@@ -4,19 +4,19 @@ import type { OverlayRow } from "@/hooks/useOverlays";
 
 /**
  * Syncs active overlays as Mapbox sources/layers.
- * Call this hook inside MapCanvas or a sibling that has access to the map instance.
+ * When showAllLabels is true, adds symbol layers with overlay names.
  */
 export function useOverlayLayers(
   map: mapboxgl.Map | null,
   overlays: OverlayRow[],
-  activeIds: string[]
+  activeIds: string[],
+  showAllLabels: boolean = false
 ) {
   const addedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!map) return;
 
-    // Wait for style to load before manipulating layers
     const apply = () => {
       const activeSet = new Set(activeIds);
       const overlayMap = new Map(overlays.map((o) => [o.id, o]));
@@ -37,6 +37,9 @@ export function useOverlayLayers(
         addOverlay(map, overlay);
         addedRef.current.add(id);
       }
+
+      // Sync label layers
+      syncLabelLayers(map, overlays, activeIds, addedRef.current, showAllLabels);
     };
 
     if (map.isStyleLoaded()) {
@@ -44,7 +47,7 @@ export function useOverlayLayers(
     } else {
       map.once("style.load", apply);
     }
-  }, [map, overlays, activeIds]);
+  }, [map, overlays, activeIds, showAllLabels]);
 
   // Cleanup all on unmount
   useEffect(() => {
@@ -59,12 +62,11 @@ export function useOverlayLayers(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Re-add overlays when style changes (style.load fires after setStyle)
+  // Re-add overlays when style changes
   useEffect(() => {
     if (!map) return;
     const onStyleLoad = () => {
       const overlayMap = new Map(overlays.map((o) => [o.id, o]));
-      // Re-add all currently active overlays since sources/layers are cleared
       const previouslyAdded = new Set(addedRef.current);
       addedRef.current.clear();
       for (const id of previouslyAdded) {
@@ -74,21 +76,77 @@ export function useOverlayLayers(
           addedRef.current.add(id);
         }
       }
+      syncLabelLayers(map, overlays, activeIds, addedRef.current, showAllLabels);
     };
     map.on("style.load", onStyleLoad);
     return () => {
       map.off("style.load", onStyleLoad);
     };
-  }, [map, overlays]);
+  }, [map, overlays, activeIds, showAllLabels]);
 }
 
 function sourceId(slug: string) {
   return `overlay-${slug}`;
 }
 
+function labelLayerId(slug: string) {
+  return `overlay-${slug}-label`;
+}
+
+function syncLabelLayers(
+  map: mapboxgl.Map,
+  overlays: OverlayRow[],
+  activeIds: string[],
+  addedIds: Set<string>,
+  showAllLabels: boolean
+) {
+  const overlayMap = new Map(overlays.map((o) => [o.id, o]));
+
+  for (const id of addedIds) {
+    const overlay = overlayMap.get(id);
+    if (!overlay) continue;
+    const src = sourceId(overlay.slug);
+    const lblId = labelLayerId(overlay.slug);
+
+    if (showAllLabels) {
+      if (map.getLayer(lblId)) continue; // already exists
+      if (!map.getSource(src)) continue;
+
+      const geojson = overlay.geojson as any;
+      const geometryType = getGeometryType(geojson);
+
+      map.addLayer({
+        id: lblId,
+        type: "symbol",
+        source: src,
+        layout: {
+          "text-field": overlay.name,
+          "text-size": 13,
+          "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
+          "symbol-placement": geometryType === "line" ? "line" : "point",
+          "text-allow-overlap": false,
+          "text-ignore-placement": false,
+          ...(geometryType === "line" ? { "text-max-angle": 30 } : {}),
+        },
+        paint: {
+          "text-color": "#f0e0b0",
+          "text-halo-color": "#1a1208",
+          "text-halo-width": 1.5,
+          "text-opacity": 0.9,
+        },
+      });
+    } else {
+      // Remove label layer if it exists
+      if (map.getLayer(lblId)) {
+        map.removeLayer(lblId);
+      }
+    }
+  }
+}
+
 function addOverlay(map: mapboxgl.Map, overlay: OverlayRow) {
   const src = sourceId(overlay.slug);
-  if (map.getSource(src)) return; // already added
+  if (map.getSource(src)) return;
 
   map.addSource(src, {
     type: "geojson",
@@ -98,7 +156,6 @@ function addOverlay(map: mapboxgl.Map, overlay: OverlayRow) {
   const style = overlay.default_style as Record<string, unknown>;
   const color = overlay.default_color;
 
-  // Determine geometry type from geojson
   const geojson = overlay.geojson as any;
   const geometryType = getGeometryType(geojson);
 
@@ -149,7 +206,7 @@ function addOverlay(map: mapboxgl.Map, overlay: OverlayRow) {
 
 function removeOverlay(map: mapboxgl.Map, slug: string) {
   const src = sourceId(slug);
-  const suffixes = ["-line", "-fill", "-stroke", "-circle"];
+  const suffixes = ["-line", "-fill", "-stroke", "-circle", "-label"];
   for (const suffix of suffixes) {
     const layerId = `${src}${suffix}`;
     if (map.getLayer(layerId)) map.removeLayer(layerId);

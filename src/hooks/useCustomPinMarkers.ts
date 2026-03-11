@@ -18,7 +18,7 @@ const ICON_MAP: Record<string, string> = {
   star: "⭐",
 };
 
-function createMarkerEl(pin: CustomPin, isSelected: boolean): HTMLDivElement {
+function createMarkerEl(pin: CustomPin, isSelected: boolean, showLabel: boolean): HTMLDivElement {
   const wrapper = document.createElement("div");
   wrapper.className = "custom-pin-marker";
   wrapper.style.cursor = "pointer";
@@ -43,6 +43,7 @@ function createMarkerEl(pin: CustomPin, isSelected: boolean): HTMLDivElement {
   wrapper.appendChild(el);
 
   const tooltip = document.createElement("div");
+  tooltip.className = "custom-pin-tooltip";
   tooltip.textContent = pin.label;
   tooltip.style.cssText = `
     position: absolute; bottom: 36px; left: 50%;
@@ -51,12 +52,15 @@ function createMarkerEl(pin: CustomPin, isSelected: boolean): HTMLDivElement {
     border: 1px solid #c8a020;
     padding: 3px 8px; border-radius: 4px;
     font-size: 11px; white-space: nowrap;
-    pointer-events: none; opacity: 0;
+    pointer-events: none; opacity: ${showLabel ? "1" : "0"};
     transition: opacity 0.15s; z-index: 10;
   `;
   wrapper.appendChild(tooltip);
-  wrapper.addEventListener("mouseenter", () => { tooltip.style.opacity = "1"; });
-  wrapper.addEventListener("mouseleave", () => { tooltip.style.opacity = "0"; });
+
+  if (!showLabel) {
+    wrapper.addEventListener("mouseenter", () => { tooltip.style.opacity = "1"; });
+    wrapper.addEventListener("mouseleave", () => { tooltip.style.opacity = "0"; });
+  }
 
   return wrapper;
 }
@@ -91,6 +95,7 @@ export function useCustomPinMarkers(
 ) {
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const popupRef = useRef<mapboxgl.Popup | null>(null);
+  const showAllLabels = useMapStore((s) => s.showAllLabels);
 
   useEffect(() => {
     if (!map) return;
@@ -114,10 +119,14 @@ export function useCustomPinMarkers(
         if (el) {
           el.style.boxShadow = selectedPinId === pin.id ? "0 0 14px #c8a02088" : "";
         }
+        const tooltip = marker.getElement().querySelector(".custom-pin-tooltip") as HTMLDivElement | null;
+        if (tooltip) {
+          tooltip.style.opacity = showAllLabels ? "1" : "0";
+        }
         continue;
       }
 
-      const el = createMarkerEl(pin, selectedPinId === pin.id);
+      const el = createMarkerEl(pin, selectedPinId === pin.id, showAllLabels);
       const marker = new mapboxgl.Marker({ element: el, anchor: "bottom-left" })
         .setLngLat(pin.coordinates)
         .addTo(map);
@@ -163,7 +172,7 @@ export function useCustomPinMarkers(
 
       existing.set(pin.id, marker);
     }
-  }, [map, pins, selectedPinId, onSelectPin]);
+  }, [map, pins, selectedPinId, onSelectPin, showAllLabels]);
 
   useEffect(() => {
     return () => {

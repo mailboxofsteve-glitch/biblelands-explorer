@@ -127,9 +127,21 @@ const MapPage = () => {
           }`}
         >
           <div className="px-4 py-3 border-b border-border/40">
-            <h2 className="text-sm font-serif font-semibold text-foreground tracking-wide">
-              Controls
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-serif font-semibold text-foreground tracking-wide">
+                Controls
+              </h2>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-1.5 cursor-pointer" title="Show all labels on map">
+                  <span className="text-[10px] text-muted-foreground">Labels</span>
+                  <Switch
+                    checked={showAllLabels}
+                    onCheckedChange={toggleShowAllLabels}
+                    className="scale-75"
+                  />
+                </label>
+              </div>
+            </div>
             <div className="flex items-center justify-between mt-0.5">
               <p className="text-[10px] text-muted-foreground truncate">
                 Lesson: {lessonId ?? "—"}

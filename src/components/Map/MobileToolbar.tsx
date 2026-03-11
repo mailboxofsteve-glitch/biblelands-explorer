@@ -79,7 +79,18 @@ export default function MobileToolbar({
       >
         <SheetContent side="bottom" className="h-[50vh] overflow-y-auto">
           <SheetHeader>
-            <SheetTitle className="font-serif">Controls</SheetTitle>
+            <div className="flex items-center justify-between">
+              <SheetTitle className="font-serif">Controls</SheetTitle>
+              <label className="flex items-center gap-1.5 cursor-pointer" title="Show all labels">
+                <span className="text-[10px] text-muted-foreground">Labels</span>
+                <Switch
+                  checked={showAllLabels}
+                  onCheckedChange={toggleShowAllLabels}
+                  className="scale-75"
+                />
+              </label>
+            </div>
+          </SheetHeader>
           </SheetHeader>
 
           <div className="space-y-4 py-4">

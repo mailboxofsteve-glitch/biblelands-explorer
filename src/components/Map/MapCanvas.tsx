@@ -122,7 +122,8 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string }>(({ lessonId
   useOverlayLayers(
     mapReady ? mapRef.current : null,
     overlays,
-    activeOverlayIds
+    activeOverlayIds,
+    showAllLabels
   );
 
   // Pin markers
