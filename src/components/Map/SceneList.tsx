@@ -34,6 +34,7 @@ interface SceneCardProps {
   onDelete: (id: string) => void;
   onRenameTitle: (id: string, title: string) => void;
   onToggleAnimate: (id: string) => void;
+  onUpdate: (id: string) => void;
 }
 
 function SceneCard({ scene, index, onPlay, onDelete, onRenameTitle, onToggleAnimate }: SceneCardProps) {
