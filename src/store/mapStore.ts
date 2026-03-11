@@ -44,6 +44,9 @@ interface MapState {
   customPinIds: string[];
   customOverlayIds: string[];
 
+  // Labels
+  showAllLabels: boolean;
+
   // Scene state
   scenes: LessonScene[];
   currentSceneIndex: number | null;
