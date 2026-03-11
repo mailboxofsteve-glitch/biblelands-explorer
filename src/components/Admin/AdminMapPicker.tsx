@@ -164,6 +164,17 @@ export default function AdminMapPicker({
     }
   }, [initialCenter, mode]);
 
+  // Sync draw colors when color prop changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || mode === "point") return;
+    try {
+      if (map.getLayer("draw-fill")) map.setPaintProperty("draw-fill", "fill-color", color);
+      if (map.getLayer("draw-line")) map.setPaintProperty("draw-line", "line-color", color);
+      if (map.getLayer("draw-points")) map.setPaintProperty("draw-points", "circle-color", color);
+    } catch { /* layers not ready yet */ }
+  }, [color, mode]);
+
   const handleUndo = useCallback(() => {
     const next = coordsRef.current.slice(0, -1);
     coordsRef.current = next;
