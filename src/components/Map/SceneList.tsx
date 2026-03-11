@@ -107,6 +107,12 @@ function SceneCard({ scene, index, onPlay, onDelete, onRenameTitle, onToggleAnim
         </span>
       )}
 
+      {scene.active_overlay_ids.length > 0 && (
+        <Badge variant="secondary" className="shrink-0 text-[9px] px-1.5 py-0 h-4">
+          {scene.active_overlay_ids.length}
+        </Badge>
+      )}
+
       <button
         onClick={() => onToggleAnimate(scene.id)}
         className={`shrink-0 transition-colors ${
@@ -117,6 +123,13 @@ function SceneCard({ scene, index, onPlay, onDelete, onRenameTitle, onToggleAnim
         title={scene.animate_on_enter ? "Route animation ON" : "Route animation OFF"}
       >
         <Sparkles size={12} />
+      </button>
+      <button
+        onClick={() => onUpdate(scene.id)}
+        className="shrink-0 text-muted-foreground hover:text-foreground"
+        title="Update scene with current map state"
+      >
+        <Save size={13} />
       </button>
       <button
         onClick={() => onPlay(index)}
