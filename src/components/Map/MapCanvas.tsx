@@ -68,7 +68,6 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string }>(({ lessonId
   const selectedPinId = useMapStore((s) => s.selectedPinId);
   const selectPin = useMapStore((s) => s.selectPin);
   const showAllLabels = useMapStore((s) => s.showAllLabels);
-  const selectPin = useMapStore((s) => s.selectPin);
 
   useImperativeHandle(ref, () => ({
     getMap: () => mapRef.current,
