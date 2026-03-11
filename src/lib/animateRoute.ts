@@ -261,17 +261,23 @@ function densifyCoordinates(
 export function animateRoutesSequentially(
   map: mapboxgl.Map,
   routes: { geojson: GeoJSON.GeoJSON; color: string }[],
-  options: { duration?: number; pauseMs?: number; onAllComplete?: () => void } = {}
+  options: { duration?: number; pauseMs?: number; loop?: boolean; onAllComplete?: () => void } = {}
 ): { cancel: () => void } {
-  const { duration = 3000, pauseMs = 400, onAllComplete } = options;
+  const { duration = 3000, pauseMs = 400, loop = false, onAllComplete } = options;
   let currentIndex = 0;
   let currentAnim: AnimationState | null = null;
   let cancelled = false;
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
   function playNext() {
-    if (cancelled || currentIndex >= routes.length) {
-      if (!cancelled) onAllComplete?.();
+    if (cancelled) return;
+    if (currentIndex >= routes.length) {
+      if (loop) {
+        currentIndex = 0;
+        timeoutId = setTimeout(playNext, pauseMs);
+        return;
+      }
+      onAllComplete?.();
       return;
     }
 
