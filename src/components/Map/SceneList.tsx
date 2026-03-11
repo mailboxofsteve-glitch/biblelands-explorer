@@ -20,7 +20,8 @@ import { useMapStore } from "@/store/mapStore";
 import { useScenes } from "@/hooks/useScenes";
 import { useOverlays } from "@/hooks/useOverlays";
 import { useAuth } from "@/hooks/useAuth";
-import { Play, Trash2, Plus, GripVertical, Sparkles } from "lucide-react";
+import { Play, Trash2, Plus, GripVertical, Sparkles, Save } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import type { LessonScene } from "@/types";
 import type { MapCanvasHandle } from "./MapCanvas";
@@ -33,9 +34,10 @@ interface SceneCardProps {
   onDelete: (id: string) => void;
   onRenameTitle: (id: string, title: string) => void;
   onToggleAnimate: (id: string) => void;
+  onUpdate: (id: string) => void;
 }
 
-function SceneCard({ scene, index, onPlay, onDelete, onRenameTitle, onToggleAnimate }: SceneCardProps) {
+function SceneCard({ scene, index, onPlay, onDelete, onRenameTitle, onToggleAnimate, onUpdate }: SceneCardProps) {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(scene.title);
   const currentSceneIndex = useMapStore((s) => s.currentSceneIndex);
@@ -105,6 +107,12 @@ function SceneCard({ scene, index, onPlay, onDelete, onRenameTitle, onToggleAnim
         </span>
       )}
 
+      {scene.active_overlay_ids.length > 0 && (
+        <Badge variant="secondary" className="shrink-0 text-[9px] px-1.5 py-0 h-4">
+          {scene.active_overlay_ids.length}
+        </Badge>
+      )}
+
       <button
         onClick={() => onToggleAnimate(scene.id)}
         className={`shrink-0 transition-colors ${
@@ -115,6 +123,13 @@ function SceneCard({ scene, index, onPlay, onDelete, onRenameTitle, onToggleAnim
         title={scene.animate_on_enter ? "Route animation ON" : "Route animation OFF"}
       >
         <Sparkles size={12} />
+      </button>
+      <button
+        onClick={() => onUpdate(scene.id)}
+        className="shrink-0 text-muted-foreground hover:text-foreground"
+        title="Update scene with current map state"
+      >
+        <Save size={13} />
       </button>
       <button
         onClick={() => onPlay(index)}
@@ -148,6 +163,7 @@ export default function SceneList({ mapRef }: SceneListProps) {
   const reorderScenes = useMapStore((s) => s.reorderScenes);
   const renameScene = useMapStore((s) => s.renameScene);
   const toggleSceneAnimation = useMapStore((s) => s.toggleSceneAnimation);
+  const updateScene = useMapStore((s) => s.updateScene);
   const activeOverlayIds = useMapStore((s) => s.activeOverlayIds);
 
   const { persistScene, deleteSceneFromDb, persistOrder, updateTitle } =
@@ -263,6 +279,26 @@ export default function SceneList({ mapRef }: SceneListProps) {
     [toggleSceneAnimation, scenes]
   );
 
+  const handleUpdate = useCallback(
+    (id: string) => {
+      const map = mapRef.current?.getMap();
+      if (!map) return;
+      const center = map.getCenter();
+      const updated = updateScene(id, {
+        center_lng: center.lng,
+        center_lat: center.lat,
+        zoom: map.getZoom(),
+        bearing: map.getBearing(),
+        pitch: map.getPitch(),
+      });
+      if (updated) {
+        persistScene(updated);
+        toast.success(`Updated "${updated.title}"`);
+      }
+    },
+    [mapRef, updateScene, persistScene]
+  );
+
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
@@ -307,6 +343,7 @@ export default function SceneList({ mapRef }: SceneListProps) {
                   onDelete={handleDelete}
                   onRenameTitle={handleRename}
                   onToggleAnimate={handleToggleAnimate}
+                  onUpdate={handleUpdate}
                 />
               ))}
             </div>

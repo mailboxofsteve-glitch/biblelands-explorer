@@ -82,6 +82,7 @@ interface MapState {
   reorderScenes: (newOrder: LessonScene[]) => void;
   renameScene: (id: string, title: string) => void;
   toggleSceneAnimation: (id: string) => void;
+  updateScene: (id: string, camera: CameraState) => LessonScene | null;
 }
 
 export const useMapStore = create<MapState>((set, get) => ({
@@ -272,4 +273,25 @@ export const useMapStore = create<MapState>((set, get) => ({
         sc.id === id ? { ...sc, animate_on_enter: !sc.animate_on_enter } : sc
       ),
     })),
+
+  updateScene: (id, camera) => {
+    const s = get();
+    const scene = s.scenes.find((sc) => sc.id === id);
+    if (!scene) return null;
+    const updated: LessonScene = {
+      ...scene,
+      center_lng: camera.center_lng,
+      center_lat: camera.center_lat,
+      zoom: camera.zoom,
+      bearing: camera.bearing,
+      pitch: camera.pitch,
+      active_overlay_ids: [...s.activeOverlayIds],
+      visible_pin_ids: [...s.customPinIds],
+      highlighted_pin_id: s.selectedPinId,
+    };
+    set({
+      scenes: s.scenes.map((sc) => (sc.id === id ? updated : sc)),
+    });
+    return updated;
+  },
 }));
