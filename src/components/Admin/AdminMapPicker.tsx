@@ -101,7 +101,7 @@ export default function AdminMapPicker({
           type: "line",
           source: "draw-source",
           paint: {
-            "line-color": "hsl(var(--primary))",
+            "line-color": color,
             "line-width": 2.5,
             "line-dasharray": [2, 2],
           },
