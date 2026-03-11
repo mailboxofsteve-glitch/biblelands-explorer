@@ -17,6 +17,7 @@ interface AdminMapPickerProps {
   initialCoordinates?: number[][]; // for line/polygon editing
   onPointChange?: (lngLat: [number, number]) => void;
   onCoordinatesChange?: (coords: number[][]) => void;
+  color?: string; // concrete color for map features (CSS vars don't work in Mapbox)
   className?: string;
 }
 
