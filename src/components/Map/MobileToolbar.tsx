@@ -91,7 +91,6 @@ export default function MobileToolbar({
               </label>
             </div>
           </SheetHeader>
-          </SheetHeader>
 
           <div className="space-y-4 py-4">
             <div>
