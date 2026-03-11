@@ -279,6 +279,26 @@ export default function SceneList({ mapRef }: SceneListProps) {
     [toggleSceneAnimation, scenes]
   );
 
+  const handleUpdate = useCallback(
+    (id: string) => {
+      const map = mapRef.current?.getMap();
+      if (!map) return;
+      const center = map.getCenter();
+      const updated = updateScene(id, {
+        center_lng: center.lng,
+        center_lat: center.lat,
+        zoom: map.getZoom(),
+        bearing: map.getBearing(),
+        pitch: map.getPitch(),
+      });
+      if (updated) {
+        persistScene(updated);
+        toast.success(`Updated "${updated.title}"`);
+      }
+    },
+    [mapRef, updateScene, persistScene]
+  );
+
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const { active, over } = event;
