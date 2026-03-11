@@ -343,6 +343,7 @@ export default function SceneList({ mapRef }: SceneListProps) {
                   onDelete={handleDelete}
                   onRenameTitle={handleRename}
                   onToggleAnimate={handleToggleAnimate}
+                  onUpdate={handleUpdate}
                 />
               ))}
             </div>
