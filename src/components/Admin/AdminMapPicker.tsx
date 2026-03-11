@@ -114,7 +114,7 @@ export default function AdminMapPicker({
           source: "draw-source",
           paint: {
             "circle-radius": 5,
-            "circle-color": "hsl(var(--primary))",
+            "circle-color": color,
             "circle-stroke-width": 2,
             "circle-stroke-color": "#fff",
           },
