@@ -82,6 +82,7 @@ interface MapState {
   reorderScenes: (newOrder: LessonScene[]) => void;
   renameScene: (id: string, title: string) => void;
   toggleSceneAnimation: (id: string) => void;
+  updateScene: (id: string, camera: CameraState) => LessonScene | null;
 }
 
 export const useMapStore = create<MapState>((set, get) => ({
