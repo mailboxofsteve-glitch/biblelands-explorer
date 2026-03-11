@@ -91,7 +91,7 @@ export default function AdminMapPicker({
             id: "draw-fill",
             type: "fill",
             source: "draw-source",
-            paint: { "fill-color": "hsl(var(--primary))", "fill-opacity": 0.15 },
+            paint: { "fill-color": color, "fill-opacity": 0.15 },
             filter: ["==", "$type", "Polygon"],
           });
         }
