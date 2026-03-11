@@ -3,6 +3,7 @@ import { useMapStore } from "@/store/mapStore";
 import { useOverlays } from "@/hooks/useOverlays";
 import { animateRoutesSequentially } from "@/lib/animateRoute";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
 import {
   ChevronLeft,
   ChevronRight,
@@ -22,6 +23,8 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
   const currentSceneIndex = useMapStore((s) => s.currentSceneIndex);
   const loadScene = useMapStore((s) => s.loadScene);
   const { overlays } = useOverlays();
+  const showAllLabels = useMapStore((s) => s.showAllLabels);
+  const toggleShowAllLabels = useMapStore((s) => s.toggleShowAllLabels);
 
   const [showNotes, setShowNotes] = useState(false);
   const [autoProgress, setAutoProgress] = useState(0);
@@ -200,6 +203,17 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
           >
             <ChevronRight size={18} />
           </button>
+
+          <div className="w-px h-5 bg-border/40 mx-1" />
+
+          <label className="flex items-center gap-1 cursor-pointer px-1" title="Show all labels">
+            <span className="text-[10px] text-muted-foreground">Labels</span>
+            <Switch
+              checked={showAllLabels}
+              onCheckedChange={toggleShowAllLabels}
+              className="scale-[0.6]"
+            />
+          </label>
 
           <div className="w-px h-5 bg-border/40 mx-1" />
 

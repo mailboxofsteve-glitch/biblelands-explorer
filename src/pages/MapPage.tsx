@@ -9,6 +9,7 @@ import PresentationHUD from "@/components/Map/PresentationHUD";
 import LessonSettingsModal from "@/components/Map/LessonSettingsModal";
 import KeyboardShortcutsModal, { useKeyboardShortcuts } from "@/components/Map/KeyboardShortcutsModal";
 import MobileToolbar from "@/components/Map/MobileToolbar";
+import { Switch } from "@/components/ui/switch";
 import { useMapStore, ERAS } from "@/store/mapStore";
 import { useAuth } from "@/hooks/useAuth";
 import { useScenes } from "@/hooks/useScenes";
@@ -29,6 +30,8 @@ const MapPage = () => {
   const saveScene = useMapStore((s) => s.saveScene);
   const setEra = useMapStore((s) => s.setEra);
   const activeOverlayIds = useMapStore((s) => s.activeOverlayIds);
+  const showAllLabels = useMapStore((s) => s.showAllLabels);
+  const toggleShowAllLabels = useMapStore((s) => s.toggleShowAllLabels);
   const { persistScene } = useScenes(lessonId);
   const { overlays } = useOverlays();
 
@@ -124,9 +127,21 @@ const MapPage = () => {
           }`}
         >
           <div className="px-4 py-3 border-b border-border/40">
-            <h2 className="text-sm font-serif font-semibold text-foreground tracking-wide">
-              Controls
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-serif font-semibold text-foreground tracking-wide">
+                Controls
+              </h2>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-1.5 cursor-pointer" title="Show all labels on map">
+                  <span className="text-[10px] text-muted-foreground">Labels</span>
+                  <Switch
+                    checked={showAllLabels}
+                    onCheckedChange={toggleShowAllLabels}
+                    className="scale-75"
+                  />
+                </label>
+              </div>
+            </div>
             <div className="flex items-center justify-between mt-0.5">
               <p className="text-[10px] text-muted-foreground truncate">
                 Lesson: {lessonId ?? "—"}

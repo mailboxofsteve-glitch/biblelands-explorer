@@ -6,10 +6,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
 import EraSelector from "@/components/Map/EraSelector";
 import OverlayToggles from "@/components/Map/OverlayToggles";
 import SceneList from "@/components/Map/SceneList";
 import TeacherTools from "@/components/Map/TeacherTools";
+import { useMapStore } from "@/store/mapStore";
 import type { MapCanvasHandle } from "@/components/Map/MapCanvas";
 
 type MobilePanel = "controls" | "tools" | null;
@@ -24,6 +26,8 @@ export default function MobileToolbar({
   onPresentationMode,
 }: MobileToolbarProps) {
   const [activePanel, setActivePanel] = useState<MobilePanel>(null);
+  const showAllLabels = useMapStore((s) => s.showAllLabels);
+  const toggleShowAllLabels = useMapStore((s) => s.toggleShowAllLabels);
 
   const toggle = (panel: MobilePanel) => {
     setActivePanel((prev) => (prev === panel ? null : panel));
@@ -75,7 +79,17 @@ export default function MobileToolbar({
       >
         <SheetContent side="bottom" className="h-[50vh] overflow-y-auto">
           <SheetHeader>
-            <SheetTitle className="font-serif">Controls</SheetTitle>
+            <div className="flex items-center justify-between">
+              <SheetTitle className="font-serif">Controls</SheetTitle>
+              <label className="flex items-center gap-1.5 cursor-pointer" title="Show all labels">
+                <span className="text-[10px] text-muted-foreground">Labels</span>
+                <Switch
+                  checked={showAllLabels}
+                  onCheckedChange={toggleShowAllLabels}
+                  className="scale-75"
+                />
+              </label>
+            </div>
           </SheetHeader>
 
           <div className="space-y-4 py-4">

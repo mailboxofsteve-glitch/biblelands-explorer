@@ -44,6 +44,9 @@ interface MapState {
   customPinIds: string[];
   customOverlayIds: string[];
 
+  // Labels
+  showAllLabels: boolean;
+
   // Scene state
   scenes: LessonScene[];
   currentSceneIndex: number | null;
@@ -51,6 +54,9 @@ interface MapState {
   setEra: (era: EraId) => void;
   toggleOverlay: (id: string) => void;
   selectPin: (id: string | null) => void;
+
+  // Label actions
+  toggleShowAllLabels: () => void;
 
   // Tool actions
   startPinDrop: (iconType: string) => void;
@@ -89,6 +95,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   undoStack: [],
   customPinIds: [],
   customOverlayIds: [],
+  showAllLabels: false,
   scenes: [],
   currentSceneIndex: null,
 
@@ -110,6 +117,8 @@ export const useMapStore = create<MapState>((set, get) => ({
     })),
 
   selectPin: (id) => set({ selectedPinId: id }),
+
+  toggleShowAllLabels: () => set((s) => ({ showAllLabels: !s.showAllLabels })),
 
   startPinDrop: (iconType) =>
     set({ toolMode: "pin_drop", pinDropIconType: iconType, pendingPinCoords: null }),

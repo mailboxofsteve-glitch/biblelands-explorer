@@ -67,6 +67,7 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string }>(({ lessonId
   const activeOverlayIds = useMapStore((s) => s.activeOverlayIds);
   const selectedPinId = useMapStore((s) => s.selectedPinId);
   const selectPin = useMapStore((s) => s.selectPin);
+  const showAllLabels = useMapStore((s) => s.showAllLabels);
 
   useImperativeHandle(ref, () => ({
     getMap: () => mapRef.current,
@@ -120,7 +121,8 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string }>(({ lessonId
   useOverlayLayers(
     mapReady ? mapRef.current : null,
     overlays,
-    activeOverlayIds
+    activeOverlayIds,
+    showAllLabels
   );
 
   // Pin markers
