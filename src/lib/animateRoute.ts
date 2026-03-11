@@ -39,8 +39,10 @@ export function animateRoute(
   const headLayerId = `${id}-head`;
   const headGlowLayerId = `${id}-head-glow`;
 
-  // Extract coordinates from LineString features
-  const coords = extractCoordinates(geojson, segmentIndices);
+  // Extract coordinates and densify for smooth animation
+  const rawCoords = extractCoordinates(geojson, segmentIndices);
+  const coords = densifyCoordinates(rawCoords, 0.1);
+
   if (coords.length < 2) {
     onComplete?.();
     return { cancel: () => {} };
@@ -49,7 +51,6 @@ export function animateRoute(
   let cancelled = false;
   let rafId: number | null = null;
 
-  // Initial GeoJSON with just the first point
   const lineData: GeoJSON.Feature<GeoJSON.LineString> = {
     type: "Feature",
     properties: {},
@@ -62,11 +63,9 @@ export function animateRoute(
     geometry: { type: "Point", coordinates: coords[0] },
   };
 
-  // Add sources and layers
   map.addSource(sourceId, { type: "geojson", data: lineData });
   map.addSource(headSourceId, { type: "geojson", data: headData });
 
-  // Glow layer (wider, semi-transparent)
   map.addLayer({
     id: glowLayerId,
     type: "line",
@@ -79,7 +78,6 @@ export function animateRoute(
     },
   });
 
-  // Main line
   map.addLayer({
     id: layerId,
     type: "line",
@@ -91,7 +89,6 @@ export function animateRoute(
     },
   });
 
-  // Head glow
   map.addLayer({
     id: headGlowLayerId,
     type: "circle",
@@ -104,7 +101,6 @@ export function animateRoute(
     },
   });
 
-  // Head dot
   map.addLayer({
     id: headLayerId,
     type: "circle",
@@ -127,16 +123,13 @@ export function animateRoute(
     const elapsed = now - startTime;
     const progress = Math.min(elapsed / duration, 1);
 
-    // Determine how many full segments + partial
     const floatIndex = progress * totalSegments;
     const segIndex = Math.floor(floatIndex);
     const segFraction = floatIndex - segIndex;
 
-    // Build coordinates up to current position
     const drawn = coords.slice(0, segIndex + 1);
 
     if (segIndex < totalSegments) {
-      // Interpolate current segment
       const from = coords[segIndex];
       const to = coords[segIndex + 1];
       const interpPoint: [number, number] = [
@@ -144,8 +137,6 @@ export function animateRoute(
         from[1] + (to[1] - from[1]) * segFraction,
       ];
       drawn.push(interpPoint);
-
-      // Update head position
       headData.geometry.coordinates = interpPoint;
     } else {
       headData.geometry.coordinates = coords[coords.length - 1];
@@ -162,7 +153,6 @@ export function animateRoute(
     if (progress < 1) {
       rafId = requestAnimationFrame(tick);
     } else {
-      // Fade out head after completion
       setTimeout(() => {
         cleanup(true);
         onComplete?.();
@@ -173,7 +163,6 @@ export function animateRoute(
   rafId = requestAnimationFrame(tick);
 
   function cleanup(keepLine = false) {
-    // Remove head layers/sources
     if (map.getLayer(headGlowLayerId)) map.removeLayer(headGlowLayerId);
     if (map.getLayer(headLayerId)) map.removeLayer(headLayerId);
     if (map.getSource(headSourceId)) map.removeSource(headSourceId);
@@ -193,6 +182,8 @@ export function animateRoute(
     },
   };
 }
+
+/* ── Coordinate extraction ──────────────────────────── */
 
 function extractCoordinates(
   geojson: GeoJSON.GeoJSON,
@@ -228,9 +219,44 @@ function extractCoordinates(
   return allCoords;
 }
 
+/* ── Coordinate densification ───────────────────────── */
+
 /**
- * Animate multiple routes sequentially with a pause between each.
+ * Inserts additional points between sparse waypoints via linear interpolation.
+ * `maxGap` is the maximum distance (in degrees) between consecutive points.
+ * Roughly 0.1° ≈ 11 km at the equator.
  */
+function densifyCoordinates(
+  coords: [number, number][],
+  maxGap: number = 0.1
+): [number, number][] {
+  if (coords.length < 2) return coords;
+
+  const result: [number, number][] = [coords[0]];
+
+  for (let i = 0; i < coords.length - 1; i++) {
+    const from = coords[i];
+    const to = coords[i + 1];
+    const dx = to[0] - from[0];
+    const dy = to[1] - from[1];
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist > maxGap) {
+      const segments = Math.ceil(dist / maxGap);
+      for (let s = 1; s < segments; s++) {
+        const t = s / segments;
+        result.push([from[0] + dx * t, from[1] + dy * t]);
+      }
+    }
+
+    result.push(to);
+  }
+
+  return result;
+}
+
+/* ── Sequential animation ───────────────────────────── */
+
 export function animateRoutesSequentially(
   map: mapboxgl.Map,
   routes: { geojson: GeoJSON.GeoJSON; color: string }[],
