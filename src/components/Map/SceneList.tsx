@@ -163,6 +163,7 @@ export default function SceneList({ mapRef }: SceneListProps) {
   const reorderScenes = useMapStore((s) => s.reorderScenes);
   const renameScene = useMapStore((s) => s.renameScene);
   const toggleSceneAnimation = useMapStore((s) => s.toggleSceneAnimation);
+  const updateScene = useMapStore((s) => s.updateScene);
   const activeOverlayIds = useMapStore((s) => s.activeOverlayIds);
 
   const { persistScene, deleteSceneFromDb, persistOrder, updateTitle } =
