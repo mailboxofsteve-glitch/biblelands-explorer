@@ -379,6 +379,7 @@ function OverlaysTab() {
               {drawMode && modalOpen && (
                 <AdminMapPicker
                   mode={drawPickerMode}
+                  color={form.default_color || "#6366f1"}
                   onCoordinatesChange={handleDrawCoordinatesChange}
                   className="mb-2"
                 />

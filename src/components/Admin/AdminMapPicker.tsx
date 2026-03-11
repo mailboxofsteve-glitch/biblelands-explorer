@@ -27,6 +27,7 @@ export default function AdminMapPicker({
   initialCoordinates,
   onPointChange,
   onCoordinatesChange,
+  color = "#6366f1",
   className = "",
 }: AdminMapPickerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
