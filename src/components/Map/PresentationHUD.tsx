@@ -81,9 +81,8 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
       loadScene(index, map);
 
       const scene = scenes[index];
-      if (scene?.animate_on_enter) {
-        setTimeout(() => triggerRouteAnimation(scene), 1400);
-      }
+      // Always auto-play route animations in classroom mode
+      setTimeout(() => triggerRouteAnimation(scene), 1400);
 
       // Auto-advance if scene has auto_advance_seconds
       if (scene?.auto_advance_seconds && scene.auto_advance_seconds > 0) {
