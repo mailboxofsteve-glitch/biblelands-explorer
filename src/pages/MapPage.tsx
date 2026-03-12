@@ -180,7 +180,7 @@ const MapPage = () => {
             <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground px-3 mb-2">
               Era
             </h3>
-            <EraSelector />
+            <TimelineSlider />
           </div>
 
           <div className="px-2 py-3 flex-1">

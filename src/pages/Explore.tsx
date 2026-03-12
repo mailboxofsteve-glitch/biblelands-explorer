@@ -85,7 +85,7 @@ const Explore = () => {
                   <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
                     Era
                   </h3>
-                  <EraSelector />
+                  <TimelineSlider />
                 </div>
                 <div>
                   <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
