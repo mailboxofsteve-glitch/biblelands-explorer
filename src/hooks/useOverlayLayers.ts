@@ -133,6 +133,142 @@ function getPrimaryGeometryType(geojson: any): GeomKind {
 
 /* ── add / remove ────────────────────────────────────── */
 
+function extractLineEndpoints(geojson: any): { start: [number, number]; end: [number, number] } | null {
+  const features: any[] =
+    geojson?.type === "FeatureCollection"
+      ? geojson.features ?? []
+      : geojson?.type === "Feature"
+        ? [geojson]
+        : [];
+
+  let firstCoord: [number, number] | null = null;
+  let lastCoord: [number, number] | null = null;
+
+  for (const f of features) {
+    const geom = f?.geometry;
+    if (!geom) continue;
+    const coords: [number, number][] =
+      geom.type === "LineString"
+        ? geom.coordinates
+        : geom.type === "MultiLineString"
+          ? geom.coordinates.flat()
+          : [];
+    if (coords.length === 0) continue;
+    if (!firstCoord) firstCoord = coords[0];
+    lastCoord = coords[coords.length - 1];
+  }
+
+  if (firstCoord && lastCoord) return { start: firstCoord, end: lastCoord };
+  return null;
+}
+
+function addLineEnhancements(map: mapboxgl.Map, src: string, color: string, lineWidth: number, geojson: any) {
+  // Glow layer (rendered before main line)
+  map.addLayer({
+    id: `${src}-glow`,
+    type: "line",
+    source: src,
+    filter: ["any",
+      ["==", ["geometry-type"], "LineString"],
+      ["==", ["geometry-type"], "MultiLineString"],
+    ],
+    paint: {
+      "line-color": color,
+      "line-width": lineWidth * 3,
+      "line-opacity": 0.15,
+      "line-blur": 4,
+    },
+  });
+
+  // Directional arrows
+  // Ensure the arrow image exists
+  if (!map.hasImage("route-arrow")) {
+    // Create a simple triangle arrow image
+    const size = 16;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d")!;
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.moveTo(2, 2);
+    ctx.lineTo(size - 2, size / 2);
+    ctx.lineTo(2, size - 2);
+    ctx.closePath();
+    ctx.fill();
+    map.addImage("route-arrow", ctx.getImageData(0, 0, size, size), {
+      pixelRatio: 2,
+      sdf: true,
+    });
+  }
+
+  map.addLayer({
+    id: `${src}-arrows`,
+    type: "symbol",
+    source: src,
+    filter: ["any",
+      ["==", ["geometry-type"], "LineString"],
+      ["==", ["geometry-type"], "MultiLineString"],
+    ],
+    layout: {
+      "symbol-placement": "line",
+      "symbol-spacing": 80,
+      "icon-image": "route-arrow",
+      "icon-size": 0.6,
+      "icon-allow-overlap": true,
+      "icon-rotation-alignment": "map",
+    },
+    paint: {
+      "icon-color": color,
+      "icon-opacity": 0.7,
+    },
+  });
+
+  // Start / end markers
+  const endpoints = extractLineEndpoints(geojson);
+  if (endpoints) {
+    const endpointsSrc = `${src}-endpoints`;
+    map.addSource(endpointsSrc, {
+      type: "geojson",
+      data: {
+        type: "FeatureCollection",
+        features: [
+          { type: "Feature", properties: { role: "start" }, geometry: { type: "Point", coordinates: endpoints.start } },
+          { type: "Feature", properties: { role: "end" }, geometry: { type: "Point", coordinates: endpoints.end } },
+        ],
+      },
+    });
+
+    map.addLayer({
+      id: `${endpointsSrc}-start`,
+      type: "circle",
+      source: endpointsSrc,
+      filter: ["==", ["get", "role"], "start"],
+      paint: {
+        "circle-radius": 5,
+        "circle-color": "#22c55e",
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#ffffff",
+        "circle-opacity": 1,
+      },
+    });
+
+    map.addLayer({
+      id: `${endpointsSrc}-end`,
+      type: "circle",
+      source: endpointsSrc,
+      filter: ["==", ["get", "role"], "end"],
+      paint: {
+        "circle-radius": 5,
+        "circle-color": "#ef4444",
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#ffffff",
+        "circle-opacity": 1,
+      },
+    });
+  }
+}
+
 function addOverlay(map: mapboxgl.Map, overlay: OverlayRow) {
   const src = sourceId(overlay.slug);
   if (map.getSource(src)) return;
@@ -164,6 +300,12 @@ function addOverlay(map: mapboxgl.Map, overlay: OverlayRow) {
 
     if (kind === "line" && !lineAdded) {
       lineAdded = true;
+      const lineColor = (style["line-color"] as string) ?? color;
+      const lineWidth = (style["line-width"] as number) ?? 2;
+
+      // Add glow + arrows + endpoints before the main line
+      addLineEnhancements(map, src, lineColor, lineWidth, geojson);
+
       map.addLayer({
         id: `${src}-line`,
         type: "line",
@@ -173,8 +315,8 @@ function addOverlay(map: mapboxgl.Map, overlay: OverlayRow) {
           ["==", ["geometry-type"], "MultiLineString"],
         ],
         paint: {
-          "line-color": (style["line-color"] as string) ?? color,
-          "line-width": (style["line-width"] as number) ?? 2,
+          "line-color": lineColor,
+          "line-width": lineWidth,
           "line-opacity": (style["line-opacity"] as number) ?? 0.8,
         },
       });
@@ -230,13 +372,16 @@ function addOverlay(map: mapboxgl.Map, overlay: OverlayRow) {
   if (!lineAdded && !fillAdded && !circleAdded) {
     const kind = classifyGeomType(geojson?.type);
     if (kind === "line") {
+      const lineColor = (style["line-color"] as string) ?? color;
+      const lineWidth = (style["line-width"] as number) ?? 2;
+      addLineEnhancements(map, src, lineColor, lineWidth, geojson);
       map.addLayer({
         id: `${src}-line`,
         type: "line",
         source: src,
         paint: {
-          "line-color": (style["line-color"] as string) ?? color,
-          "line-width": (style["line-width"] as number) ?? 2,
+          "line-color": lineColor,
+          "line-width": lineWidth,
           "line-opacity": (style["line-opacity"] as number) ?? 0.8,
         },
       });
@@ -246,11 +391,19 @@ function addOverlay(map: mapboxgl.Map, overlay: OverlayRow) {
 
 function removeOverlay(map: mapboxgl.Map, slug: string) {
   const src = sourceId(slug);
-  const suffixes = ["-line", "-fill", "-stroke", "-circle", "-label"];
+  const endpointsSrc = `${src}-endpoints`;
+  const suffixes = ["-arrows", "-glow", "-line", "-fill", "-stroke", "-circle", "-label"];
+  const endpointSuffixes = ["-start", "-end"];
+
   for (const suffix of suffixes) {
     const layerId = `${src}${suffix}`;
     if (map.getLayer(layerId)) map.removeLayer(layerId);
   }
+  for (const suffix of endpointSuffixes) {
+    const layerId = `${endpointsSrc}${suffix}`;
+    if (map.getLayer(layerId)) map.removeLayer(layerId);
+  }
+  if (map.getSource(endpointsSrc)) map.removeSource(endpointsSrc);
   if (map.getSource(src)) map.removeSource(src);
 }
 

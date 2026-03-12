@@ -63,8 +63,26 @@ export function animateRoute(
     geometry: { type: "Point", coordinates: coords[0] },
   };
 
+  const startSourceId = `${id}-start-src`;
+  const startLayerId = `${id}-start`;
+  const endSourceId = `${id}-end-src`;
+  const endLayerId = `${id}-end`;
+
+  const startData: GeoJSON.Feature<GeoJSON.Point> = {
+    type: "Feature",
+    properties: {},
+    geometry: { type: "Point", coordinates: coords[0] },
+  };
+
+  const endData: GeoJSON.Feature<GeoJSON.Point> = {
+    type: "Feature",
+    properties: {},
+    geometry: { type: "Point", coordinates: coords[coords.length - 1] },
+  };
+
   map.addSource(sourceId, { type: "geojson", data: lineData });
   map.addSource(headSourceId, { type: "geojson", data: headData });
+  map.addSource(startSourceId, { type: "geojson", data: startData });
 
   map.addLayer({
     id: glowLayerId,
@@ -86,6 +104,20 @@ export function animateRoute(
       "line-color": color,
       "line-width": lineWidth,
       "line-opacity": 0.9,
+    },
+  });
+
+  // Persistent green start marker
+  map.addLayer({
+    id: startLayerId,
+    type: "circle",
+    source: startSourceId,
+    paint: {
+      "circle-radius": 5,
+      "circle-color": "#22c55e",
+      "circle-stroke-width": 2,
+      "circle-stroke-color": "#ffffff",
+      "circle-opacity": 1,
     },
   });
 
@@ -156,6 +188,22 @@ export function animateRoute(
     } else {
       setTimeout(() => {
         cleanup(true);
+        // Add red end marker
+        try {
+          map.addSource(endSourceId, { type: "geojson", data: endData });
+          map.addLayer({
+            id: endLayerId,
+            type: "circle",
+            source: endSourceId,
+            paint: {
+              "circle-radius": 5,
+              "circle-color": "#ef4444",
+              "circle-stroke-width": 2,
+              "circle-stroke-color": "#ffffff",
+              "circle-opacity": 1,
+            },
+          });
+        } catch (_) { /* map may be gone */ }
         onComplete?.();
       }, 400);
     }
@@ -172,6 +220,10 @@ export function animateRoute(
       if (map.getLayer(glowLayerId)) map.removeLayer(glowLayerId);
       if (map.getLayer(layerId)) map.removeLayer(layerId);
       if (map.getSource(sourceId)) map.removeSource(sourceId);
+      if (map.getLayer(startLayerId)) map.removeLayer(startLayerId);
+      if (map.getSource(startSourceId)) map.removeSource(startSourceId);
+      if (map.getLayer(endLayerId)) map.removeLayer(endLayerId);
+      if (map.getSource(endSourceId)) map.removeSource(endSourceId);
     }
   }
 

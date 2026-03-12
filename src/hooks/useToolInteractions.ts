@@ -103,6 +103,7 @@ export function useToolInteractions(map: mapboxgl.Map | null) {
         previewAdded.current = true;
       }
 
+      const lastIdx = routePoints.length - 1;
       if (map.getSource(pointSourceId)) {
         (map.getSource(pointSourceId) as mapboxgl.GeoJSONSource).setData(pointGeojson);
       } else {
@@ -112,10 +113,19 @@ export function useToolInteractions(map: mapboxgl.Map | null) {
           type: "circle",
           source: pointSourceId,
           paint: {
-            "circle-color": "#e07020",
-            "circle-radius": 5,
+            "circle-color": [
+              "case",
+              ["==", ["get", "index"], 0], "#22c55e",
+              ["==", ["get", "index"], lastIdx], "#ef4444",
+              "#e07020",
+            ] as any,
+            "circle-radius": [
+              "case",
+              ["any", ["==", ["get", "index"], 0], ["==", ["get", "index"], lastIdx]], 6,
+              5,
+            ] as any,
             "circle-stroke-color": "#fff",
-            "circle-stroke-width": 1.5,
+            "circle-stroke-width": 2,
           },
         });
       }
