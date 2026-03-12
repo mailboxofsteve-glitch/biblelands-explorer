@@ -9,6 +9,9 @@ const ICON_MAP: Record<string, string> = {
   region: "◈",
   sea: "🌊",
   river: "〜",
+  battle: "⚔",
+  event: "📌",
+  people: "👥",
 };
 
 function createMarkerEl(pin: LocationPin, isSelected: boolean, showLabel: boolean): HTMLDivElement {
