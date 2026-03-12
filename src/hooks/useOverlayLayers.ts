@@ -317,6 +317,31 @@ function addLineEnhancements(map: mapboxgl.Map, src: string, color: string, line
       },
     });
   }
+
+  // Mileage indicators
+  const mileageSrc = `${src}-mileage`;
+  const mileageData = buildMileagePoints(geojson);
+  if (mileageData.features.length > 0) {
+    map.addSource(mileageSrc, { type: "geojson", data: mileageData });
+    map.addLayer({
+      id: `${mileageSrc}-labels`,
+      type: "symbol",
+      source: mileageSrc,
+      layout: {
+        "text-field": ["get", "label"],
+        "text-size": 10,
+        "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
+        "text-allow-overlap": false,
+        "text-offset": [0, -1],
+      },
+      paint: {
+        "text-color": "#d4c5a0",
+        "text-halo-color": "#1a1208",
+        "text-halo-width": 1,
+        "text-opacity": 0.7,
+      },
+    });
+  }
 }
 
 function addOverlay(map: mapboxgl.Map, overlay: OverlayRow) {
