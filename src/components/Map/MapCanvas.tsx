@@ -120,7 +120,7 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string }>(({ lessonId
   // Overlay layer sync
   useOverlayLayers(
     mapReady ? mapRef.current : null,
-    overlays,
+    allOverlays,
     activeOverlayIds,
     showAllLabels
   );

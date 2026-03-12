@@ -248,6 +248,9 @@ export default function SceneList({ mapRef }: SceneListProps) {
     (index: number) => {
       const map = mapRef.current?.getMap();
       if (!map) return;
+      animCancelRef.current?.();
+      animCancelRef.current = null;
+      cleanupAllAnimationLayers(map);
       loadScene(index, map);
 
       const scene = scenes[index];

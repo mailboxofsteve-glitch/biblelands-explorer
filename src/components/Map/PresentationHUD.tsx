@@ -78,6 +78,11 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
       }
       setAutoProgress(0);
 
+      // Clean up stale animation layers before loading new scene
+      animCancelRef.current?.();
+      animCancelRef.current = null;
+      cleanupAllAnimationLayers(map);
+
       loadScene(index, map);
 
       const scene = scenes[index];
