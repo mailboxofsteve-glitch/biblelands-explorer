@@ -133,37 +133,44 @@ export function usePinMarkers(
 
       const el = createMarkerEl(pin, selectedPinId === pin.id, showAllLabels);
 
+      let marker: mapboxgl.Marker;
       try {
-        const marker = new mapboxgl.Marker({ element: el, anchor: "bottom-left" })
+        marker = new mapboxgl.Marker({ element: el, anchor: "bottom-left" })
           .setLngLat(pin.coordinates)
           .addTo(map);
+      } catch {
+        // Map container not ready (e.g. during skin switch)
+        continue;
+      }
 
       el.addEventListener("click", (e) => {
         e.stopPropagation();
         onSelectPin(pin.id);
 
-        // Show popup
         popupRef.current?.remove();
-        const popup = new mapboxgl.Popup({
-          closeButton: false,
-          closeOnClick: false,
-          maxWidth: "280px",
-          className: "pin-popup-container",
-        })
-          .setLngLat(pin.coordinates)
-          .setHTML(createPopupHTML(pin))
-          .addTo(map);
+        try {
+          const popup = new mapboxgl.Popup({
+            closeButton: false,
+            closeOnClick: false,
+            maxWidth: "280px",
+            className: "pin-popup-container",
+          })
+            .setLngLat(pin.coordinates)
+            .setHTML(createPopupHTML(pin))
+            .addTo(map);
 
-        // Close button handler
-        setTimeout(() => {
-          const closeBtn = document.querySelector(".pin-popup-close");
-          closeBtn?.addEventListener("click", () => {
-            popup.remove();
-            onSelectPin(null);
-          });
-        }, 0);
+          setTimeout(() => {
+            const closeBtn = document.querySelector(".pin-popup-close");
+            closeBtn?.addEventListener("click", () => {
+              popup.remove();
+              onSelectPin(null);
+            });
+          }, 0);
 
-        popupRef.current = popup;
+          popupRef.current = popup;
+        } catch {
+          // Map container gone
+        }
       });
 
       existingIds.set(pin.id, marker);
