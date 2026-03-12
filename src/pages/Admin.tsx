@@ -212,6 +212,7 @@ function OverlaysTab() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [drawMode, setDrawMode] = useState(false);
+  const [editShapes, setEditShapes] = useState<number[][][] | undefined>(undefined);
   const [form, setForm] = useState({ name: "", slug: "", era: ERAS[0].id as string, category: "route", default_color: "#c8a020", geojson: "", is_preloaded: true });
 
   const fetchOverlays = useCallback(async () => {
