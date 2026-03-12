@@ -100,8 +100,9 @@ function SceneCard({ scene, index, onPlay, onDelete, onRenameTitle, onToggleAnim
       ) : (
         <span
           className="flex-1 min-w-0 truncate cursor-pointer text-foreground/80"
+          onClick={() => onPlay(index)}
           onDoubleClick={() => setEditing(true)}
-          title="Double-click to rename"
+          title="Click to load scene, double-click to rename"
         >
           {scene.title}
         </span>
