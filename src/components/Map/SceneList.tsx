@@ -178,7 +178,7 @@ export default function SceneList({ mapRef }: SceneListProps) {
 
   const handleSave = useCallback(() => {
     const map = mapRef.current?.getMap();
-    if (!map || !lessonId || !user) {
+    if (!map || !lessonId || lessonId.startsWith(':') || !user) {
       toast.error("Map not ready");
       return;
     }
