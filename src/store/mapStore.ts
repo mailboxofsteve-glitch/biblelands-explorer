@@ -44,6 +44,9 @@ interface MapState {
   customPinIds: string[];
   customOverlayIds: string[];
 
+  // Hidden locations (greyed in controls, hidden in presentation)
+  hiddenLocationIds: string[];
+
   // Labels
   showAllLabels: boolean;
 
