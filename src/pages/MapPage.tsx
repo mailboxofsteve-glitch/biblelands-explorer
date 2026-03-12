@@ -21,7 +21,14 @@ import { Maximize, Settings, Keyboard } from "lucide-react";
 
 const MapPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (!lessonId || lessonId.startsWith(':')) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [lessonId, navigate]);
   const mapRef = useRef<MapCanvasHandle>(null);
   const [presenting, setPresenting] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
