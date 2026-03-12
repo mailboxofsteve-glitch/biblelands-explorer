@@ -206,6 +206,15 @@ export const useMapStore = create<MapState>((set, get) => ({
       undoStack: [],
     })),
 
+  toggleHideLocation: (id) =>
+    set((s) => ({
+      hiddenLocationIds: s.hiddenLocationIds.includes(id)
+        ? s.hiddenLocationIds.filter((x) => x !== id)
+        : [...s.hiddenLocationIds, id],
+    })),
+
+  setHiddenLocationIds: (ids) => set({ hiddenLocationIds: ids }),
+
   // Scene actions
   setScenes: (scenes) => set({ scenes }),
 

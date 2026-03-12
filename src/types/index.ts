@@ -67,4 +67,6 @@ export interface LessonScene {
   highlighted_pin_id: string | null;
   animate_on_enter: boolean;
   auto_advance_seconds: number | null;
+  era: string;
+  hidden_location_ids: string[];
 }
