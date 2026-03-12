@@ -1,5 +1,5 @@
-import { useRef, useState, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useRef, useState, useCallback, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import MapCanvas, { type MapCanvasHandle } from "@/components/Map/MapCanvas";
 import EraSelector from "@/components/Map/EraSelector";
 import OverlayToggles from "@/components/Map/OverlayToggles";
