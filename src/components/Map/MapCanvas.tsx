@@ -62,7 +62,7 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string }>(({ lessonId
   const [mapReady, setMapReady] = useState(false);
   const [skin, setSkin] = useState<MapSkin>("ancient");
 
-  const { overlays } = useOverlays();
+  const { allOverlays } = useOverlays();
   const { pins } = usePins();
   const activeOverlayIds = useMapStore((s) => s.activeOverlayIds);
   const selectedPinId = useMapStore((s) => s.selectedPinId);
