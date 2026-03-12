@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useMapStore } from "@/store/mapStore";
 import { useOverlays } from "@/hooks/useOverlays";
-import { animateRoutesSequentially } from "@/lib/animateRoute";
+import { animateRoutesSequentially, cleanupAllAnimationLayers } from "@/lib/animateRoute";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import {
