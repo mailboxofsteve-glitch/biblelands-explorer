@@ -77,6 +77,10 @@ interface MapState {
   removeCustomOverlay: (id: string) => void;
   clearAllCustom: () => void;
 
+  // Hidden location actions
+  toggleHideLocation: (id: string) => void;
+  setHiddenLocationIds: (ids: string[]) => void;
+
   // Scene actions
   setScenes: (scenes: LessonScene[]) => void;
   saveScene: (camera: CameraState, lessonId: string, userId: string) => LessonScene | null;
