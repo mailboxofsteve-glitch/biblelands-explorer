@@ -108,12 +108,13 @@ export function usePinMarkers(
   useEffect(() => {
     if (!map || !map.getContainer()) return;
 
+    const hiddenSet = new Set(hiddenLocationIds);
     const currentIds = new Set(pins.map((p) => p.id));
     const existingIds = markersRef.current;
 
-    // Remove old markers
+    // Remove old markers + markers hidden during presentation
     for (const [id, marker] of existingIds) {
-      if (!currentIds.has(id)) {
+      if (!currentIds.has(id) || (presenting && hiddenSet.has(id))) {
         marker.remove();
         existingIds.delete(id);
       }
@@ -121,21 +122,29 @@ export function usePinMarkers(
 
     // Add/update markers
     for (const pin of pins) {
+      // Skip hidden pins entirely in presentation mode
+      if (presenting && hiddenSet.has(pin.id)) continue;
+
+      const isHidden = hiddenSet.has(pin.id);
+
       if (existingIds.has(pin.id)) {
-        // Update selection state and label visibility
         const marker = existingIds.get(pin.id)!;
-        const el = marker.getElement().querySelector("div") as HTMLDivElement | null;
+        const wrapper = marker.getElement();
+        if (wrapper) {
+          (wrapper as HTMLElement).style.opacity = isHidden ? "0.3" : "1";
+        }
+        const el = wrapper.querySelector("div") as HTMLDivElement | null;
         if (el) {
           el.style.boxShadow = selectedPinId === pin.id ? "0 0 14px #c8a02066" : "";
         }
-        const tooltip = marker.getElement().querySelector(".pin-tooltip") as HTMLDivElement | null;
+        const tooltip = wrapper.querySelector(".pin-tooltip") as HTMLDivElement | null;
         if (tooltip) {
           tooltip.style.opacity = showAllLabels ? "1" : "0";
         }
         continue;
       }
 
-      const el = createMarkerEl(pin, selectedPinId === pin.id, showAllLabels);
+      const el = createMarkerEl(pin, selectedPinId === pin.id, showAllLabels, isHidden);
 
       let marker: mapboxgl.Marker;
       try {
@@ -143,7 +152,6 @@ export function usePinMarkers(
           .setLngLat(pin.coordinates)
           .addTo(map);
       } catch {
-        // Map container not ready (e.g. during skin switch)
         continue;
       }
 
@@ -169,6 +177,11 @@ export function usePinMarkers(
               popup.remove();
               onSelectPin(null);
             });
+            // Hide/show toggle button
+            const hideBtn = document.querySelector(".pin-popup-hide");
+            hideBtn?.addEventListener("click", () => {
+              useMapStore.getState().toggleHideLocation(pin.id);
+            });
           }, 0);
 
           popupRef.current = popup;
@@ -191,7 +204,7 @@ export function usePinMarkers(
     return () => {
       map.off("click", onMapClick);
     };
-  }, [map, pins, selectedPinId, onSelectPin, showAllLabels]);
+  }, [map, pins, selectedPinId, onSelectPin, showAllLabels, hiddenLocationIds, presenting]);
 
   // Cleanup on unmount
   useEffect(() => {
