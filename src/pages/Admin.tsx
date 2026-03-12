@@ -212,6 +212,7 @@ function OverlaysTab() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [drawMode, setDrawMode] = useState(false);
+  const [editShapes, setEditShapes] = useState<number[][][] | undefined>(undefined);
   const [form, setForm] = useState({ name: "", slug: "", era: ERAS[0].id as string, category: "route", default_color: "#c8a020", geojson: "", is_preloaded: true });
 
   const fetchOverlays = useCallback(async () => {
@@ -225,6 +226,7 @@ function OverlaysTab() {
   const openAdd = () => {
     setEditing(null);
     setDrawMode(false);
+    setEditShapes(undefined);
     setForm({ name: "", slug: "", era: ERAS[0].id, category: "route", default_color: "#c8a020", geojson: "", is_preloaded: true });
     setModalOpen(true);
   };
@@ -241,8 +243,44 @@ function OverlaysTab() {
       geojson: JSON.stringify(ov.geojson, null, 2),
       is_preloaded: ov.is_preloaded,
     });
+    // Parse existing GeoJSON into shapes for map picker
+    setEditShapes(parseGeoJSONToShapes(ov.geojson));
     setModalOpen(true);
   };
+
+  /** Extract shapes from existing overlay GeoJSON */
+  function parseGeoJSONToShapes(geo: any): number[][][] {
+    if (!geo) return [[]];
+    try {
+      if (geo.type === "FeatureCollection" && Array.isArray(geo.features)) {
+        const shapes: number[][][] = [];
+        for (const f of geo.features) {
+          const g = f.geometry;
+          if (!g) continue;
+          if (g.type === "Polygon" && g.coordinates?.[0]) {
+            // Strip closing duplicate point
+            const ring = g.coordinates[0];
+            const pts = ring.length > 1 && ring[0][0] === ring[ring.length - 1][0] && ring[0][1] === ring[ring.length - 1][1]
+              ? ring.slice(0, -1) : ring;
+            shapes.push(pts);
+          } else if (g.type === "LineString" && g.coordinates) {
+            shapes.push(g.coordinates);
+          }
+        }
+        return shapes.length > 0 ? shapes : [[]];
+      }
+      if (geo.type === "Polygon" && geo.coordinates?.[0]) {
+        const ring = geo.coordinates[0];
+        const pts = ring.length > 1 && ring[0][0] === ring[ring.length - 1][0] && ring[0][1] === ring[ring.length - 1][1]
+          ? ring.slice(0, -1) : ring;
+        return [pts];
+      }
+      if (geo.type === "LineString" && geo.coordinates) {
+        return [geo.coordinates];
+      }
+    } catch { /* fallback */ }
+    return [[]];
+  }
 
   const handleSave = async () => {
     let parsedGeo: any;
@@ -283,19 +321,19 @@ function OverlaysTab() {
 
   const drawPickerMode = (form.category === "route") ? "line" as const : "polygon" as const;
 
-  const handleDrawCoordinatesChange = useCallback((coords: number[][]) => {
-    if (coords.length < 2) return;
+  const handleDrawShapesChange = useCallback((shapes: number[][][]) => {
     const isPolygon = drawPickerMode === "polygon";
-    const geojson: any = {
-      type: "FeatureCollection",
-      features: [{
-        type: "Feature",
+    const features = shapes
+      .filter(s => s.length >= 2)
+      .map(coords => ({
+        type: "Feature" as const,
         properties: {},
         geometry: isPolygon && coords.length >= 3
-          ? { type: "Polygon", coordinates: [[...coords, coords[0]]] }
-          : { type: "LineString", coordinates: coords },
-      }],
-    };
+          ? { type: "Polygon" as const, coordinates: [[...coords, coords[0]]] }
+          : { type: "LineString" as const, coordinates: coords },
+      }));
+    if (features.length === 0) return;
+    const geojson = { type: "FeatureCollection", features };
     setForm((f) => ({ ...f, geojson: JSON.stringify(geojson, null, 2) }));
   }, [drawPickerMode]);
 
@@ -380,7 +418,8 @@ function OverlaysTab() {
                 <AdminMapPicker
                   mode={drawPickerMode}
                   color={form.default_color || "#6366f1"}
-                  onCoordinatesChange={handleDrawCoordinatesChange}
+                  initialShapes={editShapes}
+                  onShapesChange={handleDrawShapesChange}
                   className="mb-2"
                 />
               )}

@@ -2,30 +2,38 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { Button } from "@/components/ui/button";
-import { Undo2, Trash2, Scissors } from "lucide-react";
+import { Undo2, Trash2, Scissors, Plus, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { toast } from "sonner";
+
 const MAPBOX_TOKEN =
   "pk.eyJ1Ijoic3JvZ2Vyczg2IiwiYSI6ImNtbWg0YXNiaTBjZjgycnB0c21mbzA1MDMifQ.snS_DuU14Far-Noo4WX_rA";
-
 const STYLE = "mapbox://styles/mapbox/outdoors-v12";
 
 type PickerMode = "point" | "line" | "polygon";
 
 interface AdminMapPickerProps {
   mode: PickerMode;
-  initialCenter?: [number, number]; // [lng, lat]
-  initialCoordinates?: number[][]; // for line/polygon editing
+  initialCenter?: [number, number];
+  /** Multi-shape initial data: array of shapes, each shape is array of [lng, lat] points */
+  initialShapes?: number[][][];
+  /** @deprecated Use initialShapes instead */
+  initialCoordinates?: number[][];
   onPointChange?: (lngLat: [number, number]) => void;
+  /** Called with all shapes whenever any shape changes */
+  onShapesChange?: (shapes: number[][][]) => void;
+  /** @deprecated Use onShapesChange instead */
   onCoordinatesChange?: (coords: number[][]) => void;
-  color?: string; // concrete color for map features (CSS vars don't work in Mapbox)
+  color?: string;
   className?: string;
 }
 
 export default function AdminMapPicker({
   mode,
   initialCenter,
+  initialShapes,
   initialCoordinates,
   onPointChange,
+  onShapesChange,
   onCoordinatesChange,
   color = "#6366f1",
   className = "",
@@ -33,20 +41,38 @@ export default function AdminMapPicker({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
-  const [coords, setCoords] = useState<number[][]>(initialCoordinates ?? []);
-  const coordsRef = useRef<number[][]>(initialCoordinates ?? []);
 
-  // Keep ref in sync
-  useEffect(() => {
-    coordsRef.current = coords;
-  }, [coords]);
+  // Normalize initial data into shapes array
+  const getInitialShapes = (): number[][][] => {
+    if (initialShapes && initialShapes.length > 0) return initialShapes;
+    if (initialCoordinates && initialCoordinates.length > 0) return [initialCoordinates];
+    return [[]];
+  };
 
-  // Notify parent of coordinate changes (line/polygon)
+  const [shapes, setShapes] = useState<number[][][]>(getInitialShapes);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const shapesRef = useRef<number[][][]>(getInitialShapes());
+  const activeIdxRef = useRef(0);
+
+  // Drag state
+  const draggingRef = useRef<{ shapeIdx: number; pointIdx: number } | null>(null);
+
+  // Keep refs in sync
+  useEffect(() => { shapesRef.current = shapes; }, [shapes]);
+  useEffect(() => { activeIdxRef.current = activeIdx; }, [activeIdx]);
+
+  // Notify parent
   useEffect(() => {
-    if (mode !== "point" && onCoordinatesChange) {
-      onCoordinatesChange(coords);
+    if (mode === "point") return;
+    if (onShapesChange) {
+      const nonEmpty = shapes.filter(s => s.length > 0);
+      if (nonEmpty.length > 0) onShapesChange(nonEmpty);
+    } else if (onCoordinatesChange) {
+      // Legacy single-shape fallback
+      const active = shapes[activeIdx];
+      if (active && active.length >= 2) onCoordinatesChange(active);
     }
-  }, [coords, mode, onCoordinatesChange]);
+  }, [shapes, activeIdx, mode, onShapesChange, onCoordinatesChange]);
 
   // Initialize map
   useEffect(() => {
@@ -62,28 +88,48 @@ export default function AdminMapPicker({
       attributionControl: false,
     });
     mapRef.current = map;
-
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
 
     map.on("load", () => {
-      // Point mode: add draggable marker
       if (mode === "point") {
         const marker = new mapboxgl.Marker({ draggable: true, color })
           .setLngLat(center as [number, number])
           .addTo(map);
         markerRef.current = marker;
-
         marker.on("dragend", () => {
           const ll = marker.getLngLat();
           onPointChange?.([ll.lng, ll.lat]);
         });
       }
 
-      // Line / Polygon: add source + layers
       if (mode === "line" || mode === "polygon") {
+        // All shapes (inactive) layer
+        map.addSource("all-shapes-source", {
+          type: "geojson",
+          data: buildAllShapesGeoJSON(shapesRef.current, activeIdxRef.current, mode),
+        });
+
+        if (mode === "polygon") {
+          map.addLayer({
+            id: "all-shapes-fill",
+            type: "fill",
+            source: "all-shapes-source",
+            paint: { "fill-color": color, "fill-opacity": 0.08 },
+            filter: ["==", "$type", "Polygon"],
+          });
+        }
+        map.addLayer({
+          id: "all-shapes-line",
+          type: "line",
+          source: "all-shapes-source",
+          paint: { "line-color": color, "line-width": 1.5, "line-opacity": 0.4 },
+          filter: ["==", "$type", "LineString"],
+        });
+
+        // Active shape source + layers
         map.addSource("draw-source", {
           type: "geojson",
-          data: buildGeoJSON(coordsRef.current, mode),
+          data: buildActiveShapeGeoJSON(shapesRef.current[activeIdxRef.current] ?? [], mode),
         });
 
         if (mode === "polygon") {
@@ -95,25 +141,19 @@ export default function AdminMapPicker({
             filter: ["==", "$type", "Polygon"],
           });
         }
-
         map.addLayer({
           id: "draw-line",
           type: "line",
           source: "draw-source",
-          paint: {
-            "line-color": color,
-            "line-width": 2.5,
-            "line-dasharray": [2, 2],
-          },
+          paint: { "line-color": color, "line-width": 2.5, "line-dasharray": [2, 2] },
           filter: ["==", "$type", "LineString"],
         });
-
         map.addLayer({
           id: "draw-points",
           type: "circle",
           source: "draw-source",
           paint: {
-            "circle-radius": 5,
+            "circle-radius": 6,
             "circle-color": color,
             "circle-stroke-width": 2,
             "circle-stroke-color": "#fff",
@@ -121,29 +161,66 @@ export default function AdminMapPicker({
           filter: ["==", "$type", "Point"],
         });
 
-        // Render initial coords if present
-        if (coordsRef.current.length > 0) {
-          updateDrawSource(map, coordsRef.current, mode);
-        }
+        // Render initial data
+        refreshSources(map);
+
+        // --- Drag-to-move points ---
+        map.on("mouseenter", "draw-points", () => {
+          map.getCanvas().style.cursor = "grab";
+        });
+        map.on("mouseleave", "draw-points", () => {
+          if (!draggingRef.current) map.getCanvas().style.cursor = "";
+        });
+
+        map.on("mousedown", "draw-points", (e) => {
+          if (!e.features?.[0]) return;
+          e.preventDefault();
+          const props = e.features[0].properties as any;
+          draggingRef.current = { shapeIdx: activeIdxRef.current, pointIdx: props.pointIndex };
+          map.getCanvas().style.cursor = "grabbing";
+          map.dragPan.disable();
+        });
+
+        map.on("mousemove", (e) => {
+          if (!draggingRef.current) return;
+          const { shapeIdx, pointIdx } = draggingRef.current;
+          const { lng, lat } = e.lngLat;
+          const next = shapesRef.current.map((s, si) =>
+            si === shapeIdx ? s.map((p, pi) => (pi === pointIdx ? [lng, lat] : p)) : s
+          );
+          shapesRef.current = next;
+          refreshSources(map);
+        });
+
+        map.on("mouseup", () => {
+          if (!draggingRef.current) return;
+          draggingRef.current = null;
+          map.getCanvas().style.cursor = "";
+          map.dragPan.enable();
+          setShapes([...shapesRef.current]);
+        });
       }
     });
 
-    // Click handler
+    // Click to add points
     map.on("click", (e) => {
+      if (draggingRef.current) return;
       const { lng, lat } = e.lngLat;
 
       if (mode === "point") {
         markerRef.current?.setLngLat([lng, lat]);
         onPointChange?.([lng, lat]);
       } else {
-        const next = [...coordsRef.current, [lng, lat]];
-        coordsRef.current = next;
-        setCoords(next);
-        updateDrawSource(map, next, mode);
+        const idx = activeIdxRef.current;
+        const next = shapesRef.current.map((s, i) =>
+          i === idx ? [...s, [lng, lat]] : s
+        );
+        shapesRef.current = next;
+        setShapes(next);
+        refreshSources(map);
       }
     });
 
-    // Double-click to finish line/polygon (prevent zoom)
     if (mode === "line" || mode === "polygon") {
       map.doubleClickZoom.disable();
     }
@@ -156,15 +233,7 @@ export default function AdminMapPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
 
-  // Sync marker when parent changes point externally
-  useEffect(() => {
-    if (mode === "point" && initialCenter && markerRef.current) {
-      markerRef.current.setLngLat(initialCenter);
-      mapRef.current?.flyTo({ center: initialCenter, duration: 300 });
-    }
-  }, [initialCenter, mode]);
-
-  // Sync draw colors when color prop changes
+  // Sync colors
   useEffect(() => {
     const map = mapRef.current;
     if (!map || mode === "point") return;
@@ -172,26 +241,79 @@ export default function AdminMapPicker({
       if (map.getLayer("draw-fill")) map.setPaintProperty("draw-fill", "fill-color", color);
       if (map.getLayer("draw-line")) map.setPaintProperty("draw-line", "line-color", color);
       if (map.getLayer("draw-points")) map.setPaintProperty("draw-points", "circle-color", color);
-    } catch { /* layers not ready yet */ }
+      if (map.getLayer("all-shapes-fill")) map.setPaintProperty("all-shapes-fill", "fill-color", color);
+      if (map.getLayer("all-shapes-line")) map.setPaintProperty("all-shapes-line", "line-color", color);
+    } catch { /* layers not ready */ }
   }, [color, mode]);
 
-  const handleUndo = useCallback(() => {
-    const next = coordsRef.current.slice(0, -1);
-    coordsRef.current = next;
-    setCoords(next);
-    if (mapRef.current) updateDrawSource(mapRef.current, next, mode);
-  }, [mode]);
+  // When activeIdx changes, refresh map sources
+  useEffect(() => {
+    if (mapRef.current) refreshSources(mapRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeIdx]);
 
-  const handleClear = useCallback(() => {
-    coordsRef.current = [];
-    setCoords([]);
-    if (mapRef.current) updateDrawSource(mapRef.current, [], mode);
-  }, [mode]);
+  // Sync marker for point mode
+  useEffect(() => {
+    if (mode === "point" && initialCenter && markerRef.current) {
+      markerRef.current.setLngLat(initialCenter);
+      mapRef.current?.flyTo({ center: initialCenter, duration: 300 });
+    }
+  }, [initialCenter, mode]);
+
+  function refreshSources(map: mapboxgl.Map) {
+    const drawSrc = map.getSource("draw-source") as mapboxgl.GeoJSONSource | undefined;
+    const allSrc = map.getSource("all-shapes-source") as mapboxgl.GeoJSONSource | undefined;
+    if (drawSrc) drawSrc.setData(buildActiveShapeGeoJSON(shapesRef.current[activeIdxRef.current] ?? [], mode));
+    if (allSrc) allSrc.setData(buildAllShapesGeoJSON(shapesRef.current, activeIdxRef.current, mode));
+  }
+
+  const activeCoords = shapes[activeIdx] ?? [];
+
+  const handleUndo = useCallback(() => {
+    const idx = activeIdxRef.current;
+    const next = shapesRef.current.map((s, i) => (i === idx ? s.slice(0, -1) : s));
+    shapesRef.current = next;
+    setShapes(next);
+    if (mapRef.current) refreshSources(mapRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleClearShape = useCallback(() => {
+    const idx = activeIdxRef.current;
+    const next = shapesRef.current.map((s, i) => (i === idx ? [] : s));
+    shapesRef.current = next;
+    setShapes(next);
+    if (mapRef.current) refreshSources(mapRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleNewShape = useCallback(() => {
+    const next = [...shapesRef.current, []];
+    shapesRef.current = next;
+    setShapes(next);
+    setActiveIdx(next.length - 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleDeleteShape = useCallback(() => {
+    if (shapesRef.current.length <= 1) {
+      // Just clear the only shape
+      handleClearShape();
+      return;
+    }
+    const idx = activeIdxRef.current;
+    const next = shapesRef.current.filter((_, i) => i !== idx);
+    shapesRef.current = next;
+    setShapes(next);
+    setActiveIdx(Math.min(idx, next.length - 1));
+    if (mapRef.current) refreshSources(mapRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handleClearShape]);
 
   const [clipping, setClipping] = useState(false);
-
   const handleClipToCoastline = useCallback(async () => {
-    if (coords.length < 3) return;
+    const coords = shapesRef.current[activeIdxRef.current];
+    if (!coords || coords.length < 3) return;
     setClipping(true);
     try {
       const [{ default: intersect }, { polygon: turfPolygon, featureCollection }] = await Promise.all([
@@ -199,12 +321,9 @@ export default function AdminMapPicker({
         import("@turf/helpers"),
       ]);
       const landData = (await import("@/data/land-boundary.json")).default as unknown as GeoJSON.FeatureCollection;
-
       const closedCoords = [...coords, coords[0]];
       const drawnPoly = turfPolygon([closedCoords]);
-
       let clippedCoords: number[][] | null = null;
-
       for (const feature of landData.features) {
         if (feature.geometry.type !== "Polygon" && feature.geometry.type !== "MultiPolygon") continue;
         const result = intersect(featureCollection([drawnPoly, feature as GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiPolygon>]));
@@ -213,7 +332,6 @@ export default function AdminMapPicker({
           if (geom.type === "Polygon") {
             clippedCoords = geom.coordinates[0].slice(0, -1);
           } else if (geom.type === "MultiPolygon") {
-            // Use the largest ring
             let best: number[][] = [];
             for (const poly of geom.coordinates) {
               if (poly[0].length > best.length) best = poly[0];
@@ -223,84 +341,148 @@ export default function AdminMapPicker({
           break;
         }
       }
-
       if (!clippedCoords || clippedCoords.length < 3) {
         toast.warning("No land intersection found — the polygon may be entirely over water.");
         return;
       }
-
-      coordsRef.current = clippedCoords;
-      setCoords(clippedCoords);
-      if (mapRef.current) updateDrawSource(mapRef.current, clippedCoords, mode);
-      toast.success("Polygon clipped to coastline!");
+      const idx = activeIdxRef.current;
+      const next = shapesRef.current.map((s, i) => (i === idx ? clippedCoords! : s));
+      shapesRef.current = next;
+      setShapes(next);
+      if (mapRef.current) refreshSources(mapRef.current);
+      toast.success("Shape clipped to coastline!");
     } catch (err) {
       console.error("Clip error:", err);
       toast.error("Failed to clip polygon.");
     } finally {
       setClipping(false);
     }
-  }, [coords, mode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const totalShapes = shapes.length;
 
   return (
     <div className={`relative rounded-md border border-border overflow-hidden ${className}`}>
       <div ref={containerRef} className="h-[280px] w-full" />
-      {(mode === "line" || mode === "polygon") && coords.length > 0 && (
-        <div className="absolute bottom-2 left-2 flex gap-1">
-          <Button type="button" variant="secondary" size="sm" onClick={handleUndo}>
-            <Undo2 className="h-3.5 w-3.5 mr-1" /> Undo
-          </Button>
-          <Button type="button" variant="secondary" size="sm" onClick={handleClear}>
-            <Trash2 className="h-3.5 w-3.5 mr-1" /> Clear
-          </Button>
-          {mode === "polygon" && coords.length >= 3 && (
-            <Button type="button" variant="secondary" size="sm" onClick={handleClipToCoastline} disabled={clipping}>
-              <Scissors className="h-3.5 w-3.5 mr-1" /> {clipping ? "Clipping…" : "Clip to Coastline"}
-            </Button>
-          )}
-        </div>
+
+      {/* Top-left info */}
+      {(mode === "line" || mode === "polygon") && (
+        <p className="absolute top-2 left-2 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
+          Click to add points · Drag to move ({activeCoords.length} pt{activeCoords.length !== 1 ? "s" : ""})
+        </p>
       )}
       {mode === "point" && (
         <p className="absolute bottom-2 left-2 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
           Click or drag marker to set location
         </p>
       )}
+
+      {/* Bottom toolbar for line/polygon */}
       {(mode === "line" || mode === "polygon") && (
-        <p className="absolute top-2 left-2 text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
-          Click to add points ({coords.length} point{coords.length !== 1 ? "s" : ""})
-        </p>
+        <div className="absolute bottom-2 left-2 right-2 flex flex-wrap items-center gap-1">
+          {activeCoords.length > 0 && (
+            <>
+              <Button type="button" variant="secondary" size="sm" onClick={handleUndo}>
+                <Undo2 className="h-3.5 w-3.5 mr-1" /> Undo
+              </Button>
+              <Button type="button" variant="secondary" size="sm" onClick={handleClearShape}>
+                <Trash2 className="h-3.5 w-3.5 mr-1" /> Clear
+              </Button>
+            </>
+          )}
+          {mode === "polygon" && activeCoords.length >= 3 && (
+            <Button type="button" variant="secondary" size="sm" onClick={handleClipToCoastline} disabled={clipping}>
+              <Scissors className="h-3.5 w-3.5 mr-1" /> {clipping ? "Clipping…" : "Clip"}
+            </Button>
+          )}
+
+          {/* Spacer pushes shape controls to the right */}
+          <div className="flex-1" />
+
+          {/* Shape navigator */}
+          {totalShapes > 1 && (
+            <div className="flex items-center gap-0.5 bg-background/80 rounded px-1.5 py-0.5 text-xs">
+              <Button
+                type="button" variant="ghost" size="icon"
+                className="h-5 w-5"
+                disabled={activeIdx === 0}
+                onClick={() => setActiveIdx(i => i - 1)}
+              >
+                <ChevronLeft className="h-3 w-3" />
+              </Button>
+              <span className="text-muted-foreground">
+                Shape {activeIdx + 1}/{totalShapes}
+              </span>
+              <Button
+                type="button" variant="ghost" size="icon"
+                className="h-5 w-5"
+                disabled={activeIdx >= totalShapes - 1}
+                onClick={() => setActiveIdx(i => i + 1)}
+              >
+                <ChevronRight className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
+
+          <Button type="button" variant="secondary" size="sm" onClick={handleDeleteShape}>
+            <X className="h-3.5 w-3.5 mr-1" /> Del Shape
+          </Button>
+          <Button type="button" variant="secondary" size="sm" onClick={handleNewShape}>
+            <Plus className="h-3.5 w-3.5 mr-1" /> New Shape
+          </Button>
+        </div>
       )}
     </div>
   );
 }
 
-function buildGeoJSON(coords: number[][], mode: PickerMode): GeoJSON.FeatureCollection {
+/** Build GeoJSON for the active shape with indexed points (for drag identification) */
+function buildActiveShapeGeoJSON(coords: number[][], mode: PickerMode): GeoJSON.FeatureCollection {
   const features: GeoJSON.Feature[] = [];
 
-  // Points
-  for (const c of coords) {
-    features.push({ type: "Feature", geometry: { type: "Point", coordinates: c }, properties: {} });
+  // Indexed points
+  for (let i = 0; i < coords.length; i++) {
+    features.push({
+      type: "Feature",
+      geometry: { type: "Point", coordinates: coords[i] },
+      properties: { pointIndex: i },
+    });
   }
 
-  // Line
+  // Line / polygon shape
   if (coords.length >= 2) {
     const lineCoords = mode === "polygon" && coords.length >= 3
       ? [...coords, coords[0]]
       : coords;
-
     const geomType = mode === "polygon" && coords.length >= 3 ? "Polygon" : "LineString";
     const geometry: GeoJSON.Geometry = geomType === "Polygon"
       ? { type: "Polygon", coordinates: [lineCoords] }
       : { type: "LineString", coordinates: lineCoords };
-
     features.push({ type: "Feature", geometry, properties: {} });
   }
 
   return { type: "FeatureCollection", features };
 }
 
-function updateDrawSource(map: mapboxgl.Map, coords: number[][], mode: PickerMode) {
-  const src = map.getSource("draw-source") as mapboxgl.GeoJSONSource | undefined;
-  if (src) {
-    src.setData(buildGeoJSON(coords, mode));
+/** Build GeoJSON for all shapes EXCEPT the active one (shown dimmed) */
+function buildAllShapesGeoJSON(shapes: number[][][], activeIdx: number, mode: PickerMode): GeoJSON.FeatureCollection {
+  const features: GeoJSON.Feature[] = [];
+
+  for (let si = 0; si < shapes.length; si++) {
+    if (si === activeIdx) continue; // active shape is rendered separately
+    const coords = shapes[si];
+    if (coords.length < 2) continue;
+
+    const lineCoords = mode === "polygon" && coords.length >= 3
+      ? [...coords, coords[0]]
+      : coords;
+    const geomType = mode === "polygon" && coords.length >= 3 ? "Polygon" : "LineString";
+    const geometry: GeoJSON.Geometry = geomType === "Polygon"
+      ? { type: "Polygon", coordinates: [lineCoords] }
+      : { type: "LineString", coordinates: lineCoords };
+    features.push({ type: "Feature", geometry, properties: { shapeIndex: si } });
   }
+
+  return { type: "FeatureCollection", features };
 }
