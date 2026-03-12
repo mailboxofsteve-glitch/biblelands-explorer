@@ -14,7 +14,7 @@ const ICON_MAP: Record<string, string> = {
   people: "👥",
 };
 
-function createMarkerEl(pin: LocationPin, isSelected: boolean, showLabel: boolean): HTMLDivElement {
+function createMarkerEl(pin: LocationPin, isSelected: boolean, showLabel: boolean, isHidden: boolean): HTMLDivElement {
   const wrapper = document.createElement("div");
   wrapper.className = "pin-marker-wrapper";
   wrapper.style.cursor = "pointer";
