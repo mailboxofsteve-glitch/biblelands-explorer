@@ -321,19 +321,19 @@ function OverlaysTab() {
 
   const drawPickerMode = (form.category === "route") ? "line" as const : "polygon" as const;
 
-  const handleDrawCoordinatesChange = useCallback((coords: number[][]) => {
-    if (coords.length < 2) return;
+  const handleDrawShapesChange = useCallback((shapes: number[][][]) => {
     const isPolygon = drawPickerMode === "polygon";
-    const geojson: any = {
-      type: "FeatureCollection",
-      features: [{
-        type: "Feature",
+    const features = shapes
+      .filter(s => s.length >= 2)
+      .map(coords => ({
+        type: "Feature" as const,
         properties: {},
         geometry: isPolygon && coords.length >= 3
-          ? { type: "Polygon", coordinates: [[...coords, coords[0]]] }
-          : { type: "LineString", coordinates: coords },
-      }],
-    };
+          ? { type: "Polygon" as const, coordinates: [[...coords, coords[0]]] }
+          : { type: "LineString" as const, coordinates: coords },
+      }));
+    if (features.length === 0) return;
+    const geojson = { type: "FeatureCollection", features };
     setForm((f) => ({ ...f, geojson: JSON.stringify(geojson, null, 2) }));
   }, [drawPickerMode]);
 
