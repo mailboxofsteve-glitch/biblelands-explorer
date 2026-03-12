@@ -77,7 +77,10 @@ function SceneCard({ scene, index, onPlay, onDelete, onRenameTitle, onToggleAnim
         <GripVertical size={12} />
       </button>
 
-      <span className="shrink-0 w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center">
+      <span
+        className="shrink-0 w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center cursor-pointer hover:bg-primary/30"
+        onClick={() => onPlay(index)}
+      >
         {index + 1}
       </span>
 
@@ -100,8 +103,9 @@ function SceneCard({ scene, index, onPlay, onDelete, onRenameTitle, onToggleAnim
       ) : (
         <span
           className="flex-1 min-w-0 truncate cursor-pointer text-foreground/80"
+          onClick={() => onPlay(index)}
           onDoubleClick={() => setEditing(true)}
-          title="Double-click to rename"
+          title="Click to load scene, double-click to rename"
         >
           {scene.title}
         </span>
@@ -178,7 +182,7 @@ export default function SceneList({ mapRef }: SceneListProps) {
 
   const handleSave = useCallback(() => {
     const map = mapRef.current?.getMap();
-    if (!map || !lessonId || !user) {
+    if (!map || !lessonId || lessonId.startsWith(':') || !user) {
       toast.error("Map not ready");
       return;
     }
