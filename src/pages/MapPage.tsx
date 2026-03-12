@@ -1,5 +1,5 @@
-import { useRef, useState, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useRef, useState, useCallback, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import MapCanvas, { type MapCanvasHandle } from "@/components/Map/MapCanvas";
 import EraSelector from "@/components/Map/EraSelector";
 import OverlayToggles from "@/components/Map/OverlayToggles";
@@ -21,7 +21,14 @@ import { Maximize, Settings, Keyboard } from "lucide-react";
 
 const MapPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (!lessonId || lessonId.startsWith(':')) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [lessonId, navigate]);
   const mapRef = useRef<MapCanvasHandle>(null);
   const [presenting, setPresenting] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -46,8 +53,19 @@ const MapPage = () => {
   }, []);
 
   const handleSaveScene = useCallback(() => {
+    if (!lessonId || lessonId.startsWith(':')) {
+      toast.error("No lesson loaded — open a lesson from the dashboard first");
+      return;
+    }
+    if (!user) {
+      toast.error("Please sign in to save scenes");
+      return;
+    }
     const map = mapRef.current?.getMap();
-    if (!map || !lessonId || !user) return;
+    if (!map) {
+      toast.error("Map not ready — please wait for it to load");
+      return;
+    }
     const center = map.getCenter();
     const scene = saveScene(
       {
