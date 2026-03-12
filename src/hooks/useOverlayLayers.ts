@@ -467,8 +467,14 @@ function addOverlay(map: mapboxgl.Map, overlay: OverlayRow) {
 function removeOverlay(map: mapboxgl.Map, slug: string) {
   const src = sourceId(slug);
   const endpointsSrc = `${src}-endpoints`;
+  const mileageSrc = `${src}-mileage`;
   const suffixes = ["-arrows", "-glow", "-line", "-fill", "-stroke", "-circle", "-label"];
   const endpointSuffixes = ["-start", "-end"];
+
+  // Mileage labels
+  const mileageLayerId = `${mileageSrc}-labels`;
+  if (map.getLayer(mileageLayerId)) map.removeLayer(mileageLayerId);
+  if (map.getSource(mileageSrc)) map.removeSource(mileageSrc);
 
   for (const suffix of suffixes) {
     const layerId = `${src}${suffix}`;
