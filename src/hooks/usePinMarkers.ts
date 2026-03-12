@@ -133,9 +133,10 @@ export function usePinMarkers(
 
       const el = createMarkerEl(pin, selectedPinId === pin.id, showAllLabels);
 
-      const marker = new mapboxgl.Marker({ element: el, anchor: "bottom-left" })
-        .setLngLat(pin.coordinates)
-        .addTo(map);
+      try {
+        const marker = new mapboxgl.Marker({ element: el, anchor: "bottom-left" })
+          .setLngLat(pin.coordinates)
+          .addTo(map);
 
       el.addEventListener("click", (e) => {
         e.stopPropagation();
