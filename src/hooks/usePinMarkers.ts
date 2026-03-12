@@ -94,7 +94,9 @@ export function usePinMarkers(
   map: mapboxgl.Map | null,
   pins: LocationPin[],
   selectedPinId: string | null,
-  onSelectPin: (id: string | null) => void
+  onSelectPin: (id: string | null) => void,
+  hiddenLocationIds: string[] = [],
+  presenting: boolean = false
 ) {
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const popupRef = useRef<mapboxgl.Popup | null>(null);
