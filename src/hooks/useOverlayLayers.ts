@@ -162,6 +162,56 @@ function extractLineEndpoints(geojson: any): { start: [number, number]; end: [nu
   return null;
 }
 
+/* ── haversine helper ─── */
+
+function haversineDistance(a: [number, number], b: [number, number]): number {
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const R = 3958.8; // Earth radius in miles
+  const dLat = toRad(b[1] - a[1]);
+  const dLng = toRad(b[0] - a[0]);
+  const sinLat = Math.sin(dLat / 2);
+  const sinLng = Math.sin(dLng / 2);
+  const h = sinLat * sinLat + Math.cos(toRad(a[1])) * Math.cos(toRad(b[1])) * sinLng * sinLng;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+function extractAllCoords(geojson: any): [number, number][] {
+  const features: any[] =
+    geojson?.type === "FeatureCollection" ? geojson.features ?? [] :
+    geojson?.type === "Feature" ? [geojson] : [];
+  const coords: [number, number][] = [];
+  for (const f of features) {
+    const g = f?.geometry;
+    if (!g) continue;
+    if (g.type === "LineString") coords.push(...g.coordinates);
+    else if (g.type === "MultiLineString") coords.push(...g.coordinates.flat());
+  }
+  return coords;
+}
+
+function buildMileagePoints(geojson: any, intervalMiles = 25): GeoJSON.FeatureCollection {
+  const coords = extractAllCoords(geojson);
+  const points: GeoJSON.Feature[] = [];
+  if (coords.length < 2) return { type: "FeatureCollection", features: points };
+
+  let cumulative = 0;
+  let nextMark = intervalMiles;
+
+  for (let i = 1; i < coords.length; i++) {
+    const segDist = haversineDistance(coords[i - 1], coords[i]);
+    cumulative += segDist;
+    if (cumulative >= nextMark) {
+      points.push({
+        type: "Feature",
+        properties: { label: `${Math.round(nextMark)} mi` },
+        geometry: { type: "Point", coordinates: coords[i] },
+      });
+      nextMark += intervalMiles;
+    }
+  }
+  return { type: "FeatureCollection", features: points };
+}
+
 function addLineEnhancements(map: mapboxgl.Map, src: string, color: string, lineWidth: number, geojson: any) {
   // Glow layer (rendered before main line)
   map.addLayer({
