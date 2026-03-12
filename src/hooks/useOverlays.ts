@@ -56,5 +56,5 @@ export function useOverlays() {
     [allOverlays, currentEra]
   );
 
-  return { overlays, loading };
+  return { overlays, allOverlays, loading };
 }

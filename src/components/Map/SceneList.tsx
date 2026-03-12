@@ -25,7 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import type { LessonScene } from "@/types";
 import type { MapCanvasHandle } from "./MapCanvas";
-import { animateRoutesSequentially } from "@/lib/animateRoute";
+import { animateRoutesSequentially, cleanupAllAnimationLayers } from "@/lib/animateRoute";
 
 interface SceneCardProps {
   scene: LessonScene;
@@ -172,7 +172,7 @@ export default function SceneList({ mapRef }: SceneListProps) {
 
   const { persistScene, deleteSceneFromDb, persistOrder, updateTitle } =
     useScenes(lessonId);
-  const { overlays } = useOverlays();
+  const { allOverlays: overlays } = useOverlays();
 
   const animCancelRef = useRef<(() => void) | null>(null);
 
@@ -248,6 +248,9 @@ export default function SceneList({ mapRef }: SceneListProps) {
     (index: number) => {
       const map = mapRef.current?.getMap();
       if (!map) return;
+      animCancelRef.current?.();
+      animCancelRef.current = null;
+      cleanupAllAnimationLayers(map);
       loadScene(index, map);
 
       const scene = scenes[index];

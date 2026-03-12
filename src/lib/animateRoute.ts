@@ -256,6 +256,33 @@ function densifyCoordinates(
   return result;
 }
 
+/* ── Cleanup all animation layers ────────────────────── */
+
+/**
+ * Removes all animation-generated sources and layers from the map.
+ * Call before loading a new scene to prevent stale route artifacts.
+ */
+export function cleanupAllAnimationLayers(map: mapboxgl.Map) {
+  const style = map.getStyle();
+  if (!style?.layers) return;
+
+  const layerIds = style.layers
+    .filter((l) => l.id.startsWith("anim-route-"))
+    .map((l) => l.id);
+
+  for (const id of layerIds) {
+    if (map.getLayer(id)) map.removeLayer(id);
+  }
+
+  // Remove matching sources
+  const sources = style.sources ?? {};
+  for (const srcId of Object.keys(sources)) {
+    if (srcId.startsWith("anim-route-") && map.getSource(srcId)) {
+      map.removeSource(srcId);
+    }
+  }
+}
+
 /* ── Sequential animation ───────────────────────────── */
 
 export function animateRoutesSequentially(

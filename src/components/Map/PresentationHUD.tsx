@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useMapStore } from "@/store/mapStore";
 import { useOverlays } from "@/hooks/useOverlays";
-import { animateRoutesSequentially } from "@/lib/animateRoute";
+import { animateRoutesSequentially, cleanupAllAnimationLayers } from "@/lib/animateRoute";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -22,7 +22,7 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
   const scenes = useMapStore((s) => s.scenes);
   const currentSceneIndex = useMapStore((s) => s.currentSceneIndex);
   const loadScene = useMapStore((s) => s.loadScene);
-  const { overlays } = useOverlays();
+  const { allOverlays: overlays } = useOverlays();
   const showAllLabels = useMapStore((s) => s.showAllLabels);
   const toggleShowAllLabels = useMapStore((s) => s.toggleShowAllLabels);
 
@@ -77,6 +77,11 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
         autoTimerRef.current = null;
       }
       setAutoProgress(0);
+
+      // Clean up stale animation layers before loading new scene
+      animCancelRef.current?.();
+      animCancelRef.current = null;
+      cleanupAllAnimationLayers(map);
 
       loadScene(index, map);
 
