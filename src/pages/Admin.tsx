@@ -18,7 +18,7 @@ import { format } from "date-fns";
 import { ERAS } from "@/store/mapStore";
 import AdminMapPicker from "@/components/Admin/AdminMapPicker";
 
-const LOCATION_TYPES = ["city", "mountain", "river", "region", "sea", "desert", "road"];
+const LOCATION_TYPES = ["city", "mountain", "river", "region", "sea", "desert", "road", "battle", "people", "event"];
 const OVERLAY_CATEGORIES = ["route", "territory", "empire", "region"];
 
 /* ------------------------------------------------------------------ */
