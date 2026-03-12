@@ -226,6 +226,7 @@ function OverlaysTab() {
   const openAdd = () => {
     setEditing(null);
     setDrawMode(false);
+    setEditShapes(undefined);
     setForm({ name: "", slug: "", era: ERAS[0].id, category: "route", default_color: "#c8a020", geojson: "", is_preloaded: true });
     setModalOpen(true);
   };
