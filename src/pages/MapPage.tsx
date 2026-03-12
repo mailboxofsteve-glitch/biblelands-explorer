@@ -46,8 +46,19 @@ const MapPage = () => {
   }, []);
 
   const handleSaveScene = useCallback(() => {
+    if (!lessonId || lessonId.startsWith(':')) {
+      toast.error("No lesson loaded — open a lesson from the dashboard first");
+      return;
+    }
+    if (!user) {
+      toast.error("Please sign in to save scenes");
+      return;
+    }
     const map = mapRef.current?.getMap();
-    if (!map || !lessonId || !user) return;
+    if (!map) {
+      toast.error("Map not ready — please wait for it to load");
+      return;
+    }
     const center = map.getCenter();
     const scene = saveScene(
       {
