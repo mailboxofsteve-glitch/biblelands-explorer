@@ -262,6 +262,8 @@ export const useMapStore = create<MapState>((set, get) => ({
     set({
       activeOverlayIds: [...scene.active_overlay_ids],
       currentSceneIndex: index,
+      currentEra: scene.era as EraId,
+      hiddenLocationIds: [...scene.hidden_location_ids],
     });
 
     if (scene.highlighted_pin_id) {
