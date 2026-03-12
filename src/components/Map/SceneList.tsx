@@ -172,7 +172,7 @@ export default function SceneList({ mapRef }: SceneListProps) {
 
   const { persistScene, deleteSceneFromDb, persistOrder, updateTitle } =
     useScenes(lessonId);
-  const { overlays } = useOverlays();
+  const { allOverlays: overlays } = useOverlays();
 
   const animCancelRef = useRef<(() => void) | null>(null);
 
