@@ -14,10 +14,12 @@ const ICON_MAP: Record<string, string> = {
   people: "👥",
 };
 
-function createMarkerEl(pin: LocationPin, isSelected: boolean, showLabel: boolean): HTMLDivElement {
+function createMarkerEl(pin: LocationPin, isSelected: boolean, showLabel: boolean, isHidden: boolean): HTMLDivElement {
   const wrapper = document.createElement("div");
   wrapper.className = "pin-marker-wrapper";
   wrapper.style.cursor = "pointer";
+  wrapper.style.opacity = isHidden ? "0.3" : "1";
+  wrapper.style.transition = "opacity 0.2s";
 
   const el = document.createElement("div");
   el.style.cssText = `
@@ -69,6 +71,8 @@ function createMarkerEl(pin: LocationPin, isSelected: boolean, showLabel: boolea
 }
 
 function createPopupHTML(pin: LocationPin): string {
+  const hiddenIds = useMapStore.getState().hiddenLocationIds;
+  const isHidden = hiddenIds.includes(pin.id);
   const verse = pin.primary_verse
     ? `<div style="border:1px solid #c8a020;border-radius:6px;padding:8px 10px;margin-top:8px;font-style:italic;font-size:12px;color:#e8d5a0;background:#2a1e0e44;">
         📖 ${pin.primary_verse}
@@ -82,9 +86,15 @@ function createPopupHTML(pin: LocationPin): string {
           <div style="font-size:15px;font-weight:600;color:#f0e0b0;">${pin.name_ancient}</div>
           ${pin.name_modern ? `<div style="font-size:11px;color:#a08a60;margin-top:2px;">${pin.name_modern}</div>` : ""}
         </div>
-        <button class="pin-popup-close" style="background:none;border:none;color:#a08a60;font-size:18px;cursor:pointer;padding:0 2px;line-height:1;">×</button>
+        <div style="display:flex;gap:4px;align-items:center;">
+          <button class="pin-popup-hide" title="${isHidden ? "Show in classroom" : "Hide in classroom"}" style="background:none;border:none;color:${isHidden ? "#c8a020" : "#a08a60"};font-size:14px;cursor:pointer;padding:2px;line-height:1;">
+            ${isHidden ? "👁" : "👁‍🗨"}
+          </button>
+          <button class="pin-popup-close" style="background:none;border:none;color:#a08a60;font-size:18px;cursor:pointer;padding:0 2px;line-height:1;">×</button>
+        </div>
       </div>
       ${pin.description ? `<p style="font-size:12px;margin-top:8px;line-height:1.5;color:#c8b888;">${pin.description}</p>` : ""}
+      ${isHidden ? `<div style="font-size:10px;color:#a08a60;margin-top:6px;font-style:italic;">🚫 Hidden in classroom mode</div>` : ""}
       ${verse}
     </div>
   `;
@@ -94,7 +104,9 @@ export function usePinMarkers(
   map: mapboxgl.Map | null,
   pins: LocationPin[],
   selectedPinId: string | null,
-  onSelectPin: (id: string | null) => void
+  onSelectPin: (id: string | null) => void,
+  hiddenLocationIds: string[] = [],
+  presenting: boolean = false
 ) {
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const popupRef = useRef<mapboxgl.Popup | null>(null);
@@ -104,12 +116,13 @@ export function usePinMarkers(
   useEffect(() => {
     if (!map || !map.getContainer()) return;
 
+    const hiddenSet = new Set(hiddenLocationIds);
     const currentIds = new Set(pins.map((p) => p.id));
     const existingIds = markersRef.current;
 
-    // Remove old markers
+    // Remove old markers + markers hidden during presentation
     for (const [id, marker] of existingIds) {
-      if (!currentIds.has(id)) {
+      if (!currentIds.has(id) || (presenting && hiddenSet.has(id))) {
         marker.remove();
         existingIds.delete(id);
       }
@@ -117,21 +130,29 @@ export function usePinMarkers(
 
     // Add/update markers
     for (const pin of pins) {
+      // Skip hidden pins entirely in presentation mode
+      if (presenting && hiddenSet.has(pin.id)) continue;
+
+      const isHidden = hiddenSet.has(pin.id);
+
       if (existingIds.has(pin.id)) {
-        // Update selection state and label visibility
         const marker = existingIds.get(pin.id)!;
-        const el = marker.getElement().querySelector("div") as HTMLDivElement | null;
+        const wrapper = marker.getElement();
+        if (wrapper) {
+          (wrapper as HTMLElement).style.opacity = isHidden ? "0.3" : "1";
+        }
+        const el = wrapper.querySelector("div") as HTMLDivElement | null;
         if (el) {
           el.style.boxShadow = selectedPinId === pin.id ? "0 0 14px #c8a02066" : "";
         }
-        const tooltip = marker.getElement().querySelector(".pin-tooltip") as HTMLDivElement | null;
+        const tooltip = wrapper.querySelector(".pin-tooltip") as HTMLDivElement | null;
         if (tooltip) {
           tooltip.style.opacity = showAllLabels ? "1" : "0";
         }
         continue;
       }
 
-      const el = createMarkerEl(pin, selectedPinId === pin.id, showAllLabels);
+      const el = createMarkerEl(pin, selectedPinId === pin.id, showAllLabels, isHidden);
 
       let marker: mapboxgl.Marker;
       try {
@@ -139,7 +160,6 @@ export function usePinMarkers(
           .setLngLat(pin.coordinates)
           .addTo(map);
       } catch {
-        // Map container not ready (e.g. during skin switch)
         continue;
       }
 
@@ -165,6 +185,11 @@ export function usePinMarkers(
               popup.remove();
               onSelectPin(null);
             });
+            // Hide/show toggle button
+            const hideBtn = document.querySelector(".pin-popup-hide");
+            hideBtn?.addEventListener("click", () => {
+              useMapStore.getState().toggleHideLocation(pin.id);
+            });
           }, 0);
 
           popupRef.current = popup;
@@ -187,7 +212,7 @@ export function usePinMarkers(
     return () => {
       map.off("click", onMapClick);
     };
-  }, [map, pins, selectedPinId, onSelectPin, showAllLabels]);
+  }, [map, pins, selectedPinId, onSelectPin, showAllLabels, hiddenLocationIds, presenting]);
 
   // Cleanup on unmount
   useEffect(() => {

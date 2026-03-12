@@ -24,6 +24,8 @@ export type Database = {
           center_lng: number
           created_at: string
           created_by: string
+          era: string
+          hidden_location_ids: string[]
           highlighted_pin_id: string | null
           id: string
           lesson_id: string
@@ -43,6 +45,8 @@ export type Database = {
           center_lng?: number
           created_at?: string
           created_by: string
+          era?: string
+          hidden_location_ids?: string[]
           highlighted_pin_id?: string | null
           id?: string
           lesson_id: string
@@ -62,6 +66,8 @@ export type Database = {
           center_lng?: number
           created_at?: string
           created_by?: string
+          era?: string
+          hidden_location_ids?: string[]
           highlighted_pin_id?: string | null
           id?: string
           lesson_id?: string

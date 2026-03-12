@@ -44,6 +44,9 @@ interface MapState {
   customPinIds: string[];
   customOverlayIds: string[];
 
+  // Hidden locations (greyed in controls, hidden in presentation)
+  hiddenLocationIds: string[];
+
   // Labels
   showAllLabels: boolean;
 
@@ -74,6 +77,10 @@ interface MapState {
   removeCustomOverlay: (id: string) => void;
   clearAllCustom: () => void;
 
+  // Hidden location actions
+  toggleHideLocation: (id: string) => void;
+  setHiddenLocationIds: (ids: string[]) => void;
+
   // Scene actions
   setScenes: (scenes: LessonScene[]) => void;
   saveScene: (camera: CameraState, lessonId: string, userId: string) => LessonScene | null;
@@ -96,6 +103,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   undoStack: [],
   customPinIds: [],
   customOverlayIds: [],
+  hiddenLocationIds: [],
   showAllLabels: false,
   scenes: [],
   currentSceneIndex: null,
@@ -198,6 +206,15 @@ export const useMapStore = create<MapState>((set, get) => ({
       undoStack: [],
     })),
 
+  toggleHideLocation: (id) =>
+    set((s) => ({
+      hiddenLocationIds: s.hiddenLocationIds.includes(id)
+        ? s.hiddenLocationIds.filter((x) => x !== id)
+        : [...s.hiddenLocationIds, id],
+    })),
+
+  setHiddenLocationIds: (ids) => set({ hiddenLocationIds: ids }),
+
   // Scene actions
   setScenes: (scenes) => set({ scenes }),
 
@@ -219,6 +236,8 @@ export const useMapStore = create<MapState>((set, get) => ({
       highlighted_pin_id: s.selectedPinId,
       animate_on_enter: false,
       auto_advance_seconds: null,
+      era: s.currentEra,
+      hidden_location_ids: [...s.hiddenLocationIds],
     };
     set({
       scenes: [...s.scenes, newScene],
@@ -243,6 +262,8 @@ export const useMapStore = create<MapState>((set, get) => ({
     set({
       activeOverlayIds: [...scene.active_overlay_ids],
       currentSceneIndex: index,
+      currentEra: scene.era as EraId,
+      hiddenLocationIds: [...scene.hidden_location_ids],
     });
 
     if (scene.highlighted_pin_id) {
@@ -288,6 +309,8 @@ export const useMapStore = create<MapState>((set, get) => ({
       active_overlay_ids: [...s.activeOverlayIds],
       visible_pin_ids: [...s.customPinIds],
       highlighted_pin_id: s.selectedPinId,
+      era: s.currentEra,
+      hidden_location_ids: [...s.hiddenLocationIds],
     };
     set({
       scenes: s.scenes.map((sc) => (sc.id === id ? updated : sc)),

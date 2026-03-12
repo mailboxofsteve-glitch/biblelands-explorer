@@ -56,7 +56,7 @@ export interface MapCanvasHandle {
   getMap: () => mapboxgl.Map | null;
 }
 
-const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string }>(({ lessonId }, ref) => {
+const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: boolean }>(({ lessonId, presenting = false }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -68,6 +68,7 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string }>(({ lessonId
   const selectedPinId = useMapStore((s) => s.selectedPinId);
   const selectPin = useMapStore((s) => s.selectPin);
   const showAllLabels = useMapStore((s) => s.showAllLabels);
+  const hiddenLocationIds = useMapStore((s) => s.hiddenLocationIds);
 
   useImperativeHandle(ref, () => ({
     getMap: () => mapRef.current,
@@ -130,7 +131,9 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string }>(({ lessonId
     mapReady ? mapRef.current : null,
     pins,
     selectedPinId,
-    selectPin
+    selectPin,
+    hiddenLocationIds,
+    presenting
   );
 
   // Custom pins from the pins table

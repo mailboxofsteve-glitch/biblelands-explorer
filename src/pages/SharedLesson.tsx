@@ -136,7 +136,7 @@ const SharedLesson = () => {
 
         {/* Map */}
         <main className="flex-1 relative transition-all duration-300 ease-in-out">
-          <MapCanvas ref={mapRef} lessonId={lesson.id} />
+          <MapCanvas ref={mapRef} lessonId={lesson.id} presenting={presenting} />
 
           {!presenting && (
             <button
