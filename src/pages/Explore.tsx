@@ -3,7 +3,7 @@ import { ArrowLeft, Layers } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MapCanvas, { type MapCanvasHandle } from "@/components/Map/MapCanvas";
-import EraSelector from "@/components/Map/EraSelector";
+import TimelineSlider from "@/components/Map/TimelineSlider";
 import OverlayToggles from "@/components/Map/OverlayToggles";
 import {
   Sheet,
