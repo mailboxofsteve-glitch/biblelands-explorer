@@ -7,7 +7,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
-import EraSelector from "@/components/Map/EraSelector";
+import TimelineSlider from "@/components/Map/TimelineSlider";
 import OverlayToggles from "@/components/Map/OverlayToggles";
 import SceneList from "@/components/Map/SceneList";
 import TeacherTools from "@/components/Map/TeacherTools";
@@ -97,7 +97,7 @@ export default function MobileToolbar({
               <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
                 Era
               </h3>
-              <EraSelector />
+              <TimelineSlider />
             </div>
 
             <div>

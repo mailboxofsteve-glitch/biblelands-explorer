@@ -3,7 +3,7 @@ import { ArrowLeft, Layers } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MapCanvas, { type MapCanvasHandle } from "@/components/Map/MapCanvas";
-import EraSelector from "@/components/Map/EraSelector";
+import TimelineSlider from "@/components/Map/TimelineSlider";
 import OverlayToggles from "@/components/Map/OverlayToggles";
 import {
   Sheet,
@@ -46,7 +46,7 @@ const Explore = () => {
                 <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
                   Era
                 </h3>
-                <EraSelector />
+                <TimelineSlider />
               </div>
               <div>
                 <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
@@ -85,7 +85,7 @@ const Explore = () => {
                   <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
                     Era
                   </h3>
-                  <EraSelector />
+                  <TimelineSlider />
                 </div>
                 <div>
                   <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
