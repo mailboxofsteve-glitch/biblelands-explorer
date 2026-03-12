@@ -80,6 +80,8 @@ export function useScenes(lessonId: string | undefined) {
           highlighted_pin_id: scene.highlighted_pin_id,
           animate_on_enter: scene.animate_on_enter,
           auto_advance_seconds: scene.auto_advance_seconds,
+          era: scene.era,
+          hidden_location_ids: scene.hidden_location_ids,
         });
         if (error) {
           console.error("Failed to save scene:", error);
