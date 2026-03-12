@@ -196,7 +196,7 @@ const MapPage = () => {
 
       {/* Map */}
       <main className="flex-1 relative transition-all duration-300 ease-in-out">
-        <MapCanvas ref={mapRef} lessonId={lessonId} />
+        <MapCanvas ref={mapRef} lessonId={lessonId} presenting={presenting} />
 
         {/* Desktop buttons */}
         {!presenting && !isMobile && (

@@ -71,6 +71,8 @@ function createMarkerEl(pin: LocationPin, isSelected: boolean, showLabel: boolea
 }
 
 function createPopupHTML(pin: LocationPin): string {
+  const hiddenIds = useMapStore.getState().hiddenLocationIds;
+  const isHidden = hiddenIds.includes(pin.id);
   const verse = pin.primary_verse
     ? `<div style="border:1px solid #c8a020;border-radius:6px;padding:8px 10px;margin-top:8px;font-style:italic;font-size:12px;color:#e8d5a0;background:#2a1e0e44;">
         📖 ${pin.primary_verse}
@@ -84,9 +86,15 @@ function createPopupHTML(pin: LocationPin): string {
           <div style="font-size:15px;font-weight:600;color:#f0e0b0;">${pin.name_ancient}</div>
           ${pin.name_modern ? `<div style="font-size:11px;color:#a08a60;margin-top:2px;">${pin.name_modern}</div>` : ""}
         </div>
-        <button class="pin-popup-close" style="background:none;border:none;color:#a08a60;font-size:18px;cursor:pointer;padding:0 2px;line-height:1;">×</button>
+        <div style="display:flex;gap:4px;align-items:center;">
+          <button class="pin-popup-hide" title="${isHidden ? "Show in classroom" : "Hide in classroom"}" style="background:none;border:none;color:${isHidden ? "#c8a020" : "#a08a60"};font-size:14px;cursor:pointer;padding:2px;line-height:1;">
+            ${isHidden ? "👁" : "👁‍🗨"}
+          </button>
+          <button class="pin-popup-close" style="background:none;border:none;color:#a08a60;font-size:18px;cursor:pointer;padding:0 2px;line-height:1;">×</button>
+        </div>
       </div>
       ${pin.description ? `<p style="font-size:12px;margin-top:8px;line-height:1.5;color:#c8b888;">${pin.description}</p>` : ""}
+      ${isHidden ? `<div style="font-size:10px;color:#a08a60;margin-top:6px;font-style:italic;">🚫 Hidden in classroom mode</div>` : ""}
       ${verse}
     </div>
   `;

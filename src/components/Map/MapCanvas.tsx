@@ -131,7 +131,9 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
     mapReady ? mapRef.current : null,
     pins,
     selectedPinId,
-    selectPin
+    selectPin,
+    hiddenLocationIds,
+    presenting
   );
 
   // Custom pins from the pins table
