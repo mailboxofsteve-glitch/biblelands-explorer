@@ -188,6 +188,22 @@ export function animateRoute(
     } else {
       setTimeout(() => {
         cleanup(true);
+        // Add red end marker
+        try {
+          map.addSource(endSourceId, { type: "geojson", data: endData });
+          map.addLayer({
+            id: endLayerId,
+            type: "circle",
+            source: endSourceId,
+            paint: {
+              "circle-radius": 5,
+              "circle-color": "#ef4444",
+              "circle-stroke-width": 2,
+              "circle-stroke-color": "#ffffff",
+              "circle-opacity": 1,
+            },
+          });
+        } catch (_) { /* map may be gone */ }
         onComplete?.();
       }, 400);
     }
