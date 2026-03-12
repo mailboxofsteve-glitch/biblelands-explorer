@@ -220,6 +220,10 @@ export function animateRoute(
       if (map.getLayer(glowLayerId)) map.removeLayer(glowLayerId);
       if (map.getLayer(layerId)) map.removeLayer(layerId);
       if (map.getSource(sourceId)) map.removeSource(sourceId);
+      if (map.getLayer(startLayerId)) map.removeLayer(startLayerId);
+      if (map.getSource(startSourceId)) map.removeSource(startSourceId);
+      if (map.getLayer(endLayerId)) map.removeLayer(endLayerId);
+      if (map.getSource(endSourceId)) map.removeSource(endSourceId);
     }
   }
 

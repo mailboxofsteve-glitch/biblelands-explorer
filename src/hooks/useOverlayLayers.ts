@@ -391,11 +391,19 @@ function addOverlay(map: mapboxgl.Map, overlay: OverlayRow) {
 
 function removeOverlay(map: mapboxgl.Map, slug: string) {
   const src = sourceId(slug);
-  const suffixes = ["-line", "-fill", "-stroke", "-circle", "-label"];
+  const endpointsSrc = `${src}-endpoints`;
+  const suffixes = ["-arrows", "-glow", "-line", "-fill", "-stroke", "-circle", "-label"];
+  const endpointSuffixes = ["-start", "-end"];
+
   for (const suffix of suffixes) {
     const layerId = `${src}${suffix}`;
     if (map.getLayer(layerId)) map.removeLayer(layerId);
   }
+  for (const suffix of endpointSuffixes) {
+    const layerId = `${endpointsSrc}${suffix}`;
+    if (map.getLayer(layerId)) map.removeLayer(layerId);
+  }
+  if (map.getSource(endpointsSrc)) map.removeSource(endpointsSrc);
   if (map.getSource(src)) map.removeSource(src);
 }
 
