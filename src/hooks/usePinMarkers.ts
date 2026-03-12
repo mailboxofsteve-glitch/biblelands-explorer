@@ -18,6 +18,8 @@ function createMarkerEl(pin: LocationPin, isSelected: boolean, showLabel: boolea
   const wrapper = document.createElement("div");
   wrapper.className = "pin-marker-wrapper";
   wrapper.style.cursor = "pointer";
+  wrapper.style.opacity = isHidden ? "0.3" : "1";
+  wrapper.style.transition = "opacity 0.2s";
 
   const el = document.createElement("div");
   el.style.cssText = `
