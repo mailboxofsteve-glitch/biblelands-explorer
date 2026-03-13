@@ -18,6 +18,7 @@ import { animateRoutesSequentially } from "@/lib/animateRoute";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { Maximize, Settings, Keyboard } from "lucide-react";
+import GroundViewButton from "@/components/Map/GroundViewButton";
 
 const MapPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -209,6 +210,7 @@ const MapPage = () => {
               <Maximize size={14} />
               Classroom Mode
             </button>
+            <GroundViewButton mapRef={mapRef} />
             <button
               onClick={() => setShowShortcuts(true)}
               className="flex items-center gap-1 px-2 py-1.5 rounded-md bg-card/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-card border border-border/30 transition-all text-xs"

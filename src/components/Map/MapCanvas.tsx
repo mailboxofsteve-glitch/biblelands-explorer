@@ -87,15 +87,30 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
       zoom: 6,
       bearing: 0,
       pitch: 0,
+      maxPitch: 85,
     });
 
     map.addControl(new mapboxgl.NavigationControl(), "top-right");
+
+    const addTerrainSource = () => {
+      if (!map.getSource("mapbox-dem")) {
+        map.addSource("mapbox-dem", {
+          type: "raster-dem",
+          url: "mapbox://mapbox.mapbox-terrain-dem-v1",
+          tileSize: 512,
+          maxzoom: 14,
+        });
+      }
+    };
+
     map.on("load", () => {
       hideModernLayers(map);
+      addTerrainSource();
       setMapReady(true);
     });
     map.on("style.load", () => {
       hideModernLayers(map);
+      addTerrainSource();
       setMapReady(true);
     });
 

@@ -10,6 +10,7 @@ import {
   X,
   ClipboardList,
 } from "lucide-react";
+import GroundViewButton from "./GroundViewButton";
 import type { MapCanvasHandle } from "./MapCanvas";
 import type { LessonScene } from "@/types";
 
@@ -218,6 +219,10 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
               className="scale-[0.6]"
             />
           </label>
+
+          <div className="w-px h-5 bg-border/40 mx-1" />
+
+          <GroundViewButton mapRef={mapRef} compact />
 
           <div className="w-px h-5 bg-border/40 mx-1" />
 
