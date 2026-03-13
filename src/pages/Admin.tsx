@@ -85,21 +85,6 @@ function LocationsTab() {
 
   useEffect(() => { fetchLocations(); }, [fetchLocations]);
 
-  const filtered = useMemo(() => {
-    if (!ts.filterText) return locations;
-    const q = ts.filterText.toLowerCase();
-    return locations.filter((l) =>
-      (l.name_ancient ?? "").toLowerCase().includes(q) ||
-      (l.name_modern ?? "").toLowerCase().includes(q) ||
-      (l.location_type ?? "").toLowerCase().includes(q) ||
-      (l.primary_verse ?? "").toLowerCase().includes(q)
-    );
-  }, [locations, ts?.filterText]);
-
-  const ts = useTableSort(filtered, "name_ancient");
-
-  // Fix: ts depends on filtered which depends on ts — restructure
-  // We need to extract filterText separately
   const [filterText, setFilterText] = useState("");
   const filteredData = useMemo(() => {
     if (!filterText) return locations;
