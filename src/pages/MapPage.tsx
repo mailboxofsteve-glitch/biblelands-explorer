@@ -18,6 +18,7 @@ import { animateRoutesSequentially } from "@/lib/animateRoute";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { Maximize, Settings, Keyboard } from "lucide-react";
+import GroundViewButton from "@/components/Map/GroundViewButton";
 
 const MapPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
