@@ -223,6 +223,10 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
           <div className="w-px h-5 bg-border/40 mx-1" />
 
           <GroundViewButton mapRef={mapRef} compact />
+
+          <div className="w-px h-5 bg-border/40 mx-1" />
+
+          <button
             onClick={() => setShowNotes(!showNotes)}
             className={`p-1.5 rounded transition-colors ${
               showNotes
