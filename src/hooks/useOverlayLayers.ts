@@ -133,7 +133,8 @@ function getPrimaryGeometryType(geojson: any): GeomKind {
 
 /* ── add / remove ────────────────────────────────────── */
 
-function extractLineEndpoints(geojson: any): { start: [number, number]; end: [number, number] } | null {
+/** Extract start/end endpoints for each LineString feature separately */
+function extractAllLineEndpoints(geojson: any): { start: [number, number]; end: [number, number] }[] {
   const features: any[] =
     geojson?.type === "FeatureCollection"
       ? geojson.features ?? []
@@ -141,8 +142,7 @@ function extractLineEndpoints(geojson: any): { start: [number, number]; end: [nu
         ? [geojson]
         : [];
 
-  let firstCoord: [number, number] | null = null;
-  let lastCoord: [number, number] | null = null;
+  const endpoints: { start: [number, number]; end: [number, number] }[] = [];
 
   for (const f of features) {
     const geom = f?.geometry;
@@ -153,13 +153,11 @@ function extractLineEndpoints(geojson: any): { start: [number, number]; end: [nu
         : geom.type === "MultiLineString"
           ? geom.coordinates.flat()
           : [];
-    if (coords.length === 0) continue;
-    if (!firstCoord) firstCoord = coords[0];
-    lastCoord = coords[coords.length - 1];
+    if (coords.length < 2) continue;
+    endpoints.push({ start: coords[0], end: coords[coords.length - 1] });
   }
 
-  if (firstCoord && lastCoord) return { start: firstCoord, end: lastCoord };
-  return null;
+  return endpoints;
 }
 
 function addLineEnhancements(map: mapboxgl.Map, src: string, color: string, lineWidth: number, geojson: any) {
