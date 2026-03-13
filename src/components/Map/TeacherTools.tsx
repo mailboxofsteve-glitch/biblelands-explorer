@@ -111,10 +111,27 @@ const TeacherTools = ({ mapRef }: TeacherToolsProps) => {
 
     setIsAnimating(true);
 
-    const routes = lineOverlays.map((o) => ({
-      geojson: o.geojson as unknown as GeoJSON.GeoJSON,
-      color: o.default_color,
-    }));
+    // Expand multi-feature overlays into one route per LineString feature
+    const routes: { geojson: GeoJSON.GeoJSON; color: string }[] = [];
+    for (const o of lineOverlays) {
+      const geojson = o.geojson as any;
+      if (geojson?.type === "FeatureCollection" && Array.isArray(geojson.features)) {
+        for (const feature of geojson.features) {
+          const geomType = feature?.geometry?.type;
+          if (geomType === "LineString" || geomType === "MultiLineString") {
+            routes.push({
+              geojson: { type: "Feature", ...feature } as GeoJSON.GeoJSON,
+              color: o.default_color,
+            });
+          }
+        }
+      } else {
+        routes.push({
+          geojson: geojson as GeoJSON.GeoJSON,
+          color: o.default_color,
+        });
+      }
+    }
 
     const { cancel } = animateRoutesSequentially(map, routes, {
       duration: 3000,

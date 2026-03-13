@@ -4,6 +4,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { Button } from "@/components/ui/button";
 import { Undo2, Trash2, Scissors, Plus, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const MAPBOX_TOKEN =
   "pk.eyJ1Ijoic3JvZ2Vyczg2IiwiYSI6ImNtbWg0YXNiaTBjZjgycnB0c21mbzA1MDMifQ.snS_DuU14Far-Noo4WX_rA";
@@ -90,7 +91,68 @@ export default function AdminMapPicker({
     mapRef.current = map;
     map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right");
 
-    map.on("load", () => {
+    map.on("load", async () => {
+      // Load reference locations and overlays
+      try {
+        const [{ data: locs }, { data: ovs }] = await Promise.all([
+          supabase.from("locations_with_coords").select("id, name_ancient, lat, lng"),
+          supabase.from("overlays").select("id, name, geojson, default_color").eq("is_preloaded", true),
+        ]);
+
+        if (locs && locs.length > 0) {
+          const locFeatures: GeoJSON.Feature[] = locs
+            .filter((l: any) => l.lat && l.lng)
+            .map((l: any) => ({
+              type: "Feature" as const,
+              properties: { name: l.name_ancient },
+              geometry: { type: "Point" as const, coordinates: [l.lng, l.lat] },
+            }));
+          map.addSource("ref-locations", { type: "geojson", data: { type: "FeatureCollection", features: locFeatures } });
+          map.addLayer({
+            id: "ref-locations-circle",
+            type: "circle",
+            source: "ref-locations",
+            paint: { "circle-radius": 3, "circle-color": "#94a3b8", "circle-opacity": 0.6 },
+          });
+          map.addLayer({
+            id: "ref-locations-label",
+            type: "symbol",
+            source: "ref-locations",
+            layout: {
+              "text-field": ["get", "name"],
+              "text-size": 11,
+              "text-offset": [0, 1.2],
+              "text-font": ["DIN Pro Medium", "Arial Unicode MS Regular"],
+              "text-allow-overlap": false,
+            },
+            paint: { "text-color": "#94a3b8", "text-halo-color": "#1e293b", "text-halo-width": 1, "text-opacity": 0.7 },
+          });
+        }
+
+        if (ovs && ovs.length > 0) {
+          for (const ov of ovs) {
+            const geo = ov.geojson as any;
+            if (!geo || (!geo.features && !geo.coordinates)) continue;
+            const srcId = `ref-overlay-${ov.id}`;
+            map.addSource(srcId, { type: "geojson", data: geo as GeoJSON.GeoJSON });
+            map.addLayer({
+              id: `${srcId}-line`,
+              type: "line",
+              source: srcId,
+              filter: ["any", ["==", ["geometry-type"], "LineString"], ["==", ["geometry-type"], "MultiLineString"]],
+              paint: { "line-color": ov.default_color || "#94a3b8", "line-width": 1.5, "line-opacity": 0.25 },
+            });
+            map.addLayer({
+              id: `${srcId}-fill`,
+              type: "fill",
+              source: srcId,
+              filter: ["any", ["==", ["geometry-type"], "Polygon"], ["==", ["geometry-type"], "MultiPolygon"]],
+              paint: { "fill-color": ov.default_color || "#94a3b8", "fill-opacity": 0.08 },
+            });
+          }
+        }
+      } catch { /* reference layers are non-critical */ }
+
       if (mode === "point") {
         const marker = new mapboxgl.Marker({ draggable: true, color })
           .setLngLat(center as [number, number])
