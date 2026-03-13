@@ -10,6 +10,7 @@ import {
   X,
   ClipboardList,
 } from "lucide-react";
+import GroundViewButton from "./GroundViewButton";
 import type { MapCanvasHandle } from "./MapCanvas";
 import type { LessonScene } from "@/types";
 
