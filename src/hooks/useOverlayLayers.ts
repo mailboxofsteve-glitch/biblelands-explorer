@@ -222,19 +222,20 @@ function addLineEnhancements(map: mapboxgl.Map, src: string, color: string, line
     },
   });
 
-  // Start / end markers
-  const endpoints = extractLineEndpoints(geojson);
-  if (endpoints) {
+  // Start / end markers — one pair per LineString feature
+  const allEndpoints = extractAllLineEndpoints(geojson);
+  if (allEndpoints.length > 0) {
     const endpointsSrc = `${src}-endpoints`;
+    const endpointFeatures: GeoJSON.Feature[] = [];
+    for (const ep of allEndpoints) {
+      endpointFeatures.push(
+        { type: "Feature", properties: { role: "start" }, geometry: { type: "Point", coordinates: ep.start } },
+        { type: "Feature", properties: { role: "end" }, geometry: { type: "Point", coordinates: ep.end } },
+      );
+    }
     map.addSource(endpointsSrc, {
       type: "geojson",
-      data: {
-        type: "FeatureCollection",
-        features: [
-          { type: "Feature", properties: { role: "start" }, geometry: { type: "Point", coordinates: endpoints.start } },
-          { type: "Feature", properties: { role: "end" }, geometry: { type: "Point", coordinates: endpoints.end } },
-        ],
-      },
+      data: { type: "FeatureCollection", features: endpointFeatures },
     });
 
     map.addLayer({

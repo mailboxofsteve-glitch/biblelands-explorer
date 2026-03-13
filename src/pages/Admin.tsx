@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,13 +13,58 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { BookOpen, LogOut, MapPin, Layers, GraduationCap, Users, Plus, Pencil, Trash2, ArrowLeft, Map } from "lucide-react";
+import { BookOpen, LogOut, MapPin, Layers, GraduationCap, Users, Plus, Pencil, Trash2, ArrowLeft, Map, ArrowUpDown, ArrowUp, ArrowDown, Search } from "lucide-react";
 import { format } from "date-fns";
 import { ERAS } from "@/store/mapStore";
 import AdminMapPicker from "@/components/Admin/AdminMapPicker";
 
 const LOCATION_TYPES = ["city", "mountain", "river", "region", "sea", "desert", "road", "battle", "people", "event"];
 const OVERLAY_CATEGORIES = ["route", "territory", "empire", "region"];
+
+/* ── Reusable sort header ─────────────────────────────── */
+type SortDir = "asc" | "desc" | null;
+
+function SortableHead({ label, field, sortField, sortDir, onSort, className }: {
+  label: string; field: string; sortField: string | null; sortDir: SortDir; onSort: (f: string) => void; className?: string;
+}) {
+  const active = sortField === field;
+  return (
+    <TableHead className={`cursor-pointer select-none hover:text-foreground ${className ?? ""}`} onClick={() => onSort(field)}>
+      <span className="inline-flex items-center gap-1">
+        {label}
+        {active ? (sortDir === "asc" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 opacity-30" />}
+      </span>
+    </TableHead>
+  );
+}
+
+function useTableSort<T>(data: T[], defaultField?: string) {
+  const [sortField, setSortField] = useState<string | null>(defaultField ?? null);
+  const [sortDir, setSortDir] = useState<SortDir>(defaultField ? "asc" : null);
+  const [filterText, setFilterText] = useState("");
+
+  const toggleSort = useCallback((field: string) => {
+    setSortField((prev) => {
+      if (prev !== field) { setSortDir("asc"); return field; }
+      setSortDir((d) => { if (d === "asc") return "desc"; setSortField(null); return null; });
+      return field;
+    });
+  }, []);
+
+  const sorted = useMemo(() => {
+    if (!sortField || !sortDir) return data;
+    return [...data].sort((a: any, b: any) => {
+      const av = a[sortField]; const bv = b[sortField];
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      const cmp = typeof av === "string" ? av.localeCompare(bv) : av < bv ? -1 : av > bv ? 1 : 0;
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+  }, [data, sortField, sortDir]);
+
+  return { sortField, sortDir, toggleSort, filterText, setFilterText, sorted };
+}
 
 /* ------------------------------------------------------------------ */
 /*  Locations Tab                                                      */
@@ -39,6 +84,35 @@ function LocationsTab() {
   }, []);
 
   useEffect(() => { fetchLocations(); }, [fetchLocations]);
+
+  const filtered = useMemo(() => {
+    if (!ts.filterText) return locations;
+    const q = ts.filterText.toLowerCase();
+    return locations.filter((l) =>
+      (l.name_ancient ?? "").toLowerCase().includes(q) ||
+      (l.name_modern ?? "").toLowerCase().includes(q) ||
+      (l.location_type ?? "").toLowerCase().includes(q) ||
+      (l.primary_verse ?? "").toLowerCase().includes(q)
+    );
+  }, [locations, ts?.filterText]);
+
+  const ts = useTableSort(filtered, "name_ancient");
+
+  // Fix: ts depends on filtered which depends on ts — restructure
+  // We need to extract filterText separately
+  const [filterText, setFilterText] = useState("");
+  const filteredData = useMemo(() => {
+    if (!filterText) return locations;
+    const q = filterText.toLowerCase();
+    return locations.filter((l) =>
+      (l.name_ancient ?? "").toLowerCase().includes(q) ||
+      (l.name_modern ?? "").toLowerCase().includes(q) ||
+      (l.location_type ?? "").toLowerCase().includes(q) ||
+      (l.primary_verse ?? "").toLowerCase().includes(q)
+    );
+  }, [locations, filterText]);
+
+  const { sortField, sortDir, toggleSort, sorted } = useTableSort(filteredData, "name_ancient");
 
   const openAdd = () => {
     setEditing(null);
@@ -111,22 +185,27 @@ function LocationsTab() {
         <Button size="sm" onClick={openAdd}><Plus className="h-4 w-4 mr-1" /> Add Location</Button>
       </div>
 
+      <div className="relative">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input placeholder="Filter locations…" value={filterText} onChange={(e) => setFilterText(e.target.value)} className="pl-9 max-w-sm" />
+      </div>
+
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading…</p>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Ancient Name</TableHead>
-              <TableHead>Modern Name</TableHead>
-              <TableHead>Type</TableHead>
+              <SortableHead label="Ancient Name" field="name_ancient" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
+              <SortableHead label="Modern Name" field="name_modern" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
+              <SortableHead label="Type" field="location_type" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <TableHead>Eras</TableHead>
-              <TableHead>Verse</TableHead>
+              <SortableHead label="Verse" field="primary_verse" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <TableHead className="w-24"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {locations.map((loc) => (
+            {sorted.map((loc: any) => (
               <TableRow key={loc.id}>
                 <TableCell className="font-medium">{loc.name_ancient}</TableCell>
                 <TableCell>{loc.name_modern ?? "—"}</TableCell>
@@ -215,6 +294,18 @@ function OverlaysTab() {
   const [editShapes, setEditShapes] = useState<number[][][] | undefined>(undefined);
   const [form, setForm] = useState({ name: "", slug: "", era: ERAS[0].id as string, category: "route", default_color: "#c8a020", geojson: "", is_preloaded: true });
 
+  const [filterText, setFilterText] = useState("");
+  const filteredData = useMemo(() => {
+    if (!filterText) return overlays;
+    const q = filterText.toLowerCase();
+    return overlays.filter((o) =>
+      (o.name ?? "").toLowerCase().includes(q) ||
+      (o.era ?? "").toLowerCase().includes(q) ||
+      (o.category ?? "").toLowerCase().includes(q)
+    );
+  }, [overlays, filterText]);
+  const { sortField, sortDir, toggleSort, sorted } = useTableSort(filteredData, "name");
+
   const fetchOverlays = useCallback(async () => {
     const { data } = await supabase.from("overlays").select("*").eq("is_preloaded", true).order("name");
     setOverlays(data ?? []);
@@ -243,12 +334,10 @@ function OverlaysTab() {
       geojson: JSON.stringify(ov.geojson, null, 2),
       is_preloaded: ov.is_preloaded,
     });
-    // Parse existing GeoJSON into shapes for map picker
     setEditShapes(parseGeoJSONToShapes(ov.geojson));
     setModalOpen(true);
   };
 
-  /** Extract shapes from existing overlay GeoJSON */
   function parseGeoJSONToShapes(geo: any): number[][][] {
     if (!geo) return [[]];
     try {
@@ -258,7 +347,6 @@ function OverlaysTab() {
           const g = f.geometry;
           if (!g) continue;
           if (g.type === "Polygon" && g.coordinates?.[0]) {
-            // Strip closing duplicate point
             const ring = g.coordinates[0];
             const pts = ring.length > 1 && ring[0][0] === ring[ring.length - 1][0] && ring[0][1] === ring[ring.length - 1][1]
               ? ring.slice(0, -1) : ring;
@@ -344,21 +432,26 @@ function OverlaysTab() {
         <Button size="sm" onClick={openAdd}><Plus className="h-4 w-4 mr-1" /> Add Overlay</Button>
       </div>
 
+      <div className="relative">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input placeholder="Filter overlays…" value={filterText} onChange={(e) => setFilterText(e.target.value)} className="pl-9 max-w-sm" />
+      </div>
+
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading…</p>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Era</TableHead>
-              <TableHead>Category</TableHead>
+              <SortableHead label="Name" field="name" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
+              <SortableHead label="Era" field="era" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
+              <SortableHead label="Category" field="category" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <TableHead>Color</TableHead>
               <TableHead className="w-24"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {overlays.map((ov) => (
+            {sorted.map((ov: any) => (
               <TableRow key={ov.id}>
                 <TableCell className="font-medium">{ov.name}</TableCell>
                 <TableCell><Badge variant="secondary">{ov.era}</Badge></TableCell>
@@ -451,6 +544,17 @@ function LessonsTab() {
   const [createOpen, setCreateOpen] = useState(false);
   const [newLesson, setNewLesson] = useState({ title: "", description: "", era: ERAS[0].id as string });
 
+  const [filterText, setFilterText] = useState("");
+  const filteredData = useMemo(() => {
+    if (!filterText) return lessons;
+    const q = filterText.toLowerCase();
+    return lessons.filter((l) =>
+      (l.title ?? "").toLowerCase().includes(q) ||
+      (l.era ?? "").toLowerCase().includes(q)
+    );
+  }, [lessons, filterText]);
+  const { sortField, sortDir, toggleSort, sorted } = useTableSort(filteredData, "title");
+
   const fetchLessons = useCallback(async () => {
     const { data } = await supabase
       .from("lessons")
@@ -493,23 +597,29 @@ function LessonsTab() {
         <h2 className="text-lg font-serif font-semibold text-foreground">Public Lessons</h2>
         <Button size="sm" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-1" /> Create Lesson</Button>
       </div>
+
+      <div className="relative">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input placeholder="Filter lessons…" value={filterText} onChange={(e) => setFilterText(e.target.value)} className="pl-9 max-w-sm" />
+      </div>
+
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading…</p>
-      ) : lessons.length === 0 ? (
+      ) : sorted.length === 0 ? (
         <p className="text-muted-foreground text-sm">No public lessons yet.</p>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Era</TableHead>
-              <TableHead>Scenes</TableHead>
-              <TableHead>Updated</TableHead>
+              <SortableHead label="Title" field="title" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
+              <SortableHead label="Era" field="era" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
+              <SortableHead label="Scenes" field="scene_count" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
+              <SortableHead label="Updated" field="updated_at" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <TableHead>Featured</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {lessons.map((l) => (
+            {sorted.map((l: any) => (
               <TableRow key={l.id}>
                 <TableCell className="font-medium">{l.title}</TableCell>
                 <TableCell>{l.era ? <Badge variant="secondary">{l.era}</Badge> : "—"}</TableCell>
@@ -558,6 +668,17 @@ function UsersTab() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [filterText, setFilterText] = useState("");
+  const filteredData = useMemo(() => {
+    if (!filterText) return users;
+    const q = filterText.toLowerCase();
+    return users.filter((u) =>
+      (u.email ?? "").toLowerCase().includes(q) ||
+      (u.display_name ?? "").toLowerCase().includes(q)
+    );
+  }, [users, filterText]);
+  const { sortField, sortDir, toggleSort, sorted } = useTableSort(filteredData, "email");
+
   const fetchUsers = useCallback(async () => {
     const { data, error } = await supabase.rpc("admin_list_users");
     if (error) { toast({ title: "Error loading users", description: error.message, variant: "destructive" }); return; }
@@ -580,21 +701,27 @@ function UsersTab() {
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-serif font-semibold text-foreground">Users</h2>
+
+      <div className="relative">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input placeholder="Filter users…" value={filterText} onChange={(e) => setFilterText(e.target.value)} className="pl-9 max-w-sm" />
+      </div>
+
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading…</p>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Email</TableHead>
-              <TableHead>Display Name</TableHead>
-              <TableHead>Lessons</TableHead>
-              <TableHead>Joined</TableHead>
+              <SortableHead label="Email" field="email" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
+              <SortableHead label="Display Name" field="display_name" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
+              <SortableHead label="Lessons" field="lesson_count" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
+              <SortableHead label="Joined" field="created_at" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <TableHead className="w-28"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((u: any) => (
+            {sorted.map((u: any) => (
               <TableRow key={u.user_id}>
                 <TableCell className="font-medium">{u.email}</TableCell>
                 <TableCell>{u.display_name ?? "—"}</TableCell>
