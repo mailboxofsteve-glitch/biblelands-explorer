@@ -68,8 +68,8 @@ export default function GroundViewButton({ mapRef, compact = false }: GroundView
     const map = mapRef.current?.getMap();
     if (!map) return;
 
-    // Disable terrain
-    map.setTerrain(null);
+    // Restore default terrain exaggeration
+    map.setTerrain({ source: "mapbox-dem", exaggeration: 2.0 });
 
     // Remove sky layer
     if (map.getLayer("sky-atmosphere")) {
