@@ -86,7 +86,7 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
       center: [35.5, 32.0],
       zoom: 6,
       bearing: 0,
-      pitch: 0,
+      pitch: 35,
       maxPitch: 85,
     });
 
