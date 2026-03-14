@@ -33,6 +33,7 @@ const MapPage = () => {
   }, [lessonId, navigate]);
   const mapRef = useRef<MapCanvasHandle>(null);
   const [presenting, setPresenting] = useState(false);
+  const [presenterMode, setPresenterMode] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const isMobile = useIsMobile();
 
