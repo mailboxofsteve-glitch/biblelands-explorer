@@ -86,7 +86,7 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
       center: [35.5, 32.0],
       zoom: 6,
       bearing: 0,
-      pitch: 0,
+      pitch: 35,
       maxPitch: 85,
     });
 
@@ -100,6 +100,32 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
           tileSize: 512,
           maxzoom: 14,
         });
+      }
+      map.setTerrain({ source: "mapbox-dem", exaggeration: 2.0 });
+
+      if (!map.getLayer("hillshade-layer")) {
+        // Insert before first symbol layer for proper z-order
+        const layers = map.getStyle()?.layers;
+        let firstSymbol: string | undefined;
+        if (layers) {
+          for (const layer of layers) {
+            if (layer.type === "symbol") { firstSymbol = layer.id; break; }
+          }
+        }
+        try {
+          map.addLayer({
+            id: "hillshade-layer",
+            type: "hillshade",
+            source: "mapbox-dem",
+            paint: {
+              "hillshade-exaggeration": 0.6,
+              "hillshade-shadow-color": "#473B2B",
+              "hillshade-highlight-color": "#FDFCFA",
+              "hillshade-accent-color": "#5a4a3a",
+              "hillshade-illumination-direction": 315,
+            },
+          }, firstSymbol);
+        } catch { /* layer may already exist */ }
       }
     };
 
