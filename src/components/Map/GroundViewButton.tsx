@@ -29,9 +29,9 @@ export default function GroundViewButton({ mapRef, compact = false }: GroundView
       bearing: map.getBearing(),
     });
 
-    // Enable 3D terrain
+    // Increase terrain exaggeration for dramatic ground-level relief
     if (map.getSource("mapbox-dem")) {
-      map.setTerrain({ source: "mapbox-dem", exaggeration: 1.5 });
+      map.setTerrain({ source: "mapbox-dem", exaggeration: 3.0 });
     }
 
     // Add sky layer for atmosphere
