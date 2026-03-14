@@ -130,6 +130,9 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
         prev();
       } else if (e.key === "Escape") {
         e.preventDefault();
+        if (document.fullscreenElement) {
+          document.exitFullscreen?.().catch(() => {});
+        }
         onExit();
       }
     };

@@ -258,9 +258,12 @@ const MapPage = () => {
           </div>
         )}
 
-        {/* Presentation HUD */}
-        {presenting && (
+        {/* Presentation HUD or Presenter View */}
+        {presenting && !presenterMode && (
           <PresentationHUD mapRef={mapRef} onExit={exitPresentation} />
+        )}
+        {presenting && presenterMode && (
+          <PresenterView mapRef={mapRef} onExit={exitPresentation} />
         )}
 
         {/* Mobile toolbar */}

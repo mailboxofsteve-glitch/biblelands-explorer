@@ -52,13 +52,28 @@ const SharedLesson = () => {
 
   const enterPresentation = useCallback(() => {
     setPresenting(true);
+    document.documentElement.requestFullscreen?.().catch(() => {});
     setTimeout(() => mapRef.current?.getMap()?.resize(), 350);
   }, []);
 
   const exitPresentation = useCallback(() => {
     setPresenting(false);
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.().catch(() => {});
+    }
     setTimeout(() => mapRef.current?.getMap()?.resize(), 350);
   }, []);
+
+  useEffect(() => {
+    const handler = () => {
+      if (!document.fullscreenElement && presenting) {
+        setPresenting(false);
+        setTimeout(() => mapRef.current?.getMap()?.resize(), 350);
+      }
+    };
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, [presenting]);
 
   if (loading) {
     return (
