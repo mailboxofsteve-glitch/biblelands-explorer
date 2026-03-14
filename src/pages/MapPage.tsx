@@ -239,6 +239,14 @@ const MapPage = () => {
               <Maximize size={14} />
               Classroom Mode
             </button>
+            <button
+              onClick={enterPresenterView}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-card/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-card border border-border/30 transition-all text-xs font-medium"
+              title="Presenter View (multi-monitor)"
+            >
+              <Monitor size={14} />
+              Presenter View
+            </button>
             <GroundViewButton mapRef={mapRef} />
             <button
               onClick={() => setShowShortcuts(true)}
