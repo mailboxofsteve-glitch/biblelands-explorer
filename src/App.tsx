@@ -19,6 +19,7 @@ const Library = lazy(() => import("./pages/Library"));
 const Lessons = lazy(() => import("./pages/Lessons"));
 const Explore = lazy(() => import("./pages/Explore"));
 const Admin = lazy(() => import("./pages/Admin"));
+const PresentationWindow = lazy(() => import("./pages/PresentationWindow"));
 
 const queryClient = new QueryClient();
 
