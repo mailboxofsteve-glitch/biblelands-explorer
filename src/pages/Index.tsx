@@ -29,9 +29,7 @@ const Index = () => {
       <header className="border-b border-border/40 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BookOpen className="h-6 w-6 text-accent" />
-          <span className="text-xl font-serif font-bold tracking-wide text-foreground">
-            BibleLands
-          </span>
+          <span className="text-xl font-serif font-bold tracking-wide text-foreground">BibleLands</span>
         </div>
         <nav className="flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={() => navigate("/lessons")}>
@@ -39,6 +37,9 @@ const Index = () => {
           </Button>
           <Button variant="ghost" size="sm" onClick={() => navigate("/explore")}>
             Explore
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>
+            Log In
           </Button>
         </nav>
       </header>
@@ -51,9 +52,8 @@ const Index = () => {
             <span className="text-accent">of Scripture</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-lg mx-auto leading-relaxed">
-            An interactive geography tool for Bible class teachers. Create
-            lessons, pin locations, and guide your students through the ancient
-            world — scene by scene.
+            An interactive geography tool for Bible class teachers. Create lessons, pin locations, and guide your
+            students through the ancient world — scene by scene.
           </p>
           <div className="flex items-center justify-center gap-3 pt-2">
             <Button size="lg" onClick={() => navigate("/lessons")}>
@@ -69,17 +69,10 @@ const Index = () => {
         {/* Features */}
         <div className="grid md:grid-cols-3 gap-6 mt-20 max-w-4xl w-full">
           {features.map((f) => (
-            <div
-              key={f.title}
-              className="rounded-lg border border-border/40 bg-card p-6 text-left space-y-3"
-            >
+            <div key={f.title} className="rounded-lg border border-border/40 bg-card p-6 text-left space-y-3">
               <f.icon className="h-8 w-8 text-accent" />
-              <h3 className="text-lg font-serif font-semibold text-foreground">
-                {f.title}
-              </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {f.description}
-              </p>
+              <h3 className="text-lg font-serif font-semibold text-foreground">{f.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{f.description}</p>
             </div>
           ))}
         </div>
