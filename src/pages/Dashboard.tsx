@@ -89,6 +89,16 @@ const Dashboard = () => {
     navigate("/login");
   };
 
+  const handleDelete = async (lessonId: string) => {
+    const { error } = await supabase.from("lessons").delete().eq("id", lessonId);
+    if (error) {
+      toast({ title: "Error deleting lesson", description: error.message, variant: "destructive" });
+      return;
+    }
+    setLessons((prev) => prev.filter((l) => l.id !== lessonId));
+    toast({ title: "Lesson deleted" });
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
