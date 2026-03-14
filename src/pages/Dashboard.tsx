@@ -14,6 +14,17 @@ import { format } from "date-fns";
 import LessonGridSkeleton from "@/components/LessonGridSkeleton";
 import OnboardingBanner from "@/components/OnboardingBanner";
 import TipOfTheDay from "@/components/TipOfTheDay";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface LessonRow {
   id: string;
