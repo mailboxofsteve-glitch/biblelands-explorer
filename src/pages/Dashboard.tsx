@@ -153,9 +153,35 @@ const Dashboard = () => {
                 key={lesson.id}
                 className="rounded-lg border border-border/40 bg-card p-5 space-y-3 flex flex-col"
               >
-                <h3 className="text-lg font-serif font-semibold text-foreground truncate">
-                  {lesson.title}
-                </h3>
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="text-lg font-serif font-semibold text-foreground truncate">
+                    {lesson.title}
+                  </h3>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete "{lesson.title}"?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete the lesson and all its scenes. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDelete(lesson.id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
                 {lesson.description && (
                   <p className="text-sm text-muted-foreground line-clamp-2">{lesson.description}</p>
                 )}
