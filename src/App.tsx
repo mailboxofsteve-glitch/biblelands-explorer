@@ -19,6 +19,7 @@ const Library = lazy(() => import("./pages/Library"));
 const Lessons = lazy(() => import("./pages/Lessons"));
 const Explore = lazy(() => import("./pages/Explore"));
 const Admin = lazy(() => import("./pages/Admin"));
+const PresentationWindow = lazy(() => import("./pages/PresentationWindow"));
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/explore" element={<Explore />} />
             <Route path="/share/:token" element={<SharedLesson />} />
             <Route path="/library" element={<Library />} />
+            <Route path="/present/:lessonId" element={<ProtectedRoute><PresentationWindow /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>

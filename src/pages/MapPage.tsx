@@ -17,8 +17,9 @@ import { useOverlays } from "@/hooks/useOverlays";
 import { animateRoutesSequentially } from "@/lib/animateRoute";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
-import { Maximize, Settings, Keyboard } from "lucide-react";
+import { Maximize, Settings, Keyboard, Monitor } from "lucide-react";
 import GroundViewButton from "@/components/Map/GroundViewButton";
+import PresenterView from "@/components/Map/PresenterView";
 
 const MapPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
@@ -32,6 +33,7 @@ const MapPage = () => {
   }, [lessonId, navigate]);
   const mapRef = useRef<MapCanvasHandle>(null);
   const [presenting, setPresenting] = useState(false);
+  const [presenterMode, setPresenterMode] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const isMobile = useIsMobile();
 
@@ -45,13 +47,40 @@ const MapPage = () => {
 
   const enterPresentation = useCallback(() => {
     setPresenting(true);
+    document.documentElement.requestFullscreen?.().catch(() => {});
     setTimeout(() => mapRef.current?.getMap()?.resize(), 350);
   }, []);
 
   const exitPresentation = useCallback(() => {
     setPresenting(false);
+    setPresenterMode(false);
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.().catch(() => {});
+    }
     setTimeout(() => mapRef.current?.getMap()?.resize(), 350);
   }, []);
+
+  // Sync state if user exits fullscreen via browser (e.g. Escape at browser level)
+  useEffect(() => {
+    const handler = () => {
+      if (!document.fullscreenElement && presenting) {
+        setPresenting(false);
+        setPresenterMode(false);
+        setTimeout(() => mapRef.current?.getMap()?.resize(), 350);
+      }
+    };
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, [presenting]);
+
+  const enterPresenterView = useCallback(() => {
+    if (!lessonId) return;
+    // Open audience window
+    window.open(`/present/${lessonId}`, "audience_window", "popup,width=1280,height=720");
+    setPresenterMode(true);
+    setPresenting(true);
+    setTimeout(() => mapRef.current?.getMap()?.resize(), 350);
+  }, [lessonId]);
 
   const handleSaveScene = useCallback(() => {
     if (!lessonId || lessonId.startsWith(':')) {
@@ -210,6 +239,14 @@ const MapPage = () => {
               <Maximize size={14} />
               Classroom Mode
             </button>
+            <button
+              onClick={enterPresenterView}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-card/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-card border border-border/30 transition-all text-xs font-medium"
+              title="Presenter View (multi-monitor)"
+            >
+              <Monitor size={14} />
+              Presenter View
+            </button>
             <GroundViewButton mapRef={mapRef} />
             <button
               onClick={() => setShowShortcuts(true)}
@@ -221,9 +258,12 @@ const MapPage = () => {
           </div>
         )}
 
-        {/* Presentation HUD */}
-        {presenting && (
+        {/* Presentation HUD or Presenter View */}
+        {presenting && !presenterMode && (
           <PresentationHUD mapRef={mapRef} onExit={exitPresentation} />
+        )}
+        {presenting && presenterMode && (
+          <PresenterView mapRef={mapRef} onExit={exitPresentation} />
         )}
 
         {/* Mobile toolbar */}
