@@ -47,13 +47,40 @@ const MapPage = () => {
 
   const enterPresentation = useCallback(() => {
     setPresenting(true);
+    document.documentElement.requestFullscreen?.().catch(() => {});
     setTimeout(() => mapRef.current?.getMap()?.resize(), 350);
   }, []);
 
   const exitPresentation = useCallback(() => {
     setPresenting(false);
+    setPresenterMode(false);
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.().catch(() => {});
+    }
     setTimeout(() => mapRef.current?.getMap()?.resize(), 350);
   }, []);
+
+  // Sync state if user exits fullscreen via browser (e.g. Escape at browser level)
+  useEffect(() => {
+    const handler = () => {
+      if (!document.fullscreenElement && presenting) {
+        setPresenting(false);
+        setPresenterMode(false);
+        setTimeout(() => mapRef.current?.getMap()?.resize(), 350);
+      }
+    };
+    document.addEventListener("fullscreenchange", handler);
+    return () => document.removeEventListener("fullscreenchange", handler);
+  }, [presenting]);
+
+  const enterPresenterView = useCallback(() => {
+    if (!lessonId) return;
+    // Open audience window
+    window.open(`/present/${lessonId}`, "audience_window", "popup,width=1280,height=720");
+    setPresenterMode(true);
+    setPresenting(true);
+    setTimeout(() => mapRef.current?.getMap()?.resize(), 350);
+  }, [lessonId]);
 
   const handleSaveScene = useCallback(() => {
     if (!lessonId || lessonId.startsWith(':')) {
