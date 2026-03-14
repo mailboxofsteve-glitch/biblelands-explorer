@@ -32,7 +32,7 @@ const Index = () => {
           <span className="text-xl font-serif font-bold tracking-wide text-foreground">BibleLands</span>
         </div>
         <nav className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/lessons")}>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
             Lessons
           </Button>
           <Button variant="ghost" size="sm" onClick={() => navigate("/explore")}>
