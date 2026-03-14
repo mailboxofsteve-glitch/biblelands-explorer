@@ -7,13 +7,24 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Plus, LogOut, Library, Settings } from "lucide-react";
+import { BookOpen, Plus, LogOut, Library, Settings, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useProfile } from "@/hooks/useProfile";
 import { format } from "date-fns";
 import LessonGridSkeleton from "@/components/LessonGridSkeleton";
 import OnboardingBanner from "@/components/OnboardingBanner";
 import TipOfTheDay from "@/components/TipOfTheDay";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface LessonRow {
   id: string;
@@ -78,6 +89,16 @@ const Dashboard = () => {
     navigate("/login");
   };
 
+  const handleDelete = async (lessonId: string) => {
+    const { error } = await supabase.from("lessons").delete().eq("id", lessonId);
+    if (error) {
+      toast({ title: "Error deleting lesson", description: error.message, variant: "destructive" });
+      return;
+    }
+    setLessons((prev) => prev.filter((l) => l.id !== lessonId));
+    toast({ title: "Lesson deleted" });
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
@@ -132,9 +153,35 @@ const Dashboard = () => {
                 key={lesson.id}
                 className="rounded-lg border border-border/40 bg-card p-5 space-y-3 flex flex-col"
               >
-                <h3 className="text-lg font-serif font-semibold text-foreground truncate">
-                  {lesson.title}
-                </h3>
+                <div className="flex items-start justify-between gap-2">
+                  <h3 className="text-lg font-serif font-semibold text-foreground truncate">
+                    {lesson.title}
+                  </h3>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete "{lesson.title}"?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete the lesson and all its scenes. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDelete(lesson.id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
                 {lesson.description && (
                   <p className="text-sm text-muted-foreground line-clamp-2">{lesson.description}</p>
                 )}
