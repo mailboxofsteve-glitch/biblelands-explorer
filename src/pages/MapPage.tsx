@@ -17,8 +17,9 @@ import { useOverlays } from "@/hooks/useOverlays";
 import { animateRoutesSequentially } from "@/lib/animateRoute";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
-import { Maximize, Settings, Keyboard } from "lucide-react";
+import { Maximize, Settings, Keyboard, Monitor } from "lucide-react";
 import GroundViewButton from "@/components/Map/GroundViewButton";
+import PresenterView from "@/components/Map/PresenterView";
 
 const MapPage = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
