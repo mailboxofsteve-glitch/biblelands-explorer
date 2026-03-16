@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MapCanvas, { type MapCanvasHandle } from "@/components/Map/MapCanvas";
-import TimelineSlider from "@/components/Map/TimelineSlider";
+import BottomTimeline from "@/components/Map/BottomTimeline";
 import OverlayToggles from "@/components/Map/OverlayToggles";
 import TeacherTools from "@/components/Map/TeacherTools";
 import SceneList from "@/components/Map/SceneList";
