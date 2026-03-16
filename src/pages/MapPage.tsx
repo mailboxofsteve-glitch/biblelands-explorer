@@ -236,13 +236,6 @@ const MapPage = () => {
             </div>
           </div>
 
-          <div className="px-2 py-3 border-b border-border/40">
-            <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground px-3 mb-2">
-              Era
-            </h3>
-            <TimelineSlider />
-          </div>
-
           <div className="px-2 py-3 flex-1">
             <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground px-3 mb-2">
               Overlays
