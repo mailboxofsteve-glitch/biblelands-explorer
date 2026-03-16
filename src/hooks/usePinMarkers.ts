@@ -52,11 +52,10 @@ function createMarkerEl(pin: LocationPin, isSelected: boolean, showLabel: boolea
   tooltip.style.cssText = `
     position: absolute; bottom: 36px; left: 50%;
     transform: translateX(-50%);
-    background: #1a1208; color: #e8d5a0;
-    border: 1px solid #8a6040;
-    padding: 3px 8px; border-radius: 4px;
+    color: #3a2a1a;
     font-size: 11px; white-space: nowrap;
-    pointer-events: none; opacity: ${showLabel ? "1" : "0"};
+    pointer-events: none; text-shadow: 0 1px 2px rgba(255,255,255,0.3);
+    opacity: ${showLabel ? "1" : "0"};
     transition: opacity 0.15s;
     z-index: 10;
   `;
