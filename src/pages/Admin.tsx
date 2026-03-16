@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { BookOpen, LogOut, MapPin, Layers, GraduationCap, Users, Plus, Pencil, Trash2, ArrowLeft, Map, ArrowUpDown, ArrowUp, ArrowDown, Search, Upload, CheckSquare, Square, FileUp, Loader2 } from "lucide-react";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { parseKml, parseKmlOverlays, type ParsedKmlLocation, type ParsedKmlOverlay } from "@/lib/kmlParser";
@@ -79,6 +80,9 @@ function LocationsTab() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [form, setForm] = useState({ name_ancient: "", name_modern: "", location_type: "city", era_tags: [] as string[], primary_verse: "", description: "", lat: "32.0", lng: "35.5" });
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const fetchLocations = useCallback(async () => {
     const { data } = await supabase.from("locations_with_coords").select("*").order("name_ancient");
@@ -100,7 +104,33 @@ function LocationsTab() {
     );
   }, [locations, filterText]);
 
+  // Clear selection when filter changes
+  useEffect(() => { setSelectedIds(new Set()); }, [filterText]);
+
   const { sortField, sortDir, toggleSort, sorted } = useTableSort(filteredData, "name_ancient");
+
+  const allVisibleIds = useMemo(() => sorted.map((l: any) => l.id), [sorted]);
+  const allSelected = allVisibleIds.length > 0 && allVisibleIds.every((id: string) => selectedIds.has(id));
+  const someSelected = allVisibleIds.some((id: string) => selectedIds.has(id));
+
+  const toggleSelectAll = () => {
+    if (allSelected) { setSelectedIds(new Set()); }
+    else { setSelectedIds(new Set(allVisibleIds)); }
+  };
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
+  };
+
+  const handleBulkDelete = async () => {
+    setBulkDeleting(true);
+    const { error } = await supabase.from("locations").delete().in("id", Array.from(selectedIds));
+    setBulkDeleting(false);
+    setBulkDeleteOpen(false);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: `${selectedIds.size} location(s) deleted` });
+    setSelectedIds(new Set());
+    fetchLocations();
+  };
 
   const openAdd = () => {
     setEditing(null);
@@ -178,12 +208,24 @@ function LocationsTab() {
         <Input placeholder="Filter locations…" value={filterText} onChange={(e) => setFilterText(e.target.value)} className="pl-9 max-w-sm" />
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 text-sm">
+          <span className="font-medium">{selectedIds.size} selected</span>
+          <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)}>
+            <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete Selected
+          </Button>
+        </div>
+      )}
+
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading…</p>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-10">
+                <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} aria-label="Select all" {...(someSelected && !allSelected ? { "data-state": "indeterminate" } : {})} />
+              </TableHead>
               <SortableHead label="Ancient Name" field="name_ancient" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <SortableHead label="Modern Name" field="name_modern" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <SortableHead label="Type" field="location_type" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
@@ -194,7 +236,10 @@ function LocationsTab() {
           </TableHeader>
           <TableBody>
             {sorted.map((loc: any) => (
-              <TableRow key={loc.id}>
+              <TableRow key={loc.id} data-state={selectedIds.has(loc.id) ? "selected" : undefined}>
+                <TableCell>
+                  <Checkbox checked={selectedIds.has(loc.id)} onCheckedChange={() => toggleSelect(loc.id)} aria-label={`Select ${loc.name_ancient}`} />
+                </TableCell>
                 <TableCell className="font-medium">{loc.name_ancient}</TableCell>
                 <TableCell>{loc.name_modern ?? "—"}</TableCell>
                 <TableCell><Badge variant="outline">{loc.location_type}</Badge></TableCell>
@@ -217,6 +262,21 @@ function LocationsTab() {
           </TableBody>
         </Table>
       )}
+
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.size} location(s)?</AlertDialogTitle>
+            <AlertDialogDescription>This action cannot be undone. The selected locations will be permanently removed.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete} disabled={bulkDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {bulkDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -281,6 +341,9 @@ function OverlaysTab() {
   const [drawMode, setDrawMode] = useState(false);
   const [editShapes, setEditShapes] = useState<number[][][] | undefined>(undefined);
   const [form, setForm] = useState({ name: "", slug: "", era: ERAS[0].id as string, category: "route", default_color: "#c8a020", geojson: "", is_preloaded: true });
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const [filterText, setFilterText] = useState("");
   const filteredData = useMemo(() => {
@@ -292,7 +355,34 @@ function OverlaysTab() {
       (o.category ?? "").toLowerCase().includes(q)
     );
   }, [overlays, filterText]);
+
+  // Clear selection when filter changes
+  useEffect(() => { setSelectedIds(new Set()); }, [filterText]);
+
   const { sortField, sortDir, toggleSort, sorted } = useTableSort(filteredData, "name");
+
+  const allVisibleIds = useMemo(() => sorted.map((o: any) => o.id), [sorted]);
+  const allSelected = allVisibleIds.length > 0 && allVisibleIds.every((id: string) => selectedIds.has(id));
+  const someSelected = allVisibleIds.some((id: string) => selectedIds.has(id));
+
+  const toggleSelectAll = () => {
+    if (allSelected) { setSelectedIds(new Set()); }
+    else { setSelectedIds(new Set(allVisibleIds)); }
+  };
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
+  };
+
+  const handleBulkDelete = async () => {
+    setBulkDeleting(true);
+    const { error } = await supabase.from("overlays").delete().in("id", Array.from(selectedIds));
+    setBulkDeleting(false);
+    setBulkDeleteOpen(false);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: `${selectedIds.size} overlay(s) deleted` });
+    setSelectedIds(new Set());
+    fetchOverlays();
+  };
 
   const fetchOverlays = useCallback(async () => {
     const { data } = await supabase.from("overlays").select("*").eq("is_preloaded", true).order("name");
@@ -425,12 +515,24 @@ function OverlaysTab() {
         <Input placeholder="Filter overlays…" value={filterText} onChange={(e) => setFilterText(e.target.value)} className="pl-9 max-w-sm" />
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 text-sm">
+          <span className="font-medium">{selectedIds.size} selected</span>
+          <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)}>
+            <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete Selected
+          </Button>
+        </div>
+      )}
+
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading…</p>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-10">
+                <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} aria-label="Select all" {...(someSelected && !allSelected ? { "data-state": "indeterminate" } : {})} />
+              </TableHead>
               <SortableHead label="Name" field="name" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <SortableHead label="Era" field="era" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <SortableHead label="Category" field="category" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
@@ -440,7 +542,10 @@ function OverlaysTab() {
           </TableHeader>
           <TableBody>
             {sorted.map((ov: any) => (
-              <TableRow key={ov.id}>
+              <TableRow key={ov.id} data-state={selectedIds.has(ov.id) ? "selected" : undefined}>
+                <TableCell>
+                  <Checkbox checked={selectedIds.has(ov.id)} onCheckedChange={() => toggleSelect(ov.id)} aria-label={`Select ${ov.name}`} />
+                </TableCell>
                 <TableCell className="font-medium">{ov.name}</TableCell>
                 <TableCell><Badge variant="secondary">{ov.era}</Badge></TableCell>
                 <TableCell>{ov.category}</TableCell>
@@ -456,6 +561,21 @@ function OverlaysTab() {
           </TableBody>
         </Table>
       )}
+
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.size} overlay(s)?</AlertDialogTitle>
+            <AlertDialogDescription>This action cannot be undone. The selected overlays will be permanently removed.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete} disabled={bulkDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {bulkDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
