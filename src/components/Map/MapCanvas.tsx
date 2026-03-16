@@ -206,6 +206,51 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
   // Tool interactions (pin drop click, route drawing)
   useToolInteractions(mapReady ? mapRef.current : null);
 
+  // Fog toggle
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+    if (fogEnabled) {
+      map.setFog({
+        color: "rgb(220, 210, 195)",
+        "high-color": "rgb(180, 165, 145)",
+        "horizon-blend": 0.08,
+        "space-color": "rgb(25, 25, 35)",
+        "star-intensity": 0.3,
+      });
+    } else {
+      map.setFog(null as any);
+    }
+  }, [fogEnabled, mapReady]);
+
+  // Label font size scaling
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+    const layers = map.getStyle()?.layers;
+    if (!layers) return;
+    for (const layer of layers) {
+      if (layer.type !== "symbol") continue;
+      // Cache original text-size on first encounter
+      if (!(layer.id in originalTextSizes.current)) {
+        try {
+          originalTextSizes.current[layer.id] = map.getLayoutProperty(layer.id, "text-size") ?? 12;
+        } catch {
+          originalTextSizes.current[layer.id] = 12;
+        }
+      }
+      const orig = originalTextSizes.current[layer.id];
+      try {
+        if (typeof orig === "number") {
+          map.setLayoutProperty(layer.id, "text-size", orig * labelFontSize);
+        } else if (Array.isArray(orig)) {
+          // expression-based sizes — wrap in ["*", expr, multiplier]
+          map.setLayoutProperty(layer.id, "text-size", ["*", ["number", orig.length ? orig : 12], labelFontSize]);
+        }
+      } catch { /* skip layers that don't support text-size */ }
+    }
+  }, [labelFontSize, mapReady]);
+
   const toggleSkin = useCallback(
     () => setSkin((prev) => (prev === "ancient" ? "satellite" : "ancient")),
     []
