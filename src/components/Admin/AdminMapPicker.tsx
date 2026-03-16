@@ -317,8 +317,11 @@ export default function AdminMapPicker({
   // Sync marker for point mode
   useEffect(() => {
     if (mode === "point" && initialCenter && markerRef.current) {
-      markerRef.current.setLngLat(initialCenter);
-      mapRef.current?.flyTo({ center: initialCenter, duration: 300 });
+      const [lng, lat] = initialCenter;
+      if (Math.abs(lat) <= 90 && Math.abs(lng) <= 180) {
+        markerRef.current.setLngLat(initialCenter);
+        mapRef.current?.flyTo({ center: initialCenter, duration: 300 });
+      }
     }
   }, [initialCenter, mode]);
 
