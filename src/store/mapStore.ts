@@ -113,6 +113,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   customPinIds: [],
   customOverlayIds: [],
   hiddenLocationIds: [],
+  yearFilter: null,
   showAllLabels: false,
   fogEnabled: true,
   labelFontSize: 1.0,
