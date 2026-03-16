@@ -49,6 +49,8 @@ interface MapState {
 
   // Labels
   showAllLabels: boolean;
+  fogEnabled: boolean;
+  labelFontSize: number;
 
   // Scene state
   scenes: LessonScene[];
