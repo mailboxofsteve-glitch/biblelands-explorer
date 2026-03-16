@@ -31,25 +31,7 @@ const BORDER_KEYWORDS = ["boundary", "border", "admin"];
 const LABEL_KEYWORDS = ["label", "symbol", "place", "poi"];
 const WATER_KEYWORDS = ["water", "sea", "ocean", "lake", "river"];
 
-function scaleExpression(expr: any[], factor: number): any[] {
-  const type = expr[0];
-  if (type === "interpolate" || type === "interpolate-hcl" || type === "interpolate-lab") {
-    const result = [...expr];
-    for (let i = 4; i < result.length; i += 2) {
-      if (typeof result[i] === "number") result[i] = result[i] * factor;
-    }
-    return result;
-  }
-  if (type === "step") {
-    const result = [...expr];
-    if (typeof result[2] === "number") result[2] = result[2] * factor;
-    for (let i = 4; i < result.length; i += 2) {
-      if (typeof result[i] === "number") result[i] = result[i] * factor;
-    }
-    return result;
-  }
-  return ["*", expr, factor];
-}
+
 
 function hideModernLayers(map: mapboxgl.Map) {
   const layers = map.getStyle()?.layers;
