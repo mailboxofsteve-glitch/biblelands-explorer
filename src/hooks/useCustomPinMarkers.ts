@@ -178,7 +178,7 @@ export function useCustomPinMarkers(
 
       existing.set(pin.id, marker);
     }
-  }, [map, pins, selectedPinId, onSelectPin, showAllLabels]);
+  }, [map, pins, selectedPinId, onSelectPin, showAllLabels, labelFontSize]);
 
   useEffect(() => {
     return () => {

@@ -216,7 +216,7 @@ export function usePinMarkers(
     return () => {
       map.off("click", onMapClick);
     };
-  }, [map, pins, selectedPinId, onSelectPin, showAllLabels, hiddenLocationIds, presenting]);
+  }, [map, pins, selectedPinId, onSelectPin, showAllLabels, hiddenLocationIds, presenting, labelFontSize]);
 
   // Cleanup on unmount
   useEffect(() => {
