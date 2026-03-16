@@ -15,7 +15,7 @@ import { useMapStore, ERAS } from "@/store/mapStore";
 import { useAuth } from "@/hooks/useAuth";
 import { useScenes } from "@/hooks/useScenes";
 import { useOverlays } from "@/hooks/useOverlays";
-import { animateRoutesSequentially } from "@/lib/animateRoute";
+import { animateRoutesSimultaneously } from "@/lib/animateRoute";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { Maximize, Settings, Keyboard, Monitor } from "lucide-react";
