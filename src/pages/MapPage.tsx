@@ -43,6 +43,10 @@ const MapPage = () => {
   const activeOverlayIds = useMapStore((s) => s.activeOverlayIds);
   const showAllLabels = useMapStore((s) => s.showAllLabels);
   const toggleShowAllLabels = useMapStore((s) => s.toggleShowAllLabels);
+  const fogEnabled = useMapStore((s) => s.fogEnabled);
+  const toggleFog = useMapStore((s) => s.toggleFog);
+  const labelFontSize = useMapStore((s) => s.labelFontSize);
+  const setLabelFontSize = useMapStore((s) => s.setLabelFontSize);
   const { persistScene } = useScenes(lessonId);
   const { overlays } = useOverlays();
 
