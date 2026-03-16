@@ -86,18 +86,44 @@ export default function MobileToolbar({
           <SheetHeader>
             <div className="flex items-center justify-between">
               <SheetTitle className="font-serif">Controls</SheetTitle>
-              <label className="flex items-center gap-1.5 cursor-pointer" title="Show all labels">
-                <span className="text-[10px] text-muted-foreground">Labels</span>
-                <Switch
-                  checked={showAllLabels}
-                  onCheckedChange={toggleShowAllLabels}
-                  className="scale-75"
-                />
-              </label>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-1.5 cursor-pointer" title="Atmospheric fog">
+                  <span className="text-[10px] text-muted-foreground">Fog</span>
+                  <Switch
+                    checked={fogEnabled}
+                    onCheckedChange={toggleFog}
+                    className="scale-75"
+                  />
+                </label>
+                <label className="flex items-center gap-1.5 cursor-pointer" title="Show all labels">
+                  <span className="text-[10px] text-muted-foreground">Labels</span>
+                  <Switch
+                    checked={showAllLabels}
+                    onCheckedChange={toggleShowAllLabels}
+                    className="scale-75"
+                  />
+                </label>
+              </div>
             </div>
           </SheetHeader>
 
           <div className="space-y-4 py-4">
+            {/* Label font size slider */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] text-muted-foreground">Label Size</span>
+                <span className="text-[10px] text-muted-foreground">{labelFontSize.toFixed(1)}×</span>
+              </div>
+              <Slider
+                value={[labelFontSize]}
+                onValueChange={([v]) => setLabelFontSize(v)}
+                min={0.5}
+                max={2.0}
+                step={0.1}
+                className="w-full"
+              />
+            </div>
+
             <div>
               <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
                 Era

@@ -109,6 +109,8 @@ export const useMapStore = create<MapState>((set, get) => ({
   customOverlayIds: [],
   hiddenLocationIds: [],
   showAllLabels: false,
+  fogEnabled: true,
+  labelFontSize: 1.0,
   scenes: [],
   currentSceneIndex: null,
 
