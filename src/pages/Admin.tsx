@@ -609,7 +609,10 @@ function OverlaysTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-serif font-semibold text-foreground">Preloaded Overlays</h2>
-        <Button size="sm" onClick={openAdd}><Plus className="h-4 w-4 mr-1" /> Add Overlay</Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => downloadKml(overlaysToKml(sorted), "overlays-export.kml")}><Download className="h-4 w-4 mr-1" /> Download KML</Button>
+          <Button size="sm" onClick={openAdd}><Plus className="h-4 w-4 mr-1" /> Add Overlay</Button>
+        </div>
       </div>
 
       <div className="relative">
