@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { BookOpen, LogOut, MapPin, Layers, GraduationCap, Users, Plus, Pencil, Trash2, ArrowLeft, Map, ArrowUpDown, ArrowUp, ArrowDown, Search, Upload, CheckSquare, Square, FileUp, Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { parseKml, type ParsedKmlLocation } from "@/lib/kmlParser";
+import { parseKml, parseKmlOverlays, type ParsedKmlLocation, type ParsedKmlOverlay } from "@/lib/kmlParser";
 import { format } from "date-fns";
 import { ERAS } from "@/store/mapStore";
 import AdminMapPicker from "@/components/Admin/AdminMapPicker";
