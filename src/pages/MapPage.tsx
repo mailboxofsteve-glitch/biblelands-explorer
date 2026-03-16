@@ -151,7 +151,7 @@ const MapPage = () => {
       }
     }
 
-    animateRoutesSequentially(map, routes, { duration: 3000 });
+    animateRoutesSimultaneously(map, routes);
     toast.success("Animating routes…");
   }, [overlays, activeOverlayIds]);
 

@@ -357,6 +357,21 @@ export function cleanupAllAnimationLayers(map: mapboxgl.Map) {
   }
 }
 
+/* ── Simultaneous animation ─────────────────────────── */
+
+export function animateRoutesSimultaneously(
+  map: mapboxgl.Map,
+  routes: { geojson: GeoJSON.GeoJSON; color: string }[],
+  options: { loop?: boolean; onAllComplete?: () => void } = {}
+): { cancel: () => void } {
+  const anims = routes.map(route =>
+    animateRoute(map, route.geojson, { color: route.color, loop: options.loop })
+  );
+  return {
+    cancel: () => anims.forEach(a => a.cancel()),
+  };
+}
+
 /* ── Sequential animation ───────────────────────────── */
 
 export function animateRoutesSequentially(

@@ -238,7 +238,7 @@ export default function SceneList({ mapRef }: SceneListProps) {
       }));
 
       animCancelRef.current?.();
-      const { cancel } = animateRoutesSequentially(map, routes, { duration: 3000 });
+      const { cancel } = animateRoutesSimultaneously(map, routes);
       animCancelRef.current = cancel;
     },
     [mapRef, overlays]

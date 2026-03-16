@@ -135,9 +135,7 @@ const TeacherTools = ({ mapRef }: TeacherToolsProps) => {
       }
     }
 
-    const { cancel } = animateRoutesSequentially(map, routes, {
-      duration: 3000,
-      pauseMs: 400,
+    const { cancel } = animateRoutesSimultaneously(map, routes, {
       loop: true,
     });
 

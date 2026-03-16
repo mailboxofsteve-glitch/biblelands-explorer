@@ -67,7 +67,7 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
       }
 
       animCancelRef.current?.();
-      const { cancel } = animateRoutesSequentially(map, routes, { duration: 3000, loop: true });
+      const { cancel } = animateRoutesSimultaneously(map, routes, { loop: true });
       animCancelRef.current = cancel;
     },
     [mapRef, overlays]
