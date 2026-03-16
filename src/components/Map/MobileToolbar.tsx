@@ -7,6 +7,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import TimelineSlider from "@/components/Map/TimelineSlider";
 import OverlayToggles from "@/components/Map/OverlayToggles";
 import SceneList from "@/components/Map/SceneList";
