@@ -962,15 +962,17 @@ const Admin = () => {
 
       <main className="flex-1 px-4 sm:px-6 py-8 max-w-6xl mx-auto w-full">
         <Tabs defaultValue="locations" className="space-y-6">
-          <TabsList className="w-full sm:w-auto">
+          <TabsList className="w-full sm:w-auto flex-wrap">
             <TabsTrigger value="locations" className="gap-1.5"><MapPin className="h-4 w-4" /> Locations</TabsTrigger>
             <TabsTrigger value="overlays" className="gap-1.5"><Layers className="h-4 w-4" /> Overlays</TabsTrigger>
+            <TabsTrigger value="import" className="gap-1.5"><Upload className="h-4 w-4" /> Import</TabsTrigger>
             <TabsTrigger value="lessons" className="gap-1.5"><GraduationCap className="h-4 w-4" /> Lessons</TabsTrigger>
             <TabsTrigger value="users" className="gap-1.5"><Users className="h-4 w-4" /> Users</TabsTrigger>
           </TabsList>
 
           <TabsContent value="locations"><LocationsTab /></TabsContent>
           <TabsContent value="overlays"><OverlaysTab /></TabsContent>
+          <TabsContent value="import"><ImportTab /></TabsContent>
           <TabsContent value="lessons"><LessonsTab /></TabsContent>
           <TabsContent value="users"><UsersTab /></TabsContent>
         </Tabs>
