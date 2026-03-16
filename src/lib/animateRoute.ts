@@ -13,10 +13,48 @@ interface AnimationState {
 }
 
 let animCounter = 0;
+const ARROW_IMAGE_ID = "__conveyor-arrow";
 
 /**
- * Progressively draws a LineString on the map with a glowing head marker.
- * Returns { cancel } to abort mid-animation.
+ * Registers a small chevron arrow image on the map for use in symbol layers.
+ */
+function ensureArrowImage(map: mapboxgl.Map, color: string) {
+  const id = `${ARROW_IMAGE_ID}-${color.replace("#", "")}`;
+  if (map.hasImage(id)) return id;
+
+  const size = 16;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+
+  // Draw a right-pointing chevron/triangle
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(2, 2);
+  ctx.lineTo(14, 8);
+  ctx.lineTo(2, 14);
+  ctx.closePath();
+  ctx.fill();
+
+  map.addImage(id, { width: size, height: size, data: new Uint8Array(ctx.getImageData(0, 0, size, size).data) });
+  return id;
+}
+
+/**
+ * Computes bearing in degrees from point a to point b (geographic coords).
+ */
+function bearing(a: [number, number], b: [number, number]): number {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  // atan2 gives angle from positive x-axis; convert to map bearing (0=north, CW)
+  const angle = Math.atan2(dx, dy) * (180 / Math.PI);
+  return angle;
+}
+
+/**
+ * Draws a route with a conveyor-belt arrow animation.
+ * The full line is shown immediately; evenly-spaced arrows slide along the path.
  */
 export function animateRoute(
   map: mapboxgl.Map,
@@ -25,7 +63,7 @@ export function animateRoute(
 ): AnimationState {
   const {
     color = "#e6a817",
-    duration = 3000,
+    duration,
     lineWidth = 3,
     segmentIndices,
     onComplete,
@@ -35,13 +73,15 @@ export function animateRoute(
   const sourceId = `${id}-src`;
   const layerId = `${id}-line`;
   const glowLayerId = `${id}-glow`;
-  const headSourceId = `${id}-head-src`;
-  const headLayerId = `${id}-head`;
-  const headGlowLayerId = `${id}-head-glow`;
+  const arrowSourceId = `${id}-arrows-src`;
+  const arrowLayerId = `${id}-arrows`;
+  const startSourceId = `${id}-start-src`;
+  const startLayerId = `${id}-start`;
+  const endSourceId = `${id}-end-src`;
+  const endLayerId = `${id}-end`;
 
-  // Extract coordinates and densify for smooth animation
   const rawCoords = extractCoordinates(geojson, segmentIndices);
-  const coords = densifyCoordinates(rawCoords, 0.1);
+  const coords = densifyCoordinates(rawCoords, 0.05);
 
   if (coords.length < 2) {
     onComplete?.();
@@ -51,39 +91,67 @@ export function animateRoute(
   let cancelled = false;
   let rafId: number | null = null;
 
+  // Precompute bearings for every segment
+  const bearings: number[] = [];
+  for (let i = 0; i < coords.length; i++) {
+    const next = i < coords.length - 1 ? i + 1 : i;
+    bearings.push(bearing(coords[i], coords[next]));
+  }
+
+  // Full line data
   const lineData: GeoJSON.Feature<GeoJSON.LineString> = {
     type: "Feature",
     properties: {},
-    geometry: { type: "LineString", coordinates: [coords[0]] },
+    geometry: { type: "LineString", coordinates: coords },
   };
 
-  const headData: GeoJSON.Feature<GeoJSON.Point> = {
-    type: "Feature",
-    properties: {},
-    geometry: { type: "Point", coordinates: coords[0] },
+  // Arrow spacing: one arrow every ARROW_SPACING points
+  const ARROW_SPACING = 10;
+  const arrowCount = Math.max(1, Math.floor(coords.length / ARROW_SPACING));
+
+  // Build arrow GeoJSON
+  function buildArrowFeatures(offset: number): GeoJSON.Feature[] {
+    const features: GeoJSON.Feature[] = [];
+    for (let i = 0; i < arrowCount; i++) {
+      const rawIdx = (i * ARROW_SPACING + offset) % coords.length;
+      const idx = Math.floor(rawIdx);
+      const frac = rawIdx - idx;
+      const nextIdx = (idx + 1) % coords.length;
+
+      // Interpolate position
+      const lng = coords[idx][0] + (coords[nextIdx][0] - coords[idx][0]) * frac;
+      const lat = coords[idx][1] + (coords[nextIdx][1] - coords[idx][1]) * frac;
+
+      features.push({
+        type: "Feature",
+        properties: { bearing: bearings[idx] },
+        geometry: { type: "Point", coordinates: [lng, lat] },
+      });
+    }
+    return features;
+  }
+
+  const arrowData: GeoJSON.FeatureCollection = {
+    type: "FeatureCollection",
+    features: buildArrowFeatures(0),
   };
 
-  const startSourceId = `${id}-start-src`;
-  const startLayerId = `${id}-start`;
-  const endSourceId = `${id}-end-src`;
-  const endLayerId = `${id}-end`;
+  // Register arrow image
+  const arrowImageId = ensureArrowImage(map, color);
 
-  const startData: GeoJSON.Feature<GeoJSON.Point> = {
-    type: "Feature",
-    properties: {},
-    geometry: { type: "Point", coordinates: coords[0] },
-  };
-
-  const endData: GeoJSON.Feature<GeoJSON.Point> = {
-    type: "Feature",
-    properties: {},
-    geometry: { type: "Point", coordinates: coords[coords.length - 1] },
-  };
-
+  // Add sources
   map.addSource(sourceId, { type: "geojson", data: lineData });
-  map.addSource(headSourceId, { type: "geojson", data: headData });
-  map.addSource(startSourceId, { type: "geojson", data: startData });
+  map.addSource(arrowSourceId, { type: "geojson", data: arrowData });
+  map.addSource(startSourceId, {
+    type: "geojson",
+    data: { type: "Feature", properties: {}, geometry: { type: "Point", coordinates: coords[0] } },
+  });
+  map.addSource(endSourceId, {
+    type: "geojson",
+    data: { type: "Feature", properties: {}, geometry: { type: "Point", coordinates: coords[coords.length - 1] } },
+  });
 
+  // Glow line
   map.addLayer({
     id: glowLayerId,
     type: "line",
@@ -96,6 +164,7 @@ export function animateRoute(
     },
   });
 
+  // Main line
   map.addLayer({
     id: layerId,
     type: "line",
@@ -107,7 +176,7 @@ export function animateRoute(
     },
   });
 
-  // Persistent green start marker
+  // Start marker (green)
   map.addLayer({
     id: startLayerId,
     type: "circle",
@@ -121,109 +190,72 @@ export function animateRoute(
     },
   });
 
+  // End marker (red)
   map.addLayer({
-    id: headGlowLayerId,
+    id: endLayerId,
     type: "circle",
-    source: headSourceId,
+    source: endSourceId,
     paint: {
-      "circle-radius": 10,
-      "circle-color": color,
-      "circle-opacity": 0.25,
-      "circle-blur": 1,
-    },
-  });
-
-  map.addLayer({
-    id: headLayerId,
-    type: "circle",
-    source: headSourceId,
-    paint: {
-      "circle-radius": 4,
-      "circle-color": color,
-      "circle-opacity": 1,
+      "circle-radius": 5,
+      "circle-color": "#ef4444",
       "circle-stroke-width": 2,
       "circle-stroke-color": "#ffffff",
+      "circle-opacity": 1,
     },
   });
 
-  const totalSegments = coords.length - 1;
+  // Arrow symbol layer
+  map.addLayer({
+    id: arrowLayerId,
+    type: "symbol",
+    source: arrowSourceId,
+    layout: {
+      "icon-image": arrowImageId,
+      "icon-size": 0.9,
+      "icon-rotate": ["get", "bearing"],
+      "icon-rotation-alignment": "map",
+      "icon-allow-overlap": true,
+      "icon-ignore-placement": true,
+    },
+    paint: {
+      "icon-opacity": 0.85,
+    },
+  });
+
+  // Animation loop — conveyor belt
+  let offset = 0;
+  const SPEED = 0.15; // points per frame
   const startTime = performance.now();
 
-  function tick(now: number) {
+  function tick() {
     if (cancelled) return;
 
-    const elapsed = now - startTime;
-    const progress = Math.min(elapsed / duration, 1);
+    offset = (offset + SPEED) % coords.length;
 
-    const floatIndex = progress * totalSegments;
-    const segIndex = Math.min(Math.floor(floatIndex), totalSegments - 1);
-    const segFraction = floatIndex - segIndex;
+    arrowData.features = buildArrowFeatures(offset);
+    const src = map.getSource(arrowSourceId) as mapboxgl.GeoJSONSource | undefined;
+    if (src) src.setData(arrowData);
 
-    const drawn = coords.slice(0, segIndex + 1);
-
-    const from = coords[segIndex];
-    const to = coords[segIndex + 1];
-
-    if (from && to) {
-      const interpPoint: [number, number] = [
-        from[0] + (to[0] - from[0]) * segFraction,
-        from[1] + (to[1] - from[1]) * segFraction,
-      ];
-      drawn.push(interpPoint);
-      headData.geometry.coordinates = interpPoint;
-    } else {
-      headData.geometry.coordinates = coords[coords.length - 1];
+    // If duration is set, auto-stop after that time
+    if (duration && performance.now() - startTime >= duration) {
+      onComplete?.();
+      return;
     }
 
-    lineData.geometry.coordinates = drawn;
-
-    const lineSrc = map.getSource(sourceId) as mapboxgl.GeoJSONSource | undefined;
-    const headSrc = map.getSource(headSourceId) as mapboxgl.GeoJSONSource | undefined;
-
-    if (lineSrc) lineSrc.setData(lineData);
-    if (headSrc) headSrc.setData(headData);
-
-    if (progress < 1) {
-      rafId = requestAnimationFrame(tick);
-    } else {
-      setTimeout(() => {
-        cleanup(true);
-        // Add red end marker
-        try {
-          map.addSource(endSourceId, { type: "geojson", data: endData });
-          map.addLayer({
-            id: endLayerId,
-            type: "circle",
-            source: endSourceId,
-            paint: {
-              "circle-radius": 5,
-              "circle-color": "#ef4444",
-              "circle-stroke-width": 2,
-              "circle-stroke-color": "#ffffff",
-              "circle-opacity": 1,
-            },
-          });
-        } catch (_) { /* map may be gone */ }
-        onComplete?.();
-      }, 400);
-    }
+    rafId = requestAnimationFrame(tick);
   }
 
   rafId = requestAnimationFrame(tick);
 
-  function cleanup(keepLine = false) {
-    if (map.getLayer(headGlowLayerId)) map.removeLayer(headGlowLayerId);
-    if (map.getLayer(headLayerId)) map.removeLayer(headLayerId);
-    if (map.getSource(headSourceId)) map.removeSource(headSourceId);
+  function cleanup() {
+    const layerIds = [arrowLayerId, endLayerId, startLayerId, layerId, glowLayerId];
+    const sourceIds = [arrowSourceId, endSourceId, startSourceId, sourceId];
 
-    if (!keepLine) {
-      if (map.getLayer(glowLayerId)) map.removeLayer(glowLayerId);
-      if (map.getLayer(layerId)) map.removeLayer(layerId);
-      if (map.getSource(sourceId)) map.removeSource(sourceId);
-      if (map.getLayer(startLayerId)) map.removeLayer(startLayerId);
-      if (map.getSource(startSourceId)) map.removeSource(startSourceId);
-      if (map.getLayer(endLayerId)) map.removeLayer(endLayerId);
-      if (map.getSource(endSourceId)) map.removeSource(endSourceId);
+    for (const lid of layerIds) {
+      if (map.getLayer(lid)) map.removeLayer(lid);
+    }
+    for (const sid of sourceIds) {
+      if (map.getSource(sid)) map.removeSource(sid);
     }
   }
 
@@ -231,7 +263,7 @@ export function animateRoute(
     cancel: () => {
       cancelled = true;
       if (rafId !== null) cancelAnimationFrame(rafId);
-      cleanup(false);
+      cleanup();
     },
   };
 }
@@ -274,11 +306,6 @@ function extractCoordinates(
 
 /* ── Coordinate densification ───────────────────────── */
 
-/**
- * Inserts additional points between sparse waypoints via linear interpolation.
- * `maxGap` is the maximum distance (in degrees) between consecutive points.
- * Roughly 0.1° ≈ 11 km at the equator.
- */
 function densifyCoordinates(
   coords: [number, number][],
   maxGap: number = 0.1
@@ -310,10 +337,6 @@ function densifyCoordinates(
 
 /* ── Cleanup all animation layers ────────────────────── */
 
-/**
- * Removes all animation-generated sources and layers from the map.
- * Call before loading a new scene to prevent stale route artifacts.
- */
 export function cleanupAllAnimationLayers(map: mapboxgl.Map) {
   const style = map.getStyle();
   if (!style?.layers) return;
@@ -326,7 +349,6 @@ export function cleanupAllAnimationLayers(map: mapboxgl.Map) {
     if (map.getLayer(id)) map.removeLayer(id);
   }
 
-  // Remove matching sources
   const sources = style.sources ?? {};
   for (const srcId of Object.keys(sources)) {
     if (srcId.startsWith("anim-route-") && map.getSource(srcId)) {
