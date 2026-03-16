@@ -126,13 +126,6 @@ export default function MobileToolbar({
 
             <div>
               <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-                Era
-              </h3>
-              <TimelineSlider />
-            </div>
-
-            <div>
-              <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
                 Overlays
               </h3>
               <OverlayToggles />
