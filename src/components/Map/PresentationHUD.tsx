@@ -55,10 +55,16 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
 
       if (lineOverlays.length === 0) return;
 
-      const routes = lineOverlays.map((o) => ({
-        geojson: o.geojson as unknown as GeoJSON.GeoJSON,
-        color: o.default_color,
-      }));
+      const routes: { geojson: GeoJSON.GeoJSON; color: string }[] = [];
+      for (const o of lineOverlays) {
+        const gj = o.geojson as any;
+        const features = gj?.type === "FeatureCollection" ? gj.features : [gj?.type === "Feature" ? gj : { type: "Feature", geometry: gj, properties: {} }];
+        for (const f of features) {
+          if (f?.geometry?.type?.toLowerCase().includes("line")) {
+            routes.push({ geojson: f as GeoJSON.GeoJSON, color: o.default_color });
+          }
+        }
+      }
 
       animCancelRef.current?.();
       const { cancel } = animateRoutesSequentially(map, routes, { duration: 3000, loop: true });
@@ -180,7 +186,7 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
       </button>
 
       {/* Bottom HUD */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none">
+      <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none">
         {/* Scene title */}
         {currentScene && (
           <div className="pointer-events-auto bg-card/80 backdrop-blur-sm rounded-lg px-4 py-1.5 border border-border/30">

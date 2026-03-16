@@ -140,10 +140,16 @@ const MapPage = () => {
       return;
     }
 
-    const routes = lineOverlays.map((o) => ({
-      geojson: o.geojson as unknown as GeoJSON.GeoJSON,
-      color: o.default_color,
-    }));
+    const routes: { geojson: GeoJSON.GeoJSON; color: string }[] = [];
+    for (const o of lineOverlays) {
+      const gj = o.geojson as any;
+      const features = gj?.type === "FeatureCollection" ? gj.features : [gj?.type === "Feature" ? gj : { type: "Feature", geometry: gj, properties: {} }];
+      for (const f of features) {
+        if (f?.geometry?.type?.toLowerCase().includes("line")) {
+          routes.push({ geojson: f as GeoJSON.GeoJSON, color: o.default_color });
+        }
+      }
+    }
 
     animateRoutesSequentially(map, routes, { duration: 3000 });
     toast.success("Animating routes…");
@@ -309,7 +315,7 @@ const MapPage = () => {
       </div>
 
       {/* Bottom timeline */}
-      {!presenting && <BottomTimeline />}
+      <BottomTimeline />
 
       {/* Modals */}
       {lessonId && (
