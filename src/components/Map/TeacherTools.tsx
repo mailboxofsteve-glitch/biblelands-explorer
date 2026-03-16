@@ -13,6 +13,7 @@ import {
   Ship,
   User,
   CalendarDays,
+  AlertCircle,
   Route,
   Undo2,
   Trash2,
@@ -36,6 +37,7 @@ const PIN_ICONS = [
   { type: "ship", label: "Ship", icon: Ship },
   { type: "person", label: "Person", icon: User },
   { type: "event", label: "Event", icon: CalendarDays },
+  { type: "poi", label: "POI", icon: AlertCircle },
 ];
 
 interface TeacherToolsProps {
