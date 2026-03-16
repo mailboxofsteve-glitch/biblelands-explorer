@@ -125,6 +125,7 @@ export function useCustomPinMarkers(
         const tooltip = marker.getElement().querySelector(".custom-pin-tooltip") as HTMLDivElement | null;
         if (tooltip) {
           tooltip.style.opacity = showAllLabels ? "1" : "0";
+          tooltip.style.fontSize = `${11 * labelFontSize}px`;
         }
         continue;
       }
