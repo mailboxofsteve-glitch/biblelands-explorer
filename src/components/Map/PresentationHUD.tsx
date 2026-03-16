@@ -55,10 +55,16 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
 
       if (lineOverlays.length === 0) return;
 
-      const routes = lineOverlays.map((o) => ({
-        geojson: o.geojson as unknown as GeoJSON.GeoJSON,
-        color: o.default_color,
-      }));
+      const routes: { geojson: GeoJSON.GeoJSON; color: string }[] = [];
+      for (const o of lineOverlays) {
+        const gj = o.geojson as any;
+        const features = gj?.type === "FeatureCollection" ? gj.features : [gj?.type === "Feature" ? gj : { type: "Feature", geometry: gj, properties: {} }];
+        for (const f of features) {
+          if (f?.geometry?.type?.toLowerCase().includes("line")) {
+            routes.push({ geojson: f as GeoJSON.GeoJSON, color: o.default_color });
+          }
+        }
+      }
 
       animCancelRef.current?.();
       const { cancel } = animateRoutesSequentially(map, routes, { duration: 3000, loop: true });
