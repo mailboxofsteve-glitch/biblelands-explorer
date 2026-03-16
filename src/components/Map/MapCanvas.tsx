@@ -223,35 +223,8 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
     }
   }, [fogEnabled, mapReady]);
 
-  // Label font size scaling
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapReady) return;
-    const layers = map.getStyle()?.layers;
-    if (!layers) return;
-    for (const layer of layers) {
-      if (layer.type !== "symbol") continue;
-      // Cache original text-size on first encounter
-      if (!(layer.id in originalTextSizes.current)) {
-        try {
-          originalTextSizes.current[layer.id] = map.getLayoutProperty(layer.id, "text-size") ?? 12;
-        } catch {
-          originalTextSizes.current[layer.id] = 12;
-        }
-      }
-      const orig = originalTextSizes.current[layer.id];
-      try {
-        if (typeof orig === "number") {
-          map.setLayoutProperty(layer.id, "text-size", orig * labelFontSize);
-        } else if (Array.isArray(orig)) {
-          map.setLayoutProperty(layer.id, "text-size", scaleExpression(orig, labelFontSize) as any);
-        } else if (typeof orig === "object" && orig !== null && "stops" in orig) {
-          const scaled = { ...orig, stops: (orig as any).stops.map((s: [number, number]) => [s[0], s[1] * labelFontSize]) };
-          map.setLayoutProperty(layer.id, "text-size", scaled);
-        }
-      } catch { /* skip layers that don't support text-size */ }
-    }
-  }, [labelFontSize, mapReady]);
+
+
 
   const toggleSkin = useCallback(
     () => setSkin((prev) => (prev === "ancient" ? "satellite" : "ancient")),
