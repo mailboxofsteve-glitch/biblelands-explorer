@@ -158,9 +158,9 @@ function LocationsTab() {
   useEffect(() => { fetchLocations(); fetchParentLocations(); }, [fetchLocations, fetchParentLocations]);
 
   const parentNameMap = useMemo(() => {
-    const map = new Map<string, string>();
-    parentLocations.forEach((p) => map.set(p.id, p.name_ancient));
-    return map;
+    const m: Record<string, string> = {};
+    parentLocations.forEach((p) => { m[p.id] = p.name_ancient; });
+    return m;
   }, [parentLocations]);
 
   const [filterText, setFilterText] = useState("");
