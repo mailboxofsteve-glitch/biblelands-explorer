@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import PinDropModal from "./PinDropModal";
 import RouteFinishModal from "./RouteFinishModal";
-import { animateRoutesSequentially } from "@/lib/animateRoute";
+import { animateRoutesSimultaneously } from "@/lib/animateRoute";
 import { downloadMapScreenshot, generatePDFHandout } from "@/lib/exportUtils";
 import type { MapCanvasHandle } from "./MapCanvas";
 
@@ -135,9 +135,7 @@ const TeacherTools = ({ mapRef }: TeacherToolsProps) => {
       }
     }
 
-    const { cancel } = animateRoutesSequentially(map, routes, {
-      duration: 3000,
-      pauseMs: 400,
+    const { cancel } = animateRoutesSimultaneously(map, routes, {
       loop: true,
     });
 

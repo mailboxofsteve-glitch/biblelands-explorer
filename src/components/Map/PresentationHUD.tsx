@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useMapStore } from "@/store/mapStore";
 import { useOverlays } from "@/hooks/useOverlays";
-import { animateRoutesSequentially, cleanupAllAnimationLayers } from "@/lib/animateRoute";
+import { animateRoutesSimultaneously, cleanupAllAnimationLayers } from "@/lib/animateRoute";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -67,7 +67,7 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
       }
 
       animCancelRef.current?.();
-      const { cancel } = animateRoutesSequentially(map, routes, { duration: 3000, loop: true });
+      const { cancel } = animateRoutesSimultaneously(map, routes, { loop: true });
       animCancelRef.current = cancel;
     },
     [mapRef, overlays]
