@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import TimelineSlider from "@/components/Map/TimelineSlider";
+import OverlayToggles from "@/components/Map/OverlayToggles";
 import OverlayToggles from "@/components/Map/OverlayToggles";
 import SceneList from "@/components/Map/SceneList";
 import TeacherTools from "@/components/Map/TeacherTools";
