@@ -30,14 +30,14 @@ export function useOverlays() {
 
       const { data: preloaded } = await supabase
         .from("overlays")
-        .select("id, name, slug, category, era, default_color, default_style, geojson, is_preloaded")
+        .select("id, name, slug, category, era, default_color, default_style, geojson, is_preloaded, year_start, year_end")
         .eq("is_preloaded", true);
 
       let userOverlays: typeof preloaded = [];
       if (user) {
         const { data } = await supabase
           .from("overlays")
-          .select("id, name, slug, category, era, default_color, default_style, geojson, is_preloaded")
+          .select("id, name, slug, category, era, default_color, default_style, geojson, is_preloaded, year_start, year_end")
           .eq("created_by", user.id)
           .eq("is_preloaded", false);
         userOverlays = data;

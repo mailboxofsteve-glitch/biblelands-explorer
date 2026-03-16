@@ -27,7 +27,7 @@ export function usePins() {
       setLoading(true);
       const { data, error } = await supabase
         .from("locations_with_coords" as any)
-        .select("id, name_ancient, name_modern, name_hebrew, lng, lat, location_type, era_tags, primary_verse, description")
+        .select("id, name_ancient, name_modern, name_hebrew, lng, lat, location_type, era_tags, primary_verse, description, year_start, year_end, parent_location_id")
         .contains("era_tags", [currentEra]);
 
       if (error) {
