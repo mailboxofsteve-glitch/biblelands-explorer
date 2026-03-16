@@ -12,6 +12,9 @@ export interface LocationPin {
   era_tags: string[];
   primary_verse: string | null;
   description: string | null;
+  year_start: number | null;
+  year_end: number | null;
+  parent_location_id: string | null;
 }
 
 export function usePins() {
