@@ -131,6 +131,8 @@ export function useCustomPinMarkers(
       }
 
       const el = createMarkerEl(pin, selectedPinId === pin.id, showAllLabels);
+      const createdTooltip = el.querySelector(".custom-pin-tooltip") as HTMLDivElement | null;
+      if (createdTooltip) createdTooltip.style.fontSize = `${11 * labelFontSize}px`;
       const marker = new mapboxgl.Marker({ element: el, anchor: "bottom-left" })
         .setLngLat(pin.coordinates)
         .addTo(map);
