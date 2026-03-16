@@ -132,14 +132,28 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
       }
     };
 
+    const applyFog = () => {
+      map.setFog({
+        color: "rgb(220, 210, 195)",
+        "high-color": "rgb(180, 165, 145)",
+        "horizon-blend": 0.08,
+        "space-color": "rgb(25, 25, 35)",
+        "star-intensity": 0.3,
+      });
+    };
+
     map.on("load", () => {
       hideModernLayers(map);
       addTerrainSource();
+      applyFog();
+      originalTextSizes.current = {};
       setMapReady(true);
     });
     map.on("style.load", () => {
       hideModernLayers(map);
       addTerrainSource();
+      applyFog();
+      originalTextSizes.current = {};
       setMapReady(true);
     });
 
