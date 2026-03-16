@@ -728,6 +728,214 @@ function UsersTab() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  KML Import Tab                                                     */
+/* ------------------------------------------------------------------ */
+function ImportTab() {
+  const { toast } = useToast();
+  const [parsed, setParsed] = useState<ParsedKmlLocation[]>([]);
+  const [existingNames, setExistingNames] = useState<Set<string>>(new Set());
+  const [defaultEra, setDefaultEra] = useState<string>(ERAS[0].id);
+  const [importing, setImporting] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [fileName, setFileName] = useState("");
+
+  // Pre-fetch existing location names for duplicate detection
+  useEffect(() => {
+    supabase.from("locations_with_coords").select("name_ancient").then(({ data }) => {
+      const names = new Set((data ?? []).map((d: any) => (d.name_ancient ?? "").toLowerCase()));
+      setExistingNames(names);
+    });
+  }, []);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileName(file.name);
+    const text = await file.text();
+    const locations = parseKml(text);
+    // Mark duplicates
+    const withDuplicates = locations.map((loc) => ({
+      ...loc,
+      isDuplicate: existingNames.has(loc.name_ancient.toLowerCase()),
+      selected: !existingNames.has(loc.name_ancient.toLowerCase()),
+    }));
+    setParsed(withDuplicates);
+  };
+
+  const toggleSelect = (idx: number) => {
+    setParsed((prev) => prev.map((loc, i) => i === idx ? { ...loc, selected: !loc.selected } : loc));
+  };
+
+  const selectAll = () => setParsed((prev) => prev.map((loc) => ({ ...loc, selected: true })));
+  const deselectAll = () => setParsed((prev) => prev.map((loc) => ({ ...loc, selected: false })));
+
+  const selectedCount = parsed.filter((l) => l.selected).length;
+
+  const handleImport = async () => {
+    const toImport = parsed.filter((l) => l.selected);
+    if (toImport.length === 0) return;
+
+    setImporting(true);
+    setProgress(0);
+
+    // Batch in chunks of 50
+    const chunkSize = 50;
+    let totalInserted = 0;
+
+    for (let i = 0; i < toImport.length; i += chunkSize) {
+      const chunk = toImport.slice(i, i + chunkSize).map((loc) => ({
+        name_ancient: loc.name_ancient,
+        name_modern: loc.name_modern,
+        location_type: loc.location_type,
+        era_tags: [defaultEra],
+        primary_verse: loc.primary_verse,
+        description: loc.description,
+        lng: loc.lng,
+        lat: loc.lat,
+      }));
+
+      const { data, error } = await supabase.rpc("bulk_insert_locations", {
+        locations: chunk as any,
+      });
+
+      if (error) {
+        toast({ title: "Import error", description: error.message, variant: "destructive" });
+        break;
+      }
+      totalInserted += (data as number) ?? chunk.length;
+      setProgress(Math.round(((i + chunk.length) / toImport.length) * 100));
+    }
+
+    setImporting(false);
+    setProgress(100);
+    toast({ title: `Imported ${totalInserted} locations` });
+
+    // Update existing names set & mark newly imported as duplicates
+    const newNames = new Set(existingNames);
+    toImport.forEach((l) => newNames.add(l.name_ancient.toLowerCase()));
+    setExistingNames(newNames);
+    setParsed((prev) =>
+      prev.map((loc) => ({
+        ...loc,
+        isDuplicate: newNames.has(loc.name_ancient.toLowerCase()),
+        selected: false,
+      }))
+    );
+  };
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-lg font-serif font-semibold text-foreground">Import KML</h2>
+
+      <div className="flex flex-col sm:flex-row gap-4 items-start">
+        <div className="flex-1">
+          <Label>KML File</Label>
+          <div className="mt-1">
+            <label className="flex items-center gap-2 cursor-pointer border border-dashed border-border rounded-md p-4 hover:bg-muted/50 transition-colors">
+              <FileUp className="h-5 w-5 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">
+                {fileName || "Choose a .kml file…"}
+              </span>
+              <input type="file" accept=".kml" className="hidden" onChange={handleFileChange} />
+            </label>
+          </div>
+        </div>
+        <div>
+          <Label>Default Era</Label>
+          <Select value={defaultEra} onValueChange={setDefaultEra}>
+            <SelectTrigger className="mt-1 w-48"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {ERAS.map((e) => <SelectItem key={e.id} value={e.id}>{e.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {parsed.length > 0 && (
+        <>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {parsed.length} locations found · {selectedCount} selected
+              {parsed.filter((l) => l.isDuplicate).length > 0 && (
+                <span className="text-amber-600 ml-2">
+                  ({parsed.filter((l) => l.isDuplicate).length} already in database)
+                </span>
+              )}
+            </p>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={selectAll}>
+                <CheckSquare className="h-3.5 w-3.5 mr-1" /> Select All
+              </Button>
+              <Button variant="outline" size="sm" onClick={deselectAll}>
+                <Square className="h-3.5 w-3.5 mr-1" /> Deselect All
+              </Button>
+            </div>
+          </div>
+
+          <div className="max-h-[400px] overflow-auto border border-border rounded-md">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10"></TableHead>
+                  <TableHead>Ancient Name</TableHead>
+                  <TableHead>Modern Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Verse</TableHead>
+                  <TableHead>Coordinates</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {parsed.map((loc, idx) => (
+                  <TableRow
+                    key={idx}
+                    className={loc.isDuplicate ? "bg-amber-50 dark:bg-amber-950/20" : ""}
+                  >
+                    <TableCell>
+                      <Checkbox
+                        checked={loc.selected}
+                        onCheckedChange={() => toggleSelect(idx)}
+                      />
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {loc.name_ancient}
+                      {loc.isDuplicate && (
+                        <Badge variant="outline" className="ml-2 text-amber-600 border-amber-300 text-xs">
+                          exists
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm">{loc.name_modern || "—"}</TableCell>
+                    <TableCell><Badge variant="outline">{loc.location_type}</Badge></TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{loc.primary_verse || "—"}</TableCell>
+                    <TableCell className="text-xs font-mono text-muted-foreground">
+                      {loc.lat.toFixed(4)}, {loc.lng.toFixed(4)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {importing && (
+            <div className="space-y-1">
+              <Progress value={progress} className="h-2" />
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <Loader2 className="h-3 w-3 animate-spin" /> Importing…
+              </p>
+            </div>
+          )}
+
+          <Button onClick={handleImport} disabled={selectedCount === 0 || importing}>
+            <Upload className="h-4 w-4 mr-1" />
+            Import {selectedCount} Location{selectedCount !== 1 ? "s" : ""}
+          </Button>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Admin Page                                                         */
 /* ------------------------------------------------------------------ */
 const Admin = () => {
