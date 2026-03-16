@@ -85,6 +85,11 @@ interface MapState {
   toggleHideLocation: (id: string) => void;
   setHiddenLocationIds: (ids: string[]) => void;
 
+  // Year filter
+  yearFilter: [number, number] | null;
+  setYearFilter: (range: [number, number]) => void;
+  clearYearFilter: () => void;
+
   // Scene actions
   setScenes: (scenes: LessonScene[]) => void;
   saveScene: (camera: CameraState, lessonId: string, userId: string) => LessonScene | null;
