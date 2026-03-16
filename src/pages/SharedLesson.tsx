@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMapStore } from "@/store/mapStore";
 import MapCanvas, { type MapCanvasHandle } from "@/components/Map/MapCanvas";
 import PresentationHUD from "@/components/Map/PresentationHUD";
+import BottomTimeline from "@/components/Map/BottomTimeline";
 import EraSelector from "@/components/Map/EraSelector";
 import OverlayToggles from "@/components/Map/OverlayToggles";
 import SceneList from "@/components/Map/SceneList";
