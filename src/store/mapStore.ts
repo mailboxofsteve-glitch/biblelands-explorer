@@ -62,6 +62,8 @@ interface MapState {
 
   // Label actions
   toggleShowAllLabels: () => void;
+  toggleFog: () => void;
+  setLabelFontSize: (size: number) => void;
 
   // Tool actions
   startPinDrop: (iconType: string) => void;
