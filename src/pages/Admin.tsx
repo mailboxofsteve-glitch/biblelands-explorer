@@ -13,11 +13,12 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { BookOpen, LogOut, MapPin, Layers, GraduationCap, Users, Plus, Pencil, Trash2, ArrowLeft, Map, ArrowUpDown, ArrowUp, ArrowDown, Search, Upload, CheckSquare, Square, FileUp, Loader2 } from "lucide-react";
+import { BookOpen, LogOut, MapPin, Layers, GraduationCap, Users, Plus, Pencil, Trash2, ArrowLeft, Map, ArrowUpDown, ArrowUp, ArrowDown, Search, Upload, CheckSquare, Square, FileUp, Loader2, Download } from "lucide-react";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { parseKml, parseKmlOverlays, type ParsedKmlLocation, type ParsedKmlOverlay } from "@/lib/kmlParser";
+import { locationsToKml, overlaysToKml, downloadKml } from "@/lib/kmlExport";
 import { format } from "date-fns";
 import { ERAS } from "@/store/mapStore";
 import AdminMapPicker from "@/components/Admin/AdminMapPicker";
@@ -279,7 +280,10 @@ function LocationsTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-serif font-semibold text-foreground">Locations</h2>
-        <Button size="sm" onClick={openAdd}><Plus className="h-4 w-4 mr-1" /> Add Location</Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => downloadKml(locationsToKml(sorted), "locations-export.kml")}><Download className="h-4 w-4 mr-1" /> Download KML</Button>
+          <Button size="sm" onClick={openAdd}><Plus className="h-4 w-4 mr-1" /> Add Location</Button>
+        </div>
       </div>
 
       <div className="relative">
@@ -605,7 +609,10 @@ function OverlaysTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-serif font-semibold text-foreground">Preloaded Overlays</h2>
-        <Button size="sm" onClick={openAdd}><Plus className="h-4 w-4 mr-1" /> Add Overlay</Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => downloadKml(overlaysToKml(sorted), "overlays-export.kml")}><Download className="h-4 w-4 mr-1" /> Download KML</Button>
+          <Button size="sm" onClick={openAdd}><Plus className="h-4 w-4 mr-1" /> Add Overlay</Button>
+        </div>
       </div>
 
       <div className="relative">
