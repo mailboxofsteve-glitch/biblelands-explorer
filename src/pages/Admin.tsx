@@ -332,7 +332,7 @@ function LocationsTab() {
                   </div>
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{formatYearRange(loc.year_start, loc.year_end)}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">{loc.parent_location_id ? (parentNameMap.get(loc.parent_location_id) ?? "—") : "—"}</TableCell>
+                <TableCell className="text-xs text-muted-foreground">{loc.parent_location_id ? (parentNameMap[loc.parent_location_id] ?? "—") : "—"}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">{loc.primary_verse ?? "—"}</TableCell>
                 <TableCell>
                   <div className="flex gap-1">
