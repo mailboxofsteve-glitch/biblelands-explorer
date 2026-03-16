@@ -3,7 +3,7 @@ import { ArrowLeft, Layers } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MapCanvas, { type MapCanvasHandle } from "@/components/Map/MapCanvas";
-import TimelineSlider from "@/components/Map/TimelineSlider";
+import BottomTimeline from "@/components/Map/BottomTimeline";
 import OverlayToggles from "@/components/Map/OverlayToggles";
 import {
   Sheet,
@@ -44,12 +44,6 @@ const Explore = () => {
             <div className="p-3 space-y-4">
               <div>
                 <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-                  Era
-                </h3>
-                <TimelineSlider />
-              </div>
-              <div>
-                <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
                   Overlays
                 </h3>
                 <OverlayToggles />
@@ -64,35 +58,27 @@ const Explore = () => {
         </main>
       </div>
 
+      {/* Bottom timeline */}
+      <BottomTimeline />
+
       {/* Mobile floating button + sheet */}
       {isMobile && (
         <>
           <button
             onClick={() => setControlsOpen(true)}
-            className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 bg-card/90 backdrop-blur-sm rounded-full border border-border/40 px-4 py-2.5 shadow-lg text-muted-foreground hover:text-foreground transition-colors"
+            className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 bg-card/90 backdrop-blur-sm rounded-full border border-border/40 px-4 py-2.5 shadow-lg text-muted-foreground hover:text-foreground transition-colors"
           >
             <Layers size={16} />
-            <span className="text-xs font-medium">Controls</span>
+            <span className="text-xs font-medium">Overlays</span>
           </button>
 
           <Sheet open={controlsOpen} onOpenChange={setControlsOpen}>
             <SheetContent side="bottom" className="h-[50vh] overflow-y-auto">
               <SheetHeader>
-                <SheetTitle className="font-serif">Controls</SheetTitle>
+                <SheetTitle className="font-serif">Overlays</SheetTitle>
               </SheetHeader>
               <div className="space-y-4 py-4">
-                <div>
-                  <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-                    Era
-                  </h3>
-                  <TimelineSlider />
-                </div>
-                <div>
-                  <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-                    Overlays
-                  </h3>
-                  <OverlayToggles />
-                </div>
+                <OverlayToggles />
               </div>
             </SheetContent>
           </Sheet>
