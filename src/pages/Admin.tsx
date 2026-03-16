@@ -280,7 +280,10 @@ function LocationsTab() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-serif font-semibold text-foreground">Locations</h2>
-        <Button size="sm" onClick={openAdd}><Plus className="h-4 w-4 mr-1" /> Add Location</Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => downloadKml(locationsToKml(sorted), "locations-export.kml")}><Download className="h-4 w-4 mr-1" /> Download KML</Button>
+          <Button size="sm" onClick={openAdd}><Plus className="h-4 w-4 mr-1" /> Add Location</Button>
+        </div>
       </div>
 
       <div className="relative">
