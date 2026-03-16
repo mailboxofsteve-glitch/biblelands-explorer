@@ -5,6 +5,7 @@ export interface AnimateRouteOptions {
   duration?: number;
   lineWidth?: number;
   segmentIndices?: number[];
+  loop?: boolean;
   onComplete?: () => void;
 }
 
