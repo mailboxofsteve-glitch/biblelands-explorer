@@ -98,6 +98,7 @@ export function useCustomPinMarkers(
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const popupRef = useRef<mapboxgl.Popup | null>(null);
   const showAllLabels = useMapStore((s) => s.showAllLabels);
+  const labelFontSize = useMapStore((s) => s.labelFontSize);
 
   useEffect(() => {
     if (!map) return;
