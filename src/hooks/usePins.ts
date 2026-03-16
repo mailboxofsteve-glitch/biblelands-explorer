@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMapStore } from "@/store/mapStore";
 
@@ -19,7 +19,8 @@ export interface LocationPin {
 
 export function usePins() {
   const currentEra = useMapStore((s) => s.currentEra);
-  const [pins, setPins] = useState<LocationPin[]>([]);
+  const yearFilter = useMapStore((s) => s.yearFilter);
+  const [allPins, setAllPins] = useState<LocationPin[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,19 +33,28 @@ export function usePins() {
 
       if (error) {
         console.error("Failed to fetch locations:", error);
-        setPins([]);
+        setAllPins([]);
       } else {
         const parsed = (data ?? []).map((loc: any) => ({
           ...loc,
           coordinates: [loc.lng ?? 0, loc.lat ?? 0] as [number, number],
         })) as LocationPin[];
-        setPins(parsed);
+        setAllPins(parsed);
       }
       setLoading(false);
     };
 
     fetchPins();
   }, [currentEra]);
+
+  // Apply year filter: show pins with no year data (undated) + pins within range
+  const pins = useMemo(() => {
+    if (!yearFilter) return allPins;
+    return allPins.filter((pin) => {
+      if (pin.year_start == null) return true; // undated always visible
+      return pin.year_start <= yearFilter[1];
+    });
+  }, [allPins, yearFilter]);
 
   return { pins, loading };
 }
