@@ -155,6 +155,8 @@ export function usePinMarkers(
       }
 
       const el = createMarkerEl(pin, selectedPinId === pin.id, showAllLabels, isHidden);
+      const createdTooltip = el.querySelector(".pin-tooltip") as HTMLDivElement | null;
+      if (createdTooltip) createdTooltip.style.fontSize = `${11 * labelFontSize}px`;
 
       let marker: mapboxgl.Marker;
       try {
