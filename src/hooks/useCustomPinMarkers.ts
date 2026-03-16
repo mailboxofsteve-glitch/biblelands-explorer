@@ -18,6 +18,7 @@ const ICON_MAP: Record<string, string> = {
   star: "⭐",
   event: "📌",
   people: "👥",
+  poi: "❗",
 };
 
 function createMarkerEl(pin: CustomPin, isSelected: boolean, showLabel: boolean): HTMLDivElement {
