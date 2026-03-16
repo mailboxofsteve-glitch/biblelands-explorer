@@ -732,14 +732,15 @@ function UsersTab() {
 /* ------------------------------------------------------------------ */
 function ImportTab() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [parsed, setParsed] = useState<ParsedKmlLocation[]>([]);
+  const [parsedOverlays, setParsedOverlays] = useState<ParsedKmlOverlay[]>([]);
   const [existingNames, setExistingNames] = useState<Set<string>>(new Set());
   const [defaultEra, setDefaultEra] = useState<string>(ERAS[0].id);
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [fileName, setFileName] = useState("");
 
-  // Pre-fetch existing location names for duplicate detection
   useEffect(() => {
     supabase.from("locations_with_coords").select("name_ancient").then(({ data }) => {
       const names = new Set((data ?? []).map((d: any) => (d.name_ancient ?? "").toLowerCase()));
@@ -752,38 +753,50 @@ function ImportTab() {
     if (!file) return;
     setFileName(file.name);
     const text = await file.text();
+
     const locations = parseKml(text);
-    // Mark duplicates
     const withDuplicates = locations.map((loc) => ({
       ...loc,
       isDuplicate: existingNames.has(loc.name_ancient.toLowerCase()),
       selected: !existingNames.has(loc.name_ancient.toLowerCase()),
     }));
     setParsed(withDuplicates);
+
+    const overlays = parseKmlOverlays(text);
+    setParsedOverlays(overlays);
   };
 
   const toggleSelect = (idx: number) => {
     setParsed((prev) => prev.map((loc, i) => i === idx ? { ...loc, selected: !loc.selected } : loc));
   };
+  const toggleOverlaySelect = (idx: number) => {
+    setParsedOverlays((prev) => prev.map((o, i) => i === idx ? { ...o, selected: !o.selected } : o));
+  };
 
   const selectAll = () => setParsed((prev) => prev.map((loc) => ({ ...loc, selected: true })));
   const deselectAll = () => setParsed((prev) => prev.map((loc) => ({ ...loc, selected: false })));
+  const selectAllOverlays = () => setParsedOverlays((prev) => prev.map((o) => ({ ...o, selected: true })));
+  const deselectAllOverlays = () => setParsedOverlays((prev) => prev.map((o) => ({ ...o, selected: false })));
 
   const selectedCount = parsed.filter((l) => l.selected).length;
+  const selectedOverlayCount = parsedOverlays.filter((o) => o.selected).length;
 
   const handleImport = async () => {
-    const toImport = parsed.filter((l) => l.selected);
-    if (toImport.length === 0) return;
+    const toImportLocs = parsed.filter((l) => l.selected);
+    const toImportOverlays = parsedOverlays.filter((o) => o.selected);
+    if (toImportLocs.length === 0 && toImportOverlays.length === 0) return;
 
     setImporting(true);
     setProgress(0);
 
-    // Batch in chunks of 50
-    const chunkSize = 50;
+    const totalItems = toImportLocs.length + toImportOverlays.length;
+    let completed = 0;
     let totalInserted = 0;
 
-    for (let i = 0; i < toImport.length; i += chunkSize) {
-      const chunk = toImport.slice(i, i + chunkSize).map((loc) => ({
+    // Import locations in chunks
+    const chunkSize = 50;
+    for (let i = 0; i < toImportLocs.length; i += chunkSize) {
+      const chunk = toImportLocs.slice(i, i + chunkSize).map((loc) => ({
         name_ancient: loc.name_ancient,
         name_modern: loc.name_modern,
         location_type: loc.location_type,
@@ -803,16 +816,45 @@ function ImportTab() {
         break;
       }
       totalInserted += (data as number) ?? chunk.length;
-      setProgress(Math.round(((i + chunk.length) / toImport.length) * 100));
+      completed += chunk.length;
+      setProgress(Math.round((completed / totalItems) * 100));
+    }
+
+    // Import overlays
+    let overlaysInserted = 0;
+    for (const overlay of toImportOverlays) {
+      const { error } = await supabase.from("overlays").insert({
+        name: overlay.name,
+        slug: overlay.slug,
+        category: overlay.category,
+        era: defaultEra,
+        geojson: overlay.geojson as any,
+        default_color: overlay.default_color,
+        default_style: {} as any,
+        is_preloaded: true,
+        created_by: user?.id,
+      });
+
+      if (error) {
+        toast({ title: "Overlay import error", description: `${overlay.name}: ${error.message}`, variant: "destructive" });
+      } else {
+        overlaysInserted++;
+      }
+      completed++;
+      setProgress(Math.round((completed / totalItems) * 100));
     }
 
     setImporting(false);
     setProgress(100);
-    toast({ title: `Imported ${totalInserted} locations` });
 
-    // Update existing names set & mark newly imported as duplicates
+    const parts: string[] = [];
+    if (totalInserted > 0) parts.push(`${totalInserted} locations`);
+    if (overlaysInserted > 0) parts.push(`${overlaysInserted} overlays`);
+    toast({ title: `Imported ${parts.join(" and ")}` });
+
+    // Update existing names & reset selection
     const newNames = new Set(existingNames);
-    toImport.forEach((l) => newNames.add(l.name_ancient.toLowerCase()));
+    toImportLocs.forEach((l) => newNames.add(l.name_ancient.toLowerCase()));
     setExistingNames(newNames);
     setParsed((prev) =>
       prev.map((loc) => ({
@@ -821,6 +863,7 @@ function ImportTab() {
         selected: false,
       }))
     );
+    setParsedOverlays((prev) => prev.map((o) => ({ ...o, selected: false })));
   };
 
   return (
@@ -851,70 +894,126 @@ function ImportTab() {
         </div>
       </div>
 
-      {parsed.length > 0 && (
+      {(parsed.length > 0 || parsedOverlays.length > 0) && (
         <>
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              {parsed.length} locations found · {selectedCount} selected
-              {parsed.filter((l) => l.isDuplicate).length > 0 && (
-                <span className="text-amber-600 ml-2">
-                  ({parsed.filter((l) => l.isDuplicate).length} already in database)
-                </span>
-              )}
-            </p>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={selectAll}>
-                <CheckSquare className="h-3.5 w-3.5 mr-1" /> Select All
-              </Button>
-              <Button variant="outline" size="sm" onClick={deselectAll}>
-                <Square className="h-3.5 w-3.5 mr-1" /> Deselect All
-              </Button>
-            </div>
-          </div>
+          {/* Locations Table */}
+          {parsed.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary"><MapPin className="h-3 w-3 mr-1" />Locations</Badge>
+                  <p className="text-sm text-muted-foreground">
+                    {parsed.length} found · {selectedCount} selected
+                    {parsed.filter((l) => l.isDuplicate).length > 0 && (
+                      <span className="text-amber-600 ml-2">
+                        ({parsed.filter((l) => l.isDuplicate).length} already in database)
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={selectAll}>
+                    <CheckSquare className="h-3.5 w-3.5 mr-1" /> Select All
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={deselectAll}>
+                    <Square className="h-3.5 w-3.5 mr-1" /> Deselect All
+                  </Button>
+                </div>
+              </div>
 
-          <div className="max-h-[400px] overflow-auto border border-border rounded-md">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10"></TableHead>
-                  <TableHead>Ancient Name</TableHead>
-                  <TableHead>Modern Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Verse</TableHead>
-                  <TableHead>Coordinates</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {parsed.map((loc, idx) => (
-                  <TableRow
-                    key={idx}
-                    className={loc.isDuplicate ? "bg-amber-50 dark:bg-amber-950/20" : ""}
-                  >
-                    <TableCell>
-                      <Checkbox
-                        checked={loc.selected}
-                        onCheckedChange={() => toggleSelect(idx)}
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {loc.name_ancient}
-                      {loc.isDuplicate && (
-                        <Badge variant="outline" className="ml-2 text-amber-600 border-amber-300 text-xs">
-                          exists
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm">{loc.name_modern || "—"}</TableCell>
-                    <TableCell><Badge variant="outline">{loc.location_type}</Badge></TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{loc.primary_verse || "—"}</TableCell>
-                    <TableCell className="text-xs font-mono text-muted-foreground">
-                      {loc.lat.toFixed(4)}, {loc.lng.toFixed(4)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+              <div className="max-h-[300px] overflow-auto border border-border rounded-md">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-10"></TableHead>
+                      <TableHead>Ancient Name</TableHead>
+                      <TableHead>Modern Name</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Verse</TableHead>
+                      <TableHead>Coordinates</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {parsed.map((loc, idx) => (
+                      <TableRow
+                        key={idx}
+                        className={loc.isDuplicate ? "bg-amber-50 dark:bg-amber-950/20" : ""}
+                      >
+                        <TableCell>
+                          <Checkbox checked={loc.selected} onCheckedChange={() => toggleSelect(idx)} />
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {loc.name_ancient}
+                          {loc.isDuplicate && (
+                            <Badge variant="outline" className="ml-2 text-amber-600 border-amber-300 text-xs">exists</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm">{loc.name_modern || "—"}</TableCell>
+                        <TableCell><Badge variant="outline">{loc.location_type}</Badge></TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{loc.primary_verse || "—"}</TableCell>
+                        <TableCell className="text-xs font-mono text-muted-foreground">
+                          {loc.lat.toFixed(4)}, {loc.lng.toFixed(4)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
+
+          {/* Overlays Table */}
+          {parsedOverlays.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary"><Layers className="h-3 w-3 mr-1" />Overlays (Regions)</Badge>
+                  <p className="text-sm text-muted-foreground">
+                    {parsedOverlays.length} found · {selectedOverlayCount} selected
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={selectAllOverlays}>
+                    <CheckSquare className="h-3.5 w-3.5 mr-1" /> Select All
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={deselectAllOverlays}>
+                    <Square className="h-3.5 w-3.5 mr-1" /> Deselect All
+                  </Button>
+                </div>
+              </div>
+
+              <div className="max-h-[250px] overflow-auto border border-border rounded-md">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-10"></TableHead>
+                      <TableHead>Region Name</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Polygons</TableHead>
+                      <TableHead>Vertices</TableHead>
+                      <TableHead>Verse</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {parsedOverlays.map((overlay, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell>
+                          <Checkbox checked={overlay.selected} onCheckedChange={() => toggleOverlaySelect(idx)} />
+                        </TableCell>
+                        <TableCell className="font-medium">{overlay.name}</TableCell>
+                        <TableCell><Badge variant="outline">{overlay.category}</Badge></TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {overlay.geojson.features.length}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{overlay.vertexCount}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{overlay.primary_verse || "—"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
 
           {importing && (
             <div className="space-y-1">
@@ -925,9 +1024,11 @@ function ImportTab() {
             </div>
           )}
 
-          <Button onClick={handleImport} disabled={selectedCount === 0 || importing}>
+          <Button onClick={handleImport} disabled={(selectedCount === 0 && selectedOverlayCount === 0) || importing}>
             <Upload className="h-4 w-4 mr-1" />
-            Import {selectedCount} Location{selectedCount !== 1 ? "s" : ""}
+            Import {selectedCount > 0 ? `${selectedCount} Location${selectedCount !== 1 ? "s" : ""}` : ""}
+            {selectedCount > 0 && selectedOverlayCount > 0 ? " + " : ""}
+            {selectedOverlayCount > 0 ? `${selectedOverlayCount} Overlay${selectedOverlayCount !== 1 ? "s" : ""}` : ""}
           </Button>
         </>
       )}
