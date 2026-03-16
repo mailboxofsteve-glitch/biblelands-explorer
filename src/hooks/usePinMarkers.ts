@@ -146,8 +146,8 @@ export function usePinMarkers(
           el.style.boxShadow = selectedPinId === pin.id ? "0 0 14px #c8a02066" : "";
         }
         const tooltip = wrapper.querySelector(".pin-tooltip") as HTMLDivElement | null;
-        if (tooltip) {
-          tooltip.style.opacity = showAllLabels ? "1" : "0";
+        if (tooltip && showAllLabels) {
+          tooltip.style.opacity = "1";
         }
         continue;
       }

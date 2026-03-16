@@ -244,8 +244,10 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
         if (typeof orig === "number") {
           map.setLayoutProperty(layer.id, "text-size", orig * labelFontSize);
         } else if (Array.isArray(orig)) {
-          // expression-based sizes — wrap in ["*", expr, multiplier]
-          map.setLayoutProperty(layer.id, "text-size", ["*", ["number", orig.length ? orig : 12], labelFontSize]);
+          map.setLayoutProperty(layer.id, "text-size", ["*", orig, labelFontSize]);
+        } else if (typeof orig === "object" && orig !== null && "stops" in orig) {
+          const scaled = { ...orig, stops: (orig as any).stops.map((s: [number, number]) => [s[0], s[1] * labelFontSize]) };
+          map.setLayoutProperty(layer.id, "text-size", scaled);
         }
       } catch { /* skip layers that don't support text-size */ }
     }
