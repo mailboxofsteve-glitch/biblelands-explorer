@@ -171,7 +171,7 @@ const MapPage = () => {
   });
 
   return (
-    <div className="h-screen flex overflow-hidden bg-background">
+    <div className="h-screen flex flex-col overflow-hidden bg-background">
       {/* Left sidebar — controls (hidden on mobile) */}
       {!isMobile && (
         <aside
