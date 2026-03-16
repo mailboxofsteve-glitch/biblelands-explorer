@@ -145,7 +145,10 @@ export type Database = {
           name_ancient: string
           name_hebrew: string | null
           name_modern: string | null
+          parent_location_id: string | null
           primary_verse: string | null
+          year_end: number | null
+          year_start: number | null
         }
         Insert: {
           coordinates?: unknown
@@ -158,7 +161,10 @@ export type Database = {
           name_ancient: string
           name_hebrew?: string | null
           name_modern?: string | null
+          parent_location_id?: string | null
           primary_verse?: string | null
+          year_end?: number | null
+          year_start?: number | null
         }
         Update: {
           coordinates?: unknown
@@ -171,9 +177,27 @@ export type Database = {
           name_ancient?: string
           name_hebrew?: string | null
           name_modern?: string | null
+          parent_location_id?: string | null
           primary_verse?: string | null
+          year_end?: number | null
+          year_start?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "locations_parent_location_id_fkey"
+            columns: ["parent_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "locations_parent_location_id_fkey"
+            columns: ["parent_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations_with_coords"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       overlays: {
         Row: {
@@ -189,6 +213,8 @@ export type Database = {
           name: string
           slug: string
           updated_at: string
+          year_end: number | null
+          year_start: number | null
         }
         Insert: {
           category?: string
@@ -203,6 +229,8 @@ export type Database = {
           name: string
           slug: string
           updated_at?: string
+          year_end?: number | null
+          year_start?: number | null
         }
         Update: {
           category?: string
@@ -217,6 +245,8 @@ export type Database = {
           name?: string
           slug?: string
           updated_at?: string
+          year_end?: number | null
+          year_start?: number | null
         }
         Relationships: []
       }
@@ -388,7 +418,10 @@ export type Database = {
           name_ancient: string | null
           name_hebrew: string | null
           name_modern: string | null
+          parent_location_id: string | null
           primary_verse: string | null
+          year_end: number | null
+          year_start: number | null
         }
         Insert: {
           description?: string | null
@@ -400,7 +433,10 @@ export type Database = {
           name_ancient?: string | null
           name_hebrew?: string | null
           name_modern?: string | null
+          parent_location_id?: string | null
           primary_verse?: string | null
+          year_end?: number | null
+          year_start?: number | null
         }
         Update: {
           description?: string | null
@@ -412,9 +448,27 @@ export type Database = {
           name_ancient?: string | null
           name_hebrew?: string | null
           name_modern?: string | null
+          parent_location_id?: string | null
           primary_verse?: string | null
+          year_end?: number | null
+          year_start?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "locations_parent_location_id_fkey"
+            columns: ["parent_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "locations_parent_location_id_fkey"
+            columns: ["parent_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations_with_coords"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
