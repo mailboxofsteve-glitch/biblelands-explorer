@@ -13,7 +13,10 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { BookOpen, LogOut, MapPin, Layers, GraduationCap, Users, Plus, Pencil, Trash2, ArrowLeft, Map, ArrowUpDown, ArrowUp, ArrowDown, Search } from "lucide-react";
+import { BookOpen, LogOut, MapPin, Layers, GraduationCap, Users, Plus, Pencil, Trash2, ArrowLeft, Map, ArrowUpDown, ArrowUp, ArrowDown, Search, Upload, CheckSquare, Square, FileUp, Loader2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Progress } from "@/components/ui/progress";
+import { parseKml, type ParsedKmlLocation } from "@/lib/kmlParser";
 import { format } from "date-fns";
 import { ERAS } from "@/store/mapStore";
 import AdminMapPicker from "@/components/Admin/AdminMapPicker";
