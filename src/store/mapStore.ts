@@ -128,6 +128,7 @@ export const useMapStore = create<MapState>((set, get) => ({
       toolMode: "none",
       routePoints: [],
       pendingPinCoords: null,
+      yearFilter: null,
     }),
 
   toggleOverlay: (id) =>
