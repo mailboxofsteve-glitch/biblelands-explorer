@@ -555,6 +555,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      bulk_insert_locations: { Args: { locations: Json }; Returns: number }
       disablelongtransactions: { Args: never; Returns: string }
       dropgeometrycolumn:
         | {
