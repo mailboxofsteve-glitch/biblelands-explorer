@@ -13,6 +13,8 @@ export interface OverlayRow {
   default_style: Record<string, unknown>;
   geojson: Record<string, unknown>;
   is_preloaded: boolean;
+  year_start: number | null;
+  year_end: number | null;
 }
 
 export function useOverlays() {
