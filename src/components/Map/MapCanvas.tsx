@@ -69,6 +69,9 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
   const selectPin = useMapStore((s) => s.selectPin);
   const showAllLabels = useMapStore((s) => s.showAllLabels);
   const hiddenLocationIds = useMapStore((s) => s.hiddenLocationIds);
+  const fogEnabled = useMapStore((s) => s.fogEnabled);
+  const labelFontSize = useMapStore((s) => s.labelFontSize);
+  const originalTextSizes = useRef<Record<string, any>>({});
 
   useImperativeHandle(ref, () => ({
     getMap: () => mapRef.current,
