@@ -24,6 +24,18 @@ import AdminMapPicker from "@/components/Admin/AdminMapPicker";
 
 const LOCATION_TYPES = ["city", "mountain", "river", "region", "sea", "desert", "road", "battle", "people", "event", "poi"];
 const OVERLAY_CATEGORIES = ["route", "territory", "empire", "region"];
+const PARENT_ELIGIBLE_TYPES = ["city", "region", "mountain", "river", "sea", "desert", "road"];
+const CHILD_TYPES = ["battle", "people", "event", "poi"];
+
+/* ── Year display helpers ─────────────────────────────── */
+function formatYear(y: number | null | undefined): string {
+  if (y == null) return "";
+  return y < 0 ? `${Math.abs(y)} BC` : `${y} AD`;
+}
+function formatYearRange(start: number | null | undefined, end: number | null | undefined): string {
+  if (start == null && end == null) return "—";
+  return `${formatYear(start)} – ${formatYear(end)}`;
+}
 
 /* ── Reusable sort header ─────────────────────────────── */
 type SortDir = "asc" | "desc" | null;
@@ -70,6 +82,50 @@ function useTableSort<T>(data: T[], defaultField?: string) {
   return { sortField, sortDir, toggleSort, filterText, setFilterText, sorted };
 }
 
+/* ── Year Range Input Component ─────────────────────────────── */
+function YearRangeInputs({ yearStart, yearEnd, onChange }: {
+  yearStart: string; yearEnd: string;
+  onChange: (field: "year_start" | "year_end", value: string) => void;
+}) {
+  return (
+    <div>
+      <Label>Year Range</Label>
+      <p className="text-xs text-muted-foreground mb-1">Negative = BC (e.g. -701 = 701 BC), positive = AD (e.g. 30 = 30 AD)</p>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Input type="number" placeholder="Start year" value={yearStart} onChange={(e) => onChange("year_start", e.target.value)} />
+          {yearStart && <span className="text-xs text-muted-foreground">{formatYear(parseInt(yearStart))}</span>}
+        </div>
+        <div>
+          <Input type="number" placeholder="End year" value={yearEnd} onChange={(e) => onChange("year_end", e.target.value)} />
+          {yearEnd && <span className="text-xs text-muted-foreground">{formatYear(parseInt(yearEnd))}</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Parent Location Dropdown ─────────────────────────────── */
+function ParentLocationSelect({ value, onChange, parentLocations }: {
+  value: string; onChange: (v: string) => void;
+  parentLocations: { id: string; name_ancient: string; location_type: string }[];
+}) {
+  return (
+    <div>
+      <Label>Associated With (city/region/mountain/etc.)</Label>
+      <Select value={value || "__none__"} onValueChange={(v) => onChange(v === "__none__" ? "" : v)}>
+        <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="__none__">None</SelectItem>
+          {parentLocations.map((loc) => (
+            <SelectItem key={loc.id} value={loc.id}>{loc.name_ancient} ({loc.location_type})</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Locations Tab                                                      */
 /* ------------------------------------------------------------------ */
@@ -79,24 +135,39 @@ function LocationsTab() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
-  const [form, setForm] = useState({ name_ancient: "", name_modern: "", location_type: "city", era_tags: [] as string[], primary_verse: "", description: "", lat: "32.0", lng: "35.5" });
+  const [form, setForm] = useState({ name_ancient: "", name_modern: "", location_type: "city", era_tags: [] as string[], primary_verse: "", description: "", lat: "32.0", lng: "35.5", year_start: "", year_end: "", parent_location_id: "" });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [parentLocations, setParentLocations] = useState<{ id: string; name_ancient: string; location_type: string }[]>([]);
 
   const fetchLocations = useCallback(async () => {
-    const { data } = await supabase.from("locations_with_coords").select("*").order("name_ancient");
+    const { data } = await supabase.from("locations_with_coords" as any).select("*").order("name_ancient");
     setLocations(data ?? []);
     setLoading(false);
   }, []);
 
-  useEffect(() => { fetchLocations(); }, [fetchLocations]);
+  const fetchParentLocations = useCallback(async () => {
+    const { data } = await supabase.from("locations_with_coords" as any)
+      .select("id, name_ancient, location_type")
+      .in("location_type", PARENT_ELIGIBLE_TYPES)
+      .order("name_ancient");
+    setParentLocations((data ?? []) as any[]);
+  }, []);
+
+  useEffect(() => { fetchLocations(); fetchParentLocations(); }, [fetchLocations, fetchParentLocations]);
+
+  const parentNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    parentLocations.forEach((p) => map.set(p.id, p.name_ancient));
+    return map;
+  }, [parentLocations]);
 
   const [filterText, setFilterText] = useState("");
   const filteredData = useMemo(() => {
     if (!filterText) return locations;
     const q = filterText.toLowerCase();
-    return locations.filter((l) =>
+    return locations.filter((l: any) =>
       (l.name_ancient ?? "").toLowerCase().includes(q) ||
       (l.name_modern ?? "").toLowerCase().includes(q) ||
       (l.location_type ?? "").toLowerCase().includes(q) ||
@@ -104,7 +175,6 @@ function LocationsTab() {
     );
   }, [locations, filterText]);
 
-  // Clear selection when filter changes
   useEffect(() => { setSelectedIds(new Set()); }, [filterText]);
 
   const { sortField, sortDir, toggleSort, sorted } = useTableSort(filteredData, "name_ancient");
@@ -134,7 +204,7 @@ function LocationsTab() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ name_ancient: "", name_modern: "", location_type: "city", era_tags: [], primary_verse: "", description: "", lat: "32.0", lng: "35.5" });
+    setForm({ name_ancient: "", name_modern: "", location_type: "city", era_tags: [], primary_verse: "", description: "", lat: "32.0", lng: "35.5", year_start: "", year_end: "", parent_location_id: "" });
     setModalOpen(true);
   };
 
@@ -149,6 +219,9 @@ function LocationsTab() {
       description: loc.description ?? "",
       lat: String(loc.lat ?? "32.0"),
       lng: String(loc.lng ?? "35.5"),
+      year_start: loc.year_start != null ? String(loc.year_start) : "",
+      year_end: loc.year_end != null ? String(loc.year_end) : "",
+      parent_location_id: loc.parent_location_id ?? "",
     });
     setModalOpen(true);
   };
@@ -163,6 +236,9 @@ function LocationsTab() {
       primary_verse: form.primary_verse || null,
       description: form.description || null,
       coordinates: pointWkt,
+      year_start: form.year_start ? parseInt(form.year_start) : null,
+      year_end: form.year_end ? parseInt(form.year_end) : null,
+      parent_location_id: form.parent_location_id || null,
     };
 
     if (editing) {
@@ -176,6 +252,7 @@ function LocationsTab() {
     }
     setModalOpen(false);
     fetchLocations();
+    fetchParentLocations();
   };
 
   const handleDelete = async (id: string) => {
@@ -195,6 +272,8 @@ function LocationsTab() {
   const handleMapPointChange = useCallback((lngLat: [number, number]) => {
     setForm((f) => ({ ...f, lng: lngLat[0].toFixed(5), lat: lngLat[1].toFixed(5) }));
   }, []);
+
+  const isChildType = CHILD_TYPES.includes(form.location_type);
 
   return (
     <div className="space-y-4">
@@ -230,6 +309,8 @@ function LocationsTab() {
               <SortableHead label="Modern Name" field="name_modern" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <SortableHead label="Type" field="location_type" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <TableHead>Eras</TableHead>
+              <TableHead>Year Range</TableHead>
+              <TableHead>Associated With</TableHead>
               <SortableHead label="Verse" field="primary_verse" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <TableHead className="w-24"></TableHead>
             </TableRow>
@@ -250,6 +331,8 @@ function LocationsTab() {
                     ))}
                   </div>
                 </TableCell>
+                <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{formatYearRange(loc.year_start, loc.year_end)}</TableCell>
+                <TableCell className="text-xs text-muted-foreground">{loc.parent_location_id ? (parentNameMap.get(loc.parent_location_id) ?? "—") : "—"}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">{loc.primary_verse ?? "—"}</TableCell>
                 <TableCell>
                   <div className="flex gap-1">
@@ -293,6 +376,13 @@ function LocationsTab() {
                 <SelectContent>{LOCATION_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
               </Select>
             </div>
+            {isChildType && (
+              <ParentLocationSelect
+                value={form.parent_location_id}
+                onChange={(v) => setForm((f) => ({ ...f, parent_location_id: v }))}
+                parentLocations={parentLocations}
+              />
+            )}
             <div>
               <Label>Eras</Label>
               <div className="flex flex-wrap gap-1.5 mt-1">
@@ -301,6 +391,11 @@ function LocationsTab() {
                 ))}
               </div>
             </div>
+            <YearRangeInputs
+              yearStart={form.year_start}
+              yearEnd={form.year_end}
+              onChange={(field, value) => setForm((f) => ({ ...f, [field]: value }))}
+            />
             <div>
               <Label className="flex items-center gap-1.5 mb-1"><Map className="h-3.5 w-3.5" /> Pick on Map</Label>
               {modalOpen && (
@@ -340,7 +435,7 @@ function OverlaysTab() {
   const [editing, setEditing] = useState<any | null>(null);
   const [drawMode, setDrawMode] = useState(false);
   const [editShapes, setEditShapes] = useState<number[][][] | undefined>(undefined);
-  const [form, setForm] = useState({ name: "", slug: "", era: ERAS[0].id as string, category: "route", default_color: "#c8a020", geojson: "", is_preloaded: true });
+  const [form, setForm] = useState({ name: "", slug: "", era: ERAS[0].id as string, category: "route", default_color: "#c8a020", geojson: "", is_preloaded: true, year_start: "", year_end: "" });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
@@ -356,7 +451,6 @@ function OverlaysTab() {
     );
   }, [overlays, filterText]);
 
-  // Clear selection when filter changes
   useEffect(() => { setSelectedIds(new Set()); }, [filterText]);
 
   const { sortField, sortDir, toggleSort, sorted } = useTableSort(filteredData, "name");
@@ -396,7 +490,7 @@ function OverlaysTab() {
     setEditing(null);
     setDrawMode(false);
     setEditShapes(undefined);
-    setForm({ name: "", slug: "", era: ERAS[0].id, category: "route", default_color: "#c8a020", geojson: "", is_preloaded: true });
+    setForm({ name: "", slug: "", era: ERAS[0].id, category: "route", default_color: "#c8a020", geojson: "", is_preloaded: true, year_start: "", year_end: "" });
     setModalOpen(true);
   };
 
@@ -411,6 +505,8 @@ function OverlaysTab() {
       default_color: ov.default_color,
       geojson: JSON.stringify(ov.geojson, null, 2),
       is_preloaded: ov.is_preloaded,
+      year_start: ov.year_start != null ? String(ov.year_start) : "",
+      year_end: ov.year_end != null ? String(ov.year_end) : "",
     });
     setEditShapes(parseGeoJSONToShapes(ov.geojson));
     setModalOpen(true);
@@ -463,6 +559,8 @@ function OverlaysTab() {
       geojson: parsedGeo,
       is_preloaded: form.is_preloaded,
       created_by: user?.id,
+      year_start: form.year_start ? parseInt(form.year_start) : null,
+      year_end: form.year_end ? parseInt(form.year_end) : null,
     };
 
     if (editing) {
@@ -536,6 +634,7 @@ function OverlaysTab() {
               <SortableHead label="Name" field="name" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <SortableHead label="Era" field="era" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <SortableHead label="Category" field="category" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
+              <TableHead>Year Range</TableHead>
               <TableHead>Color</TableHead>
               <TableHead className="w-24"></TableHead>
             </TableRow>
@@ -549,6 +648,7 @@ function OverlaysTab() {
                 <TableCell className="font-medium">{ov.name}</TableCell>
                 <TableCell><Badge variant="secondary">{ov.era}</Badge></TableCell>
                 <TableCell>{ov.category}</TableCell>
+                <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{formatYearRange(ov.year_start, ov.year_end)}</TableCell>
                 <TableCell><div className="h-5 w-5 rounded-full border border-border" style={{ backgroundColor: ov.default_color }} /></TableCell>
                 <TableCell>
                   <div className="flex gap-1">
@@ -601,6 +701,11 @@ function OverlaysTab() {
                 </Select>
               </div>
             </div>
+            <YearRangeInputs
+              yearStart={form.year_start}
+              yearEnd={form.year_end}
+              onChange={(field, value) => setForm((f) => ({ ...f, [field]: value }))}
+            />
             <div>
               <Label>Color</Label>
               <div className="flex items-center gap-2 mt-1">
@@ -850,22 +955,43 @@ function UsersTab() {
 /* ------------------------------------------------------------------ */
 /*  KML Import Tab                                                     */
 /* ------------------------------------------------------------------ */
+interface ImportLocationRow extends ParsedKmlLocation {
+  era: string;
+  year_start: string;
+  year_end: string;
+  parent_location_id: string;
+}
+
+interface ImportOverlayRow extends ParsedKmlOverlay {
+  era: string;
+  year_start: string;
+  year_end: string;
+}
+
 function ImportTab() {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [parsed, setParsed] = useState<ParsedKmlLocation[]>([]);
-  const [parsedOverlays, setParsedOverlays] = useState<ParsedKmlOverlay[]>([]);
+  const [parsed, setParsed] = useState<ImportLocationRow[]>([]);
+  const [parsedOverlays, setParsedOverlays] = useState<ImportOverlayRow[]>([]);
   const [existingNames, setExistingNames] = useState<Set<string>>(new Set());
   const [defaultEra, setDefaultEra] = useState<string>(ERAS[0].id);
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [fileName, setFileName] = useState("");
+  const [parentLocations, setParentLocations] = useState<{ id: string; name_ancient: string; location_type: string }[]>([]);
 
   useEffect(() => {
-    supabase.from("locations_with_coords").select("name_ancient").then(({ data }) => {
+    supabase.from("locations_with_coords" as any).select("name_ancient").then(({ data }) => {
       const names = new Set((data ?? []).map((d: any) => (d.name_ancient ?? "").toLowerCase()));
       setExistingNames(names);
     });
+    supabase.from("locations_with_coords" as any)
+      .select("id, name_ancient, location_type")
+      .in("location_type", PARENT_ELIGIBLE_TYPES)
+      .order("name_ancient")
+      .then(({ data }) => {
+        setParentLocations((data ?? []) as any[]);
+      });
   }, []);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -875,15 +1001,25 @@ function ImportTab() {
     const text = await file.text();
 
     const locations = parseKml(text);
-    const withDuplicates = locations.map((loc) => ({
+    const withMeta: ImportLocationRow[] = locations.map((loc) => ({
       ...loc,
       isDuplicate: existingNames.has(loc.name_ancient.toLowerCase()),
       selected: !existingNames.has(loc.name_ancient.toLowerCase()),
+      era: defaultEra,
+      year_start: "",
+      year_end: "",
+      parent_location_id: "",
     }));
-    setParsed(withDuplicates);
+    setParsed(withMeta);
 
     const overlays = parseKmlOverlays(text);
-    setParsedOverlays(overlays);
+    const overlaysWithMeta: ImportOverlayRow[] = overlays.map((o) => ({
+      ...o,
+      era: defaultEra,
+      year_start: "",
+      year_end: "",
+    }));
+    setParsedOverlays(overlaysWithMeta);
   };
 
   const toggleSelect = (idx: number) => {
@@ -891,6 +1027,13 @@ function ImportTab() {
   };
   const toggleOverlaySelect = (idx: number) => {
     setParsedOverlays((prev) => prev.map((o, i) => i === idx ? { ...o, selected: !o.selected } : o));
+  };
+
+  const updateLocField = (idx: number, field: string, value: string) => {
+    setParsed((prev) => prev.map((loc, i) => i === idx ? { ...loc, [field]: value } : loc));
+  };
+  const updateOverlayField = (idx: number, field: string, value: string) => {
+    setParsedOverlays((prev) => prev.map((o, i) => i === idx ? { ...o, [field]: value } : o));
   };
 
   const selectAll = () => setParsed((prev) => prev.map((loc) => ({ ...loc, selected: true })));
@@ -913,18 +1056,20 @@ function ImportTab() {
     let completed = 0;
     let totalInserted = 0;
 
-    // Import locations in chunks
     const chunkSize = 50;
     for (let i = 0; i < toImportLocs.length; i += chunkSize) {
       const chunk = toImportLocs.slice(i, i + chunkSize).map((loc) => ({
         name_ancient: loc.name_ancient,
         name_modern: loc.name_modern,
         location_type: loc.location_type,
-        era_tags: [defaultEra],
+        era_tags: [loc.era],
         primary_verse: loc.primary_verse,
         description: loc.description,
         lng: loc.lng,
         lat: loc.lat,
+        year_start: loc.year_start ? parseInt(loc.year_start) : null,
+        year_end: loc.year_end ? parseInt(loc.year_end) : null,
+        parent_location_id: loc.parent_location_id || null,
       }));
 
       const { data, error } = await supabase.rpc("bulk_insert_locations", {
@@ -940,19 +1085,20 @@ function ImportTab() {
       setProgress(Math.round((completed / totalItems) * 100));
     }
 
-    // Import overlays
     let overlaysInserted = 0;
     for (const overlay of toImportOverlays) {
       const { error } = await supabase.from("overlays").insert({
         name: overlay.name,
         slug: overlay.slug,
         category: overlay.category,
-        era: defaultEra,
+        era: overlay.era,
         geojson: overlay.geojson as any,
         default_color: overlay.default_color,
         default_style: {} as any,
         is_preloaded: true,
         created_by: user?.id,
+        year_start: overlay.year_start ? parseInt(overlay.year_start) : null,
+        year_end: overlay.year_end ? parseInt(overlay.year_end) : null,
       });
 
       if (error) {
@@ -972,7 +1118,6 @@ function ImportTab() {
     if (overlaysInserted > 0) parts.push(`${overlaysInserted} overlays`);
     toast({ title: `Imported ${parts.join(" and ")}` });
 
-    // Update existing names & reset selection
     const newNames = new Set(existingNames);
     toImportLocs.forEach((l) => newNames.add(l.name_ancient.toLowerCase()));
     setExistingNames(newNames);
@@ -1041,41 +1186,71 @@ function ImportTab() {
                 </div>
               </div>
 
-              <div className="max-h-[300px] overflow-auto border border-border rounded-md">
+              <div className="max-h-[400px] overflow-auto border border-border rounded-md">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-10"></TableHead>
                       <TableHead>Ancient Name</TableHead>
-                      <TableHead>Modern Name</TableHead>
                       <TableHead>Type</TableHead>
-                      <TableHead>Verse</TableHead>
+                      <TableHead>Era</TableHead>
+                      <TableHead>Year Start</TableHead>
+                      <TableHead>Year End</TableHead>
+                      <TableHead>Associated With</TableHead>
                       <TableHead>Coordinates</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {parsed.map((loc, idx) => (
-                      <TableRow
-                        key={idx}
-                        className={loc.isDuplicate ? "bg-amber-50 dark:bg-amber-950/20" : ""}
-                      >
-                        <TableCell>
-                          <Checkbox checked={loc.selected} onCheckedChange={() => toggleSelect(idx)} />
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {loc.name_ancient}
-                          {loc.isDuplicate && (
-                            <Badge variant="outline" className="ml-2 text-amber-600 border-amber-300 text-xs">exists</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-sm">{loc.name_modern || "—"}</TableCell>
-                        <TableCell><Badge variant="outline">{loc.location_type}</Badge></TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{loc.primary_verse || "—"}</TableCell>
-                        <TableCell className="text-xs font-mono text-muted-foreground">
-                          {loc.lat.toFixed(4)}, {loc.lng.toFixed(4)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {parsed.map((loc, idx) => {
+                      const isChild = CHILD_TYPES.includes(loc.location_type);
+                      return (
+                        <TableRow
+                          key={idx}
+                          className={loc.isDuplicate ? "bg-amber-50 dark:bg-amber-950/20" : ""}
+                        >
+                          <TableCell>
+                            <Checkbox checked={loc.selected} onCheckedChange={() => toggleSelect(idx)} />
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {loc.name_ancient}
+                            {loc.isDuplicate && (
+                              <Badge variant="outline" className="ml-2 text-amber-600 border-amber-300 text-xs">exists</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell><Badge variant="outline">{loc.location_type}</Badge></TableCell>
+                          <TableCell>
+                            <Select value={loc.era} onValueChange={(v) => updateLocField(idx, "era", v)}>
+                              <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
+                              <SelectContent>{ERAS.map((e) => <SelectItem key={e.id} value={e.id}>{e.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell>
+                            <Input type="number" className="h-8 w-20 text-xs" placeholder="Start" value={loc.year_start} onChange={(e) => updateLocField(idx, "year_start", e.target.value)} />
+                          </TableCell>
+                          <TableCell>
+                            <Input type="number" className="h-8 w-20 text-xs" placeholder="End" value={loc.year_end} onChange={(e) => updateLocField(idx, "year_end", e.target.value)} />
+                          </TableCell>
+                          <TableCell>
+                            {isChild ? (
+                              <Select value={loc.parent_location_id || "__none__"} onValueChange={(v) => updateLocField(idx, "parent_location_id", v === "__none__" ? "" : v)}>
+                                <SelectTrigger className="h-8 w-36 text-xs"><SelectValue placeholder="None" /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="__none__">None</SelectItem>
+                                  {parentLocations.map((p) => (
+                                    <SelectItem key={p.id} value={p.id}>{p.name_ancient}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-xs font-mono text-muted-foreground">
+                            {loc.lat.toFixed(4)}, {loc.lng.toFixed(4)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
@@ -1102,16 +1277,17 @@ function ImportTab() {
                 </div>
               </div>
 
-              <div className="max-h-[250px] overflow-auto border border-border rounded-md">
+              <div className="max-h-[300px] overflow-auto border border-border rounded-md">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="w-10"></TableHead>
                       <TableHead>Region Name</TableHead>
                       <TableHead>Category</TableHead>
-                      <TableHead>Polygons</TableHead>
+                      <TableHead>Era</TableHead>
+                      <TableHead>Year Start</TableHead>
+                      <TableHead>Year End</TableHead>
                       <TableHead>Vertices</TableHead>
-                      <TableHead>Verse</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1121,12 +1297,25 @@ function ImportTab() {
                           <Checkbox checked={overlay.selected} onCheckedChange={() => toggleOverlaySelect(idx)} />
                         </TableCell>
                         <TableCell className="font-medium">{overlay.name}</TableCell>
-                        <TableCell><Badge variant="outline">{overlay.category}</Badge></TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {overlay.geojson.features.length}
+                        <TableCell>
+                          <Select value={overlay.category} onValueChange={(v) => updateOverlayField(idx, "category", v)}>
+                            <SelectTrigger className="h-8 w-28 text-xs"><SelectValue /></SelectTrigger>
+                            <SelectContent>{OVERLAY_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Select value={overlay.era} onValueChange={(v) => updateOverlayField(idx, "era", v)}>
+                            <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
+                            <SelectContent>{ERAS.map((e) => <SelectItem key={e.id} value={e.id}>{e.label}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          <Input type="number" className="h-8 w-20 text-xs" placeholder="Start" value={overlay.year_start} onChange={(e) => updateOverlayField(idx, "year_start", e.target.value)} />
+                        </TableCell>
+                        <TableCell>
+                          <Input type="number" className="h-8 w-20 text-xs" placeholder="End" value={overlay.year_end} onChange={(e) => updateOverlayField(idx, "year_end", e.target.value)} />
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">{overlay.vertexCount}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{overlay.primary_verse || "—"}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
