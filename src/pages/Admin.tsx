@@ -18,6 +18,7 @@ import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, A
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { parseKml, parseKmlOverlays, type ParsedKmlLocation, type ParsedKmlOverlay } from "@/lib/kmlParser";
+import { locationsToKml, overlaysToKml, downloadKml } from "@/lib/kmlExport";
 import { format } from "date-fns";
 import { ERAS } from "@/store/mapStore";
 import AdminMapPicker from "@/components/Admin/AdminMapPicker";
