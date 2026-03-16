@@ -315,7 +315,7 @@ const MapPage = () => {
       </div>
 
       {/* Bottom timeline */}
-      {!presenting && <BottomTimeline />}
+      <BottomTimeline />
 
       {/* Modals */}
       {lessonId && (
