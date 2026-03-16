@@ -341,6 +341,9 @@ function OverlaysTab() {
   const [drawMode, setDrawMode] = useState(false);
   const [editShapes, setEditShapes] = useState<number[][][] | undefined>(undefined);
   const [form, setForm] = useState({ name: "", slug: "", era: ERAS[0].id as string, category: "route", default_color: "#c8a020", geojson: "", is_preloaded: true });
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const [filterText, setFilterText] = useState("");
   const filteredData = useMemo(() => {
@@ -352,7 +355,34 @@ function OverlaysTab() {
       (o.category ?? "").toLowerCase().includes(q)
     );
   }, [overlays, filterText]);
+
+  // Clear selection when filter changes
+  useEffect(() => { setSelectedIds(new Set()); }, [filterText]);
+
   const { sortField, sortDir, toggleSort, sorted } = useTableSort(filteredData, "name");
+
+  const allVisibleIds = useMemo(() => sorted.map((o: any) => o.id), [sorted]);
+  const allSelected = allVisibleIds.length > 0 && allVisibleIds.every((id: string) => selectedIds.has(id));
+  const someSelected = allVisibleIds.some((id: string) => selectedIds.has(id));
+
+  const toggleSelectAll = () => {
+    if (allSelected) { setSelectedIds(new Set()); }
+    else { setSelectedIds(new Set(allVisibleIds)); }
+  };
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
+  };
+
+  const handleBulkDelete = async () => {
+    setBulkDeleting(true);
+    const { error } = await supabase.from("overlays").delete().in("id", Array.from(selectedIds));
+    setBulkDeleting(false);
+    setBulkDeleteOpen(false);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: `${selectedIds.size} overlay(s) deleted` });
+    setSelectedIds(new Set());
+    fetchOverlays();
+  };
 
   const fetchOverlays = useCallback(async () => {
     const { data } = await supabase.from("overlays").select("*").eq("is_preloaded", true).order("name");
