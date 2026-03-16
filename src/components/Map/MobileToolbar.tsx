@@ -28,6 +28,10 @@ export default function MobileToolbar({
   const [activePanel, setActivePanel] = useState<MobilePanel>(null);
   const showAllLabels = useMapStore((s) => s.showAllLabels);
   const toggleShowAllLabels = useMapStore((s) => s.toggleShowAllLabels);
+  const fogEnabled = useMapStore((s) => s.fogEnabled);
+  const toggleFog = useMapStore((s) => s.toggleFog);
+  const labelFontSize = useMapStore((s) => s.labelFontSize);
+  const setLabelFontSize = useMapStore((s) => s.setLabelFontSize);
 
   const toggle = (panel: MobilePanel) => {
     setActivePanel((prev) => (prev === panel ? null : panel));
