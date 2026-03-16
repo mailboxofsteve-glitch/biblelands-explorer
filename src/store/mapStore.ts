@@ -223,6 +223,10 @@ export const useMapStore = create<MapState>((set, get) => ({
 
   setHiddenLocationIds: (ids) => set({ hiddenLocationIds: ids }),
 
+  // Year filter actions
+  setYearFilter: (range) => set({ yearFilter: range }),
+  clearYearFilter: () => set({ yearFilter: null }),
+
   // Scene actions
   setScenes: (scenes) => set({ scenes }),
 
