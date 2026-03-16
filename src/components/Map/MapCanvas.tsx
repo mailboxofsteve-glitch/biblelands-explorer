@@ -31,6 +31,26 @@ const BORDER_KEYWORDS = ["boundary", "border", "admin"];
 const LABEL_KEYWORDS = ["label", "symbol", "place", "poi"];
 const WATER_KEYWORDS = ["water", "sea", "ocean", "lake", "river"];
 
+function scaleExpression(expr: any[], factor: number): any[] {
+  const type = expr[0];
+  if (type === "interpolate" || type === "interpolate-hcl" || type === "interpolate-lab") {
+    const result = [...expr];
+    for (let i = 4; i < result.length; i += 2) {
+      if (typeof result[i] === "number") result[i] = result[i] * factor;
+    }
+    return result;
+  }
+  if (type === "step") {
+    const result = [...expr];
+    if (typeof result[2] === "number") result[2] = result[2] * factor;
+    for (let i = 4; i < result.length; i += 2) {
+      if (typeof result[i] === "number") result[i] = result[i] * factor;
+    }
+    return result;
+  }
+  return ["*", expr, factor];
+}
+
 function hideModernLayers(map: mapboxgl.Map) {
   const layers = map.getStyle()?.layers;
   if (!layers) return;
@@ -244,7 +264,7 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
         if (typeof orig === "number") {
           map.setLayoutProperty(layer.id, "text-size", orig * labelFontSize);
         } else if (Array.isArray(orig)) {
-          map.setLayoutProperty(layer.id, "text-size", ["*", orig, labelFontSize]);
+          map.setLayoutProperty(layer.id, "text-size", scaleExpression(orig, labelFontSize) as any);
         } else if (typeof orig === "object" && orig !== null && "stops" in orig) {
           const scaled = { ...orig, stops: (orig as any).stops.map((s: [number, number]) => [s[0], s[1] * labelFontSize]) };
           map.setLayoutProperty(layer.id, "text-size", scaled);
