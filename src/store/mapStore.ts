@@ -49,6 +49,8 @@ interface MapState {
 
   // Labels
   showAllLabels: boolean;
+  fogEnabled: boolean;
+  labelFontSize: number;
 
   // Scene state
   scenes: LessonScene[];
@@ -60,6 +62,8 @@ interface MapState {
 
   // Label actions
   toggleShowAllLabels: () => void;
+  toggleFog: () => void;
+  setLabelFontSize: (size: number) => void;
 
   // Tool actions
   startPinDrop: (iconType: string) => void;
@@ -105,6 +109,8 @@ export const useMapStore = create<MapState>((set, get) => ({
   customOverlayIds: [],
   hiddenLocationIds: [],
   showAllLabels: false,
+  fogEnabled: true,
+  labelFontSize: 1.0,
   scenes: [],
   currentSceneIndex: null,
 
@@ -128,6 +134,8 @@ export const useMapStore = create<MapState>((set, get) => ({
   selectPin: (id) => set({ selectedPinId: id }),
 
   toggleShowAllLabels: () => set((s) => ({ showAllLabels: !s.showAllLabels })),
+  toggleFog: () => set((s) => ({ fogEnabled: !s.fogEnabled })),
+  setLabelFontSize: (size) => set({ labelFontSize: size }),
 
   startPinDrop: (iconType) =>
     set({ toolMode: "pin_drop", pinDropIconType: iconType, pendingPinCoords: null }),
