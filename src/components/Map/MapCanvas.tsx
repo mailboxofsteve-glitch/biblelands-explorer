@@ -31,25 +31,7 @@ const BORDER_KEYWORDS = ["boundary", "border", "admin"];
 const LABEL_KEYWORDS = ["label", "symbol", "place", "poi"];
 const WATER_KEYWORDS = ["water", "sea", "ocean", "lake", "river"];
 
-function scaleExpression(expr: any[], factor: number): any[] {
-  const type = expr[0];
-  if (type === "interpolate" || type === "interpolate-hcl" || type === "interpolate-lab") {
-    const result = [...expr];
-    for (let i = 4; i < result.length; i += 2) {
-      if (typeof result[i] === "number") result[i] = result[i] * factor;
-    }
-    return result;
-  }
-  if (type === "step") {
-    const result = [...expr];
-    if (typeof result[2] === "number") result[2] = result[2] * factor;
-    for (let i = 4; i < result.length; i += 2) {
-      if (typeof result[i] === "number") result[i] = result[i] * factor;
-    }
-    return result;
-  }
-  return ["*", expr, factor];
-}
+
 
 function hideModernLayers(map: mapboxgl.Map) {
   const layers = map.getStyle()?.layers;
@@ -90,8 +72,6 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
   const showAllLabels = useMapStore((s) => s.showAllLabels);
   const hiddenLocationIds = useMapStore((s) => s.hiddenLocationIds);
   const fogEnabled = useMapStore((s) => s.fogEnabled);
-  const labelFontSize = useMapStore((s) => s.labelFontSize);
-  const originalTextSizes = useRef<Record<string, any>>({});
 
   useImperativeHandle(ref, () => ({
     getMap: () => mapRef.current,
@@ -166,14 +146,13 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
       hideModernLayers(map);
       addTerrainSource();
       applyFog();
-      originalTextSizes.current = {};
       setMapReady(true);
     });
     map.on("style.load", () => {
       hideModernLayers(map);
       addTerrainSource();
       applyFog();
-      originalTextSizes.current = {};
+      
       setMapReady(true);
     });
 
@@ -243,35 +222,8 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
     }
   }, [fogEnabled, mapReady]);
 
-  // Label font size scaling
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapReady) return;
-    const layers = map.getStyle()?.layers;
-    if (!layers) return;
-    for (const layer of layers) {
-      if (layer.type !== "symbol") continue;
-      // Cache original text-size on first encounter
-      if (!(layer.id in originalTextSizes.current)) {
-        try {
-          originalTextSizes.current[layer.id] = map.getLayoutProperty(layer.id, "text-size") ?? 12;
-        } catch {
-          originalTextSizes.current[layer.id] = 12;
-        }
-      }
-      const orig = originalTextSizes.current[layer.id];
-      try {
-        if (typeof orig === "number") {
-          map.setLayoutProperty(layer.id, "text-size", orig * labelFontSize);
-        } else if (Array.isArray(orig)) {
-          map.setLayoutProperty(layer.id, "text-size", scaleExpression(orig, labelFontSize) as any);
-        } else if (typeof orig === "object" && orig !== null && "stops" in orig) {
-          const scaled = { ...orig, stops: (orig as any).stops.map((s: [number, number]) => [s[0], s[1] * labelFontSize]) };
-          map.setLayoutProperty(layer.id, "text-size", scaled);
-        }
-      } catch { /* skip layers that don't support text-size */ }
-    }
-  }, [labelFontSize, mapReady]);
+
+
 
   const toggleSkin = useCallback(
     () => setSkin((prev) => (prev === "ancient" ? "satellite" : "ancient")),

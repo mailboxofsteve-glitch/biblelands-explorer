@@ -98,6 +98,7 @@ export function useCustomPinMarkers(
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const popupRef = useRef<mapboxgl.Popup | null>(null);
   const showAllLabels = useMapStore((s) => s.showAllLabels);
+  const labelFontSize = useMapStore((s) => s.labelFontSize);
 
   useEffect(() => {
     if (!map) return;
@@ -124,11 +125,14 @@ export function useCustomPinMarkers(
         const tooltip = marker.getElement().querySelector(".custom-pin-tooltip") as HTMLDivElement | null;
         if (tooltip) {
           tooltip.style.opacity = showAllLabels ? "1" : "0";
+          tooltip.style.fontSize = `${11 * labelFontSize}px`;
         }
         continue;
       }
 
       const el = createMarkerEl(pin, selectedPinId === pin.id, showAllLabels);
+      const createdTooltip = el.querySelector(".custom-pin-tooltip") as HTMLDivElement | null;
+      if (createdTooltip) createdTooltip.style.fontSize = `${11 * labelFontSize}px`;
       const marker = new mapboxgl.Marker({ element: el, anchor: "bottom-left" })
         .setLngLat(pin.coordinates)
         .addTo(map);
@@ -174,7 +178,7 @@ export function useCustomPinMarkers(
 
       existing.set(pin.id, marker);
     }
-  }, [map, pins, selectedPinId, onSelectPin, showAllLabels]);
+  }, [map, pins, selectedPinId, onSelectPin, showAllLabels, labelFontSize]);
 
   useEffect(() => {
     return () => {

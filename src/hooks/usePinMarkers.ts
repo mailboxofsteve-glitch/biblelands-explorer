@@ -111,6 +111,7 @@ export function usePinMarkers(
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
   const popupRef = useRef<mapboxgl.Popup | null>(null);
   const showAllLabels = useMapStore((s) => s.showAllLabels);
+  const labelFontSize = useMapStore((s) => s.labelFontSize);
 
   // Sync markers
   useEffect(() => {
@@ -146,13 +147,16 @@ export function usePinMarkers(
           el.style.boxShadow = selectedPinId === pin.id ? "0 0 14px #c8a02066" : "";
         }
         const tooltip = wrapper.querySelector(".pin-tooltip") as HTMLDivElement | null;
-        if (tooltip && showAllLabels) {
-          tooltip.style.opacity = "1";
+        if (tooltip) {
+          if (showAllLabels) tooltip.style.opacity = "1";
+          tooltip.style.fontSize = `${11 * labelFontSize}px`;
         }
         continue;
       }
 
       const el = createMarkerEl(pin, selectedPinId === pin.id, showAllLabels, isHidden);
+      const createdTooltip = el.querySelector(".pin-tooltip") as HTMLDivElement | null;
+      if (createdTooltip) createdTooltip.style.fontSize = `${11 * labelFontSize}px`;
 
       let marker: mapboxgl.Marker;
       try {
@@ -212,7 +216,7 @@ export function usePinMarkers(
     return () => {
       map.off("click", onMapClick);
     };
-  }, [map, pins, selectedPinId, onSelectPin, showAllLabels, hiddenLocationIds, presenting]);
+  }, [map, pins, selectedPinId, onSelectPin, showAllLabels, hiddenLocationIds, presenting, labelFontSize]);
 
   // Cleanup on unmount
   useEffect(() => {
