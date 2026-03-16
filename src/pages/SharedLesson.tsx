@@ -120,7 +120,7 @@ const SharedLesson = () => {
         </div>
       )}
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Left sidebar — read-only controls */}
         <aside
           className={`w-60 shrink-0 border-r border-border/40 bg-card flex flex-col overflow-y-auto transition-transform duration-300 ease-in-out ${
@@ -151,7 +151,7 @@ const SharedLesson = () => {
         </aside>
 
         {/* Map */}
-        <main className="flex-1 relative transition-all duration-300 ease-in-out">
+        <main className="flex-1 relative transition-all duration-300 ease-in-out min-h-0">
           <MapCanvas ref={mapRef} lessonId={lesson.id} presenting={presenting} />
 
           {!presenting && (
@@ -170,6 +170,9 @@ const SharedLesson = () => {
           )}
         </main>
       </div>
+
+      {/* Bottom timeline */}
+      <BottomTimeline />
     </div>
   );
 };

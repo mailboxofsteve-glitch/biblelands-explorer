@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { ERAS, type EraId, useMapStore } from "@/store/mapStore";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // Approximate year ranges per era for positioning
 const ERA_YEAR_RANGES: Record<EraId, [number, number]> = {
@@ -39,12 +38,10 @@ export default function BottomTimeline() {
   const sliderRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Keep expanded era in sync with store era
   useEffect(() => {
     setExpandedEra(currentEra);
   }, [currentEra]);
 
-  // Fetch entries with year data for the expanded era
   useEffect(() => {
     if (!expandedEra) {
       setEntries([]);
@@ -95,7 +92,6 @@ export default function BottomTimeline() {
     clearYearFilter();
   };
 
-  // Slider drag logic
   const getYearFromPosition = (clientX: number): number => {
     if (!sliderRef.current || !eraRange) return 0;
     const rect = sliderRef.current.getBoundingClientRect();
@@ -133,7 +129,6 @@ export default function BottomTimeline() {
     }
   }, [isDragging]);
 
-  // Sorted entries for marker rendering
   const sortedEntries = useMemo(
     () => [...entries].sort((a, b) => (a.year_start ?? 0) - (b.year_start ?? 0)),
     [entries]
@@ -147,7 +142,7 @@ export default function BottomTimeline() {
   return (
     <div className="w-full bg-card/95 backdrop-blur-sm border-t border-border/40 select-none z-50 shrink-0">
       {/* Era bar */}
-      <div className="flex w-full h-10 items-stretch">
+      <div className="flex w-full h-14 items-stretch">
         {ERAS.map((era) => {
           const isExpanded = expandedEra === era.id;
           const isActive = currentEra === era.id;
@@ -163,7 +158,7 @@ export default function BottomTimeline() {
             >
               <span
                 className={`whitespace-nowrap transition-all duration-300 ${
-                  isExpanded ? "text-sm font-serif" : "text-[9px] uppercase tracking-wider"
+                  isExpanded ? "text-lg font-serif" : "text-lg uppercase tracking-wider"
                 }`}
               >
                 {isExpanded ? era.label : era.label.split(" ").map(w => w[0]).join("")}
@@ -180,7 +175,7 @@ export default function BottomTimeline() {
       {expandedEra && eraRange && (
         <div className="px-4 py-2 space-y-1">
           {/* Year labels */}
-          <div className="flex justify-between text-[10px] text-muted-foreground">
+          <div className="flex justify-between text-xl text-muted-foreground">
             <span>{formatYear(eraRange[0])}</span>
             {yearFilter && (
               <span className="text-accent font-medium">
@@ -199,7 +194,7 @@ export default function BottomTimeline() {
           {/* Track */}
           <div
             ref={sliderRef}
-            className="relative w-full h-8 cursor-pointer group"
+            className="relative w-full h-10 cursor-pointer group"
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -212,11 +207,11 @@ export default function BottomTimeline() {
             }}
           >
             {/* Background track */}
-            <div className="absolute top-1/2 -translate-y-1/2 inset-x-0 h-1.5 rounded-full bg-secondary" />
+            <div className="absolute top-1/2 -translate-y-1/2 inset-x-0 h-2 rounded-full bg-secondary" />
 
             {/* Active fill */}
             <div
-              className="absolute top-1/2 -translate-y-1/2 left-0 h-1.5 rounded-full bg-accent/50 transition-[width] duration-75"
+              className="absolute top-1/2 -translate-y-1/2 left-0 h-2 rounded-full bg-accent/50 transition-[width] duration-75"
               style={{ width: `${sliderPct}%` }}
             />
 
@@ -237,11 +232,11 @@ export default function BottomTimeline() {
                   title={`${entry.name}: ${formatYear(entry.year_start)}${entry.year_end ? ` – ${formatYear(entry.year_end)}` : ""}`}
                 >
                   <div
-                    className={`w-2 h-2 rounded-full ${
+                    className={`w-4 h-4 rounded-full ${
                       entry.type === "location"
                         ? "bg-primary"
                         : "bg-accent"
-                    } ring-1 ring-background`}
+                    } ring-2 ring-background`}
                   />
                 </div>
               );
@@ -249,14 +244,14 @@ export default function BottomTimeline() {
 
             {/* Slider thumb */}
             <div
-              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 w-4 h-4 rounded-full bg-accent border-2 border-background shadow-md cursor-grab active:cursor-grabbing transition-[left] duration-75"
+              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 z-20 w-6 h-6 rounded-full bg-accent border-2 border-background shadow-md cursor-grab active:cursor-grabbing transition-[left] duration-75"
               style={{ left: `${sliderPct}%` }}
             />
           </div>
 
           {/* Entry count */}
           {sortedEntries.length > 0 && (
-            <div className="text-[9px] text-muted-foreground text-center">
+            <div className="text-lg text-muted-foreground text-center">
               {sortedEntries.filter(
                 (e) => !yearFilter || (e.year_start != null && e.year_start <= yearFilter[1])
               ).length}
