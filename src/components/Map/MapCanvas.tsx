@@ -152,7 +152,7 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
       hideModernLayers(map);
       addTerrainSource();
       applyFog();
-      originalTextSizes.current = {};
+      
       setMapReady(true);
     });
 
