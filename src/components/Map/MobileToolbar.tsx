@@ -9,7 +9,6 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import OverlayToggles from "@/components/Map/OverlayToggles";
-import OverlayToggles from "@/components/Map/OverlayToggles";
 import SceneList from "@/components/Map/SceneList";
 import TeacherTools from "@/components/Map/TeacherTools";
 import { useMapStore } from "@/store/mapStore";
