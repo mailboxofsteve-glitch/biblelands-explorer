@@ -25,7 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import type { LessonScene } from "@/types";
 import type { MapCanvasHandle } from "./MapCanvas";
-import { animateRoutesSequentially, cleanupAllAnimationLayers } from "@/lib/animateRoute";
+import { animateRoutesSimultaneously, cleanupAllAnimationLayers } from "@/lib/animateRoute";
 
 interface SceneCardProps {
   scene: LessonScene;
