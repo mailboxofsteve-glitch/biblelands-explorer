@@ -80,6 +80,9 @@ function LocationsTab() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [form, setForm] = useState({ name_ancient: "", name_modern: "", location_type: "city", era_tags: [] as string[], primary_verse: "", description: "", lat: "32.0", lng: "35.5" });
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const fetchLocations = useCallback(async () => {
     const { data } = await supabase.from("locations_with_coords").select("*").order("name_ancient");
@@ -101,7 +104,33 @@ function LocationsTab() {
     );
   }, [locations, filterText]);
 
+  // Clear selection when filter changes
+  useEffect(() => { setSelectedIds(new Set()); }, [filterText]);
+
   const { sortField, sortDir, toggleSort, sorted } = useTableSort(filteredData, "name_ancient");
+
+  const allVisibleIds = useMemo(() => sorted.map((l: any) => l.id), [sorted]);
+  const allSelected = allVisibleIds.length > 0 && allVisibleIds.every((id: string) => selectedIds.has(id));
+  const someSelected = allVisibleIds.some((id: string) => selectedIds.has(id));
+
+  const toggleSelectAll = () => {
+    if (allSelected) { setSelectedIds(new Set()); }
+    else { setSelectedIds(new Set(allVisibleIds)); }
+  };
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
+  };
+
+  const handleBulkDelete = async () => {
+    setBulkDeleting(true);
+    const { error } = await supabase.from("locations").delete().in("id", Array.from(selectedIds));
+    setBulkDeleting(false);
+    setBulkDeleteOpen(false);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: `${selectedIds.size} location(s) deleted` });
+    setSelectedIds(new Set());
+    fetchLocations();
+  };
 
   const openAdd = () => {
     setEditing(null);
