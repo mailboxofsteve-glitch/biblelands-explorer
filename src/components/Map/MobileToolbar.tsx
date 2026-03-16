@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import TimelineSlider from "@/components/Map/TimelineSlider";
 import OverlayToggles from "@/components/Map/OverlayToggles";
 import SceneList from "@/components/Map/SceneList";
 import TeacherTools from "@/components/Map/TeacherTools";
@@ -122,13 +121,6 @@ export default function MobileToolbar({
                 step={0.1}
                 className="w-full"
               />
-            </div>
-
-            <div>
-              <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-                Era
-              </h3>
-              <TimelineSlider />
             </div>
 
             <div>

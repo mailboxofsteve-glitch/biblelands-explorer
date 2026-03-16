@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MapCanvas, { type MapCanvasHandle } from "@/components/Map/MapCanvas";
-import TimelineSlider from "@/components/Map/TimelineSlider";
+import BottomTimeline from "@/components/Map/BottomTimeline";
 import OverlayToggles from "@/components/Map/OverlayToggles";
 import TeacherTools from "@/components/Map/TeacherTools";
 import SceneList from "@/components/Map/SceneList";
@@ -171,147 +171,145 @@ const MapPage = () => {
   });
 
   return (
-    <div className="h-screen flex overflow-hidden bg-background">
-      {/* Left sidebar — controls (hidden on mobile) */}
-      {!isMobile && (
-        <aside
-          className={`w-60 shrink-0 border-r border-border/40 bg-card flex flex-col overflow-y-auto transition-transform duration-300 ease-in-out ${
-            presenting ? "-translate-x-full absolute left-0 top-0 bottom-0 z-0 pointer-events-none" : "relative"
-          }`}
-        >
-          <div className="px-4 py-3 border-b border-border/40">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-serif font-semibold text-foreground tracking-wide">
-                Controls
-              </h2>
-              <div className="flex items-center gap-2">
-                <label className="flex items-center gap-1.5 cursor-pointer" title="Atmospheric fog">
-                  <span className="text-[10px] text-muted-foreground">Fog</span>
-                  <Switch
-                    checked={fogEnabled}
-                    onCheckedChange={toggleFog}
-                    className="scale-75"
-                  />
-                </label>
-                <label className="flex items-center gap-1.5 cursor-pointer" title="Show all labels on map">
-                  <span className="text-[10px] text-muted-foreground">Labels</span>
-                  <Switch
-                    checked={showAllLabels}
-                    onCheckedChange={toggleShowAllLabels}
-                    className="scale-75"
-                  />
-                </label>
+    <div className="h-screen flex flex-col overflow-hidden bg-background">
+      <div className="flex flex-1 min-h-0">
+        {/* Left sidebar — controls (hidden on mobile) */}
+        {!isMobile && (
+          <aside
+            className={`w-60 shrink-0 border-r border-border/40 bg-card flex flex-col overflow-y-auto transition-transform duration-300 ease-in-out ${
+              presenting ? "-translate-x-full absolute left-0 top-0 bottom-0 z-0 pointer-events-none" : "relative"
+            }`}
+          >
+            <div className="px-4 py-3 border-b border-border/40">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-serif font-semibold text-foreground tracking-wide">
+                  Controls
+                </h2>
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-1.5 cursor-pointer" title="Atmospheric fog">
+                    <span className="text-[10px] text-muted-foreground">Fog</span>
+                    <Switch
+                      checked={fogEnabled}
+                      onCheckedChange={toggleFog}
+                      className="scale-75"
+                    />
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer" title="Show all labels on map">
+                    <span className="text-[10px] text-muted-foreground">Labels</span>
+                    <Switch
+                      checked={showAllLabels}
+                      onCheckedChange={toggleShowAllLabels}
+                      className="scale-75"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* Label font size slider */}
+              <div className="mt-2">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] text-muted-foreground">Label Size</span>
+                  <span className="text-[10px] text-muted-foreground">{labelFontSize.toFixed(1)}×</span>
+                </div>
+                <Slider
+                  value={[labelFontSize]}
+                  onValueChange={([v]) => setLabelFontSize(v)}
+                  min={0.5}
+                  max={2.0}
+                  step={0.1}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="flex items-center justify-between mt-2">
+                <p className="text-[10px] text-muted-foreground truncate">
+                  Lesson: {lessonId ?? "—"}
+                </p>
+                {lessonId && (
+                  <button
+                    onClick={() => setShowSettings(true)}
+                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    title="Lesson Settings"
+                  >
+                    <Settings size={14} />
+                  </button>
+                )}
               </div>
             </div>
 
-            {/* Label font size slider */}
-            <div className="mt-2">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] text-muted-foreground">Label Size</span>
-                <span className="text-[10px] text-muted-foreground">{labelFontSize.toFixed(1)}×</span>
-              </div>
-              <Slider
-                value={[labelFontSize]}
-                onValueChange={([v]) => setLabelFontSize(v)}
-                min={0.5}
-                max={2.0}
-                step={0.1}
-                className="w-full"
-              />
+            <div className="px-2 py-3 flex-1">
+              <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground px-3 mb-2">
+                Overlays
+              </h3>
+              <OverlayToggles />
             </div>
 
-            <div className="flex items-center justify-between mt-2">
-              <p className="text-[10px] text-muted-foreground truncate">
-                Lesson: {lessonId ?? "—"}
-              </p>
-              {lessonId && (
-                <button
-                  onClick={() => setShowSettings(true)}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                  title="Lesson Settings"
-                >
-                  <Settings size={14} />
-                </button>
-              )}
+            <SceneList mapRef={mapRef} />
+          </aside>
+        )}
+
+        {/* Map */}
+        <main className="flex-1 relative transition-all duration-300 ease-in-out min-h-0">
+          <MapCanvas ref={mapRef} lessonId={lessonId} presenting={presenting} />
+
+          {/* Desktop buttons */}
+          {!presenting && !isMobile && (
+            <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5">
+              <button
+                onClick={enterPresentation}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-card/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-card border border-border/30 transition-all text-xs font-medium"
+                title="Enter Classroom Presentation Mode"
+              >
+                <Maximize size={14} />
+                Classroom Mode
+              </button>
+              <button
+                onClick={enterPresenterView}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-card/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-card border border-border/30 transition-all text-xs font-medium"
+                title="Presenter View (multi-monitor)"
+              >
+                <Monitor size={14} />
+                Presenter View
+              </button>
+              <GroundViewButton mapRef={mapRef} />
+              <button
+                onClick={() => setShowShortcuts(true)}
+                className="flex items-center gap-1 px-2 py-1.5 rounded-md bg-card/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-card border border-border/30 transition-all text-xs"
+                title="Keyboard Shortcuts (?)"
+              >
+                <Keyboard size={14} />
+              </button>
             </div>
-          </div>
+          )}
 
-          <div className="px-2 py-3 border-b border-border/40">
-            <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground px-3 mb-2">
-              Era
-            </h3>
-            <TimelineSlider />
-          </div>
+          {/* Presentation HUD or Presenter View */}
+          {presenting && !presenterMode && (
+            <PresentationHUD mapRef={mapRef} onExit={exitPresentation} />
+          )}
+          {presenting && presenterMode && (
+            <PresenterView mapRef={mapRef} onExit={exitPresentation} />
+          )}
 
-          <div className="px-2 py-3 flex-1">
-            <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground px-3 mb-2">
-              Overlays
-            </h3>
-            <OverlayToggles />
-          </div>
+          {/* Mobile toolbar */}
+          {isMobile && !presenting && (
+            <MobileToolbar mapRef={mapRef} onPresentationMode={enterPresentation} />
+          )}
+        </main>
 
-          <SceneList mapRef={mapRef} />
-        </aside>
-      )}
-
-      {/* Map */}
-      <main className="flex-1 relative transition-all duration-300 ease-in-out">
-        <MapCanvas ref={mapRef} lessonId={lessonId} presenting={presenting} />
-
-        {/* Desktop buttons */}
-        {!presenting && !isMobile && (
-          <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5">
-            <button
-              onClick={enterPresentation}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-card/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-card border border-border/30 transition-all text-xs font-medium"
-              title="Enter Classroom Presentation Mode"
-            >
-              <Maximize size={14} />
-              Classroom Mode
-            </button>
-            <button
-              onClick={enterPresenterView}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-card/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-card border border-border/30 transition-all text-xs font-medium"
-              title="Presenter View (multi-monitor)"
-            >
-              <Monitor size={14} />
-              Presenter View
-            </button>
-            <GroundViewButton mapRef={mapRef} />
-            <button
-              onClick={() => setShowShortcuts(true)}
-              className="flex items-center gap-1 px-2 py-1.5 rounded-md bg-card/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-card border border-border/30 transition-all text-xs"
-              title="Keyboard Shortcuts (?)"
-            >
-              <Keyboard size={14} />
-            </button>
-          </div>
+        {/* Right sidebar — tools (hidden on mobile) */}
+        {!isMobile && (
+          <aside
+            className={`w-[200px] shrink-0 border-l border-border/40 bg-card flex flex-col transition-transform duration-300 ease-in-out ${
+              presenting ? "translate-x-full absolute right-0 top-0 bottom-0 z-0 pointer-events-none" : "relative"
+            }`}
+          >
+            <TeacherTools mapRef={mapRef} />
+          </aside>
         )}
+      </div>
 
-        {/* Presentation HUD or Presenter View */}
-        {presenting && !presenterMode && (
-          <PresentationHUD mapRef={mapRef} onExit={exitPresentation} />
-        )}
-        {presenting && presenterMode && (
-          <PresenterView mapRef={mapRef} onExit={exitPresentation} />
-        )}
-
-        {/* Mobile toolbar */}
-        {isMobile && !presenting && (
-          <MobileToolbar mapRef={mapRef} onPresentationMode={enterPresentation} />
-        )}
-      </main>
-
-      {/* Right sidebar — tools (hidden on mobile) */}
-      {!isMobile && (
-        <aside
-          className={`w-[200px] shrink-0 border-l border-border/40 bg-card flex flex-col transition-transform duration-300 ease-in-out ${
-            presenting ? "translate-x-full absolute right-0 top-0 bottom-0 z-0 pointer-events-none" : "relative"
-          }`}
-        >
-          <TeacherTools mapRef={mapRef} />
-        </aside>
-      )}
+      {/* Bottom timeline */}
+      {!presenting && <BottomTimeline />}
 
       {/* Modals */}
       {lessonId && (

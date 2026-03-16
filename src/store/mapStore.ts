@@ -85,6 +85,11 @@ interface MapState {
   toggleHideLocation: (id: string) => void;
   setHiddenLocationIds: (ids: string[]) => void;
 
+  // Year filter
+  yearFilter: [number, number] | null;
+  setYearFilter: (range: [number, number]) => void;
+  clearYearFilter: () => void;
+
   // Scene actions
   setScenes: (scenes: LessonScene[]) => void;
   saveScene: (camera: CameraState, lessonId: string, userId: string) => LessonScene | null;
@@ -108,6 +113,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   customPinIds: [],
   customOverlayIds: [],
   hiddenLocationIds: [],
+  yearFilter: null,
   showAllLabels: false,
   fogEnabled: true,
   labelFontSize: 1.0,
@@ -122,6 +128,7 @@ export const useMapStore = create<MapState>((set, get) => ({
       toolMode: "none",
       routePoints: [],
       pendingPinCoords: null,
+      yearFilter: null,
     }),
 
   toggleOverlay: (id) =>
@@ -222,6 +229,10 @@ export const useMapStore = create<MapState>((set, get) => ({
     })),
 
   setHiddenLocationIds: (ids) => set({ hiddenLocationIds: ids }),
+
+  // Year filter actions
+  setYearFilter: (range) => set({ yearFilter: range }),
+  clearYearFilter: () => set({ yearFilter: null }),
 
   // Scene actions
   setScenes: (scenes) => set({ scenes }),

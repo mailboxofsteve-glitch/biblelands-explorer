@@ -52,11 +52,17 @@ export function useOverlays() {
     fetchOverlays();
   }, [user, customOverlayIds]);
 
-  // Memoize filtered overlays and GeoJSON parsing
-  const overlays = useMemo(
-    () => allOverlays.filter((o) => o.era === currentEra),
-    [allOverlays, currentEra]
-  );
+  const yearFilter = useMapStore((s) => s.yearFilter);
+
+  // Memoize filtered overlays by era + year
+  const overlays = useMemo(() => {
+    const eraFiltered = allOverlays.filter((o) => o.era === currentEra);
+    if (!yearFilter) return eraFiltered;
+    return eraFiltered.filter((o) => {
+      if (o.year_start == null) return true; // undated always visible
+      return o.year_start <= yearFilter[1];
+    });
+  }, [allOverlays, currentEra, yearFilter]);
 
   return { overlays, allOverlays, loading };
 }
