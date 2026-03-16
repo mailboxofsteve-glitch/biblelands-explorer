@@ -10,6 +10,7 @@ import LessonSettingsModal from "@/components/Map/LessonSettingsModal";
 import KeyboardShortcutsModal, { useKeyboardShortcuts } from "@/components/Map/KeyboardShortcutsModal";
 import MobileToolbar from "@/components/Map/MobileToolbar";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { useMapStore, ERAS } from "@/store/mapStore";
 import { useAuth } from "@/hooks/useAuth";
 import { useScenes } from "@/hooks/useScenes";
