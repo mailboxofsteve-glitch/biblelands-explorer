@@ -208,12 +208,24 @@ function LocationsTab() {
         <Input placeholder="Filter locations…" value={filterText} onChange={(e) => setFilterText(e.target.value)} className="pl-9 max-w-sm" />
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 text-sm">
+          <span className="font-medium">{selectedIds.size} selected</span>
+          <Button variant="destructive" size="sm" onClick={() => setBulkDeleteOpen(true)}>
+            <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete Selected
+          </Button>
+        </div>
+      )}
+
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading…</p>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-10">
+                <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} aria-label="Select all" {...(someSelected && !allSelected ? { "data-state": "indeterminate" } : {})} />
+              </TableHead>
               <SortableHead label="Ancient Name" field="name_ancient" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <SortableHead label="Modern Name" field="name_modern" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <SortableHead label="Type" field="location_type" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
@@ -224,7 +236,10 @@ function LocationsTab() {
           </TableHeader>
           <TableBody>
             {sorted.map((loc: any) => (
-              <TableRow key={loc.id}>
+              <TableRow key={loc.id} data-state={selectedIds.has(loc.id) ? "selected" : undefined}>
+                <TableCell>
+                  <Checkbox checked={selectedIds.has(loc.id)} onCheckedChange={() => toggleSelect(loc.id)} aria-label={`Select ${loc.name_ancient}`} />
+                </TableCell>
                 <TableCell className="font-medium">{loc.name_ancient}</TableCell>
                 <TableCell>{loc.name_modern ?? "—"}</TableCell>
                 <TableCell><Badge variant="outline">{loc.location_type}</Badge></TableCell>
@@ -247,6 +262,21 @@ function LocationsTab() {
           </TableBody>
         </Table>
       )}
+
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.size} location(s)?</AlertDialogTitle>
+            <AlertDialogDescription>This action cannot be undone. The selected locations will be permanently removed.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete} disabled={bulkDeleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {bulkDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
