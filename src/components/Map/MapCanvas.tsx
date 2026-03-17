@@ -206,6 +206,9 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
   // Tool interactions (pin drop click, route drawing)
   useToolInteractions(mapReady ? mapRef.current : null);
 
+  // Textbox markers
+  useTextboxMarkers(mapReady ? mapRef.current : null, presenting);
+
   // Fog toggle
   useEffect(() => {
     const map = mapRef.current;

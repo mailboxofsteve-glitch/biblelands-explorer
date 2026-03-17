@@ -364,6 +364,14 @@ const TeacherTools = ({ mapRef }: TeacherToolsProps) => {
           lessonId={lessonId!}
         />
       )}
+
+      {pendingTextboxCoords && toolMode === "textbox_drop" && (
+        <TextboxModal
+          open={true}
+          onClose={() => useMapStore.getState().clearPendingTextbox()}
+          coords={pendingTextboxCoords}
+        />
+      )}
     </div>
   );
 };
