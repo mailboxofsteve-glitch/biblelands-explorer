@@ -99,9 +99,19 @@ export function useCustomPinMarkers(
   const popupRef = useRef<mapboxgl.Popup | null>(null);
   const showAllLabels = useMapStore((s) => s.showAllLabels);
   const labelFontSize = useMapStore((s) => s.labelFontSize);
+  const prevLabelStateRef = useRef({ showAllLabels, labelFontSize });
 
   useEffect(() => {
     if (!map) return;
+
+    // Force full recreation when label display settings change
+    const prev = prevLabelStateRef.current;
+    if (prev.showAllLabels !== showAllLabels || prev.labelFontSize !== labelFontSize) {
+      for (const marker of markersRef.current.values()) marker.remove();
+      markersRef.current.clear();
+      prev.showAllLabels = showAllLabels;
+      prev.labelFontSize = labelFontSize;
+    }
 
     const currentIds = new Set(pins.map((p) => p.id));
     const existing = markersRef.current;
