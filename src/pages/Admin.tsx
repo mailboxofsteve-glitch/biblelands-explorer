@@ -471,18 +471,19 @@ function OverlaysTab() {
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
 
-  const [filterText, setFilterText] = useState("");
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
+  const setFilter = (key: string, value: string) => setColumnFilters((f) => ({ ...f, [key]: value }));
   const filteredData = useMemo(() => {
-    if (!filterText) return overlays;
-    const q = filterText.toLowerCase();
-    return overlays.filter((o) =>
-      (o.name ?? "").toLowerCase().includes(q) ||
-      (o.era ?? "").toLowerCase().includes(q) ||
-      (o.category ?? "").toLowerCase().includes(q)
-    );
-  }, [overlays, filterText]);
+    return overlays.filter((o: any) => {
+      const f = columnFilters;
+      if (f.name && !(o.name ?? "").toLowerCase().includes(f.name.toLowerCase())) return false;
+      if (f.era && o.era !== f.era) return false;
+      if (f.category && o.category !== f.category) return false;
+      return true;
+    });
+  }, [overlays, columnFilters]);
 
-  useEffect(() => { setSelectedIds(new Set()); }, [filterText]);
+  useEffect(() => { setSelectedIds(new Set()); }, [columnFilters]);
 
   const { sortField, sortDir, toggleSort, sorted } = useTableSort(filteredData, "name");
 
