@@ -47,6 +47,7 @@ export function useScenes(lessonId: string | undefined) {
             auto_advance_seconds: d.auto_advance_seconds ?? null,
             era: d.era ?? "nt_ministry",
             hidden_location_ids: d.hidden_location_ids ?? [],
+            textboxes: d.textboxes ?? [],
           }))
         );
       }
