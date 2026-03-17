@@ -236,6 +236,24 @@ const TeacherTools = ({ mapRef }: TeacherToolsProps) => {
         )}
       </div>
 
+      {/* Text box tool */}
+      <div className="px-3 py-3 border-b border-border/40">
+        <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
+          Text Box
+        </h3>
+        <button
+          onClick={startTextboxDrop}
+          className={`w-full flex items-center gap-2 text-xs py-2 px-2 rounded transition-colors ${
+            toolMode === "textbox_drop"
+              ? "bg-accent/20 text-accent"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+          }`}
+        >
+          <Type size={14} />
+          Place Text Box
+        </button>
+      </div>
+
       {/* Animate routes */}
       <div className="px-3 py-3 border-b border-border/40">
         <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
