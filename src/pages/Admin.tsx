@@ -929,15 +929,16 @@ function UsersTab() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [filterText, setFilterText] = useState("");
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
+  const setFilter = (key: string, value: string) => setColumnFilters((f) => ({ ...f, [key]: value }));
   const filteredData = useMemo(() => {
-    if (!filterText) return users;
-    const q = filterText.toLowerCase();
-    return users.filter((u) =>
-      (u.email ?? "").toLowerCase().includes(q) ||
-      (u.display_name ?? "").toLowerCase().includes(q)
-    );
-  }, [users, filterText]);
+    return users.filter((u: any) => {
+      const f = columnFilters;
+      if (f.email && !(u.email ?? "").toLowerCase().includes(f.email.toLowerCase())) return false;
+      if (f.display_name && !(u.display_name ?? "").toLowerCase().includes(f.display_name.toLowerCase())) return false;
+      return true;
+    });
+  }, [users, columnFilters]);
   const { sortField, sortDir, toggleSort, sorted } = useTableSort(filteredData, "email");
 
   const fetchUsers = useCallback(async () => {
