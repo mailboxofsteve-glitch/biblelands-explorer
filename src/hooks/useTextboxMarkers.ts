@@ -76,7 +76,8 @@ export function useTextboxMarkers(
 function createTextboxEl(
   tb: SceneTextbox,
   presenting: boolean,
-  onDelete: () => void
+  onDelete: () => void,
+  onEdit: () => void
 ): HTMLDivElement {
   const scale = tb.font_size ?? 1;
   const wrapper = document.createElement("div");
