@@ -99,6 +99,7 @@ interface MapState {
   removeTextbox: (id: string) => void;
   updateTextbox: (id: string, updates: Partial<SceneTextbox>) => void;
   setSceneTextboxes: (tbs: SceneTextbox[]) => void;
+  setEditingTextbox: (tb: SceneTextbox | null) => void;
 
   // Year filter
   yearFilter: [number, number] | null;
