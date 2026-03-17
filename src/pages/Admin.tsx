@@ -13,7 +13,7 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { BookOpen, LogOut, MapPin, Layers, GraduationCap, Users, Plus, Pencil, Trash2, ArrowLeft, Map, ArrowUpDown, ArrowUp, ArrowDown, Search, Upload, CheckSquare, Square, FileUp, Loader2, Download } from "lucide-react";
+import { BookOpen, LogOut, MapPin, Layers, GraduationCap, Users, Plus, Pencil, Trash2, ArrowLeft, Map, ArrowUpDown, ArrowUp, ArrowDown, Upload, CheckSquare, Square, FileUp, Loader2, Download } from "lucide-react";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
@@ -58,7 +58,6 @@ function SortableHead({ label, field, sortField, sortDir, onSort, className }: {
 function useTableSort<T>(data: T[], defaultField?: string) {
   const [sortField, setSortField] = useState<string | null>(defaultField ?? null);
   const [sortDir, setSortDir] = useState<SortDir>(defaultField ? "asc" : null);
-  const [filterText, setFilterText] = useState("");
 
   const toggleSort = useCallback((field: string) => {
     setSortField((prev) => {
@@ -80,7 +79,24 @@ function useTableSort<T>(data: T[], defaultField?: string) {
     });
   }, [data, sortField, sortDir]);
 
-  return { sortField, sortDir, toggleSort, filterText, setFilterText, sorted };
+  return { sortField, sortDir, toggleSort, sorted };
+}
+
+/* ── Tiny filter input for table headers ─────────────────── */
+function FilterInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  return <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder ?? "Filter…"} className="h-7 text-xs" />;
+}
+
+function FilterSelect({ value, onChange, options, placeholder }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; placeholder?: string }) {
+  return (
+    <Select value={value || "__all__"} onValueChange={(v) => onChange(v === "__all__" ? "" : v)}>
+      <SelectTrigger className="h-7 text-xs"><SelectValue placeholder={placeholder ?? "All"} /></SelectTrigger>
+      <SelectContent>
+        <SelectItem value="__all__">All</SelectItem>
+        {options.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+      </SelectContent>
+    </Select>
+  );
 }
 
 /* ── Year Range Input Component ─────────────────────────────── */
@@ -164,19 +180,22 @@ function LocationsTab() {
     return m;
   }, [parentLocations]);
 
-  const [filterText, setFilterText] = useState("");
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
+  const setFilter = (key: string, value: string) => setColumnFilters((f) => ({ ...f, [key]: value }));
   const filteredData = useMemo(() => {
-    if (!filterText) return locations;
-    const q = filterText.toLowerCase();
-    return locations.filter((l: any) =>
-      (l.name_ancient ?? "").toLowerCase().includes(q) ||
-      (l.name_modern ?? "").toLowerCase().includes(q) ||
-      (l.location_type ?? "").toLowerCase().includes(q) ||
-      (l.primary_verse ?? "").toLowerCase().includes(q)
-    );
-  }, [locations, filterText]);
+    return locations.filter((l: any) => {
+      const f = columnFilters;
+      if (f.name_ancient && !(l.name_ancient ?? "").toLowerCase().includes(f.name_ancient.toLowerCase())) return false;
+      if (f.name_modern && !(l.name_modern ?? "").toLowerCase().includes(f.name_modern.toLowerCase())) return false;
+      if (f.location_type && l.location_type !== f.location_type) return false;
+      if (f.era_tags && !(l.era_tags ?? []).some((e: string) => e.toLowerCase().includes(f.era_tags.toLowerCase()))) return false;
+      if (f.parent_location_id && !(parentNameMap[l.parent_location_id] ?? "").toLowerCase().includes(f.parent_location_id.toLowerCase())) return false;
+      if (f.primary_verse && !(l.primary_verse ?? "").toLowerCase().includes(f.primary_verse.toLowerCase())) return false;
+      return true;
+    });
+  }, [locations, columnFilters, parentNameMap]);
 
-  useEffect(() => { setSelectedIds(new Set()); }, [filterText]);
+  useEffect(() => { setSelectedIds(new Set()); }, [columnFilters]);
 
   const { sortField, sortDir, toggleSort, sorted } = useTableSort(filteredData, "name_ancient");
 
@@ -286,10 +305,7 @@ function LocationsTab() {
         </div>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Filter locations…" value={filterText} onChange={(e) => setFilterText(e.target.value)} className="pl-9 max-w-sm" />
-      </div>
+      {/* Per-column filters are in the table header */}
 
       {selectedIds.size > 0 && (
         <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 text-sm">
@@ -317,6 +333,17 @@ function LocationsTab() {
               <TableHead>Associated With</TableHead>
               <SortableHead label="Verse" field="primary_verse" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <TableHead className="w-24"></TableHead>
+            </TableRow>
+            <TableRow className="bg-muted/30 hover:bg-muted/30">
+              <TableHead />
+              <TableHead><FilterInput value={columnFilters.name_ancient ?? ""} onChange={(v) => setFilter("name_ancient", v)} placeholder="Name…" /></TableHead>
+              <TableHead><FilterInput value={columnFilters.name_modern ?? ""} onChange={(v) => setFilter("name_modern", v)} placeholder="Modern…" /></TableHead>
+              <TableHead><FilterSelect value={columnFilters.location_type ?? ""} onChange={(v) => setFilter("location_type", v)} options={LOCATION_TYPES.map((t) => ({ value: t, label: t }))} /></TableHead>
+              <TableHead><FilterInput value={columnFilters.era_tags ?? ""} onChange={(v) => setFilter("era_tags", v)} placeholder="Era…" /></TableHead>
+              <TableHead />
+              <TableHead><FilterInput value={columnFilters.parent_location_id ?? ""} onChange={(v) => setFilter("parent_location_id", v)} placeholder="Parent…" /></TableHead>
+              <TableHead><FilterInput value={columnFilters.primary_verse ?? ""} onChange={(v) => setFilter("primary_verse", v)} placeholder="Verse…" /></TableHead>
+              <TableHead />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -444,18 +471,19 @@ function OverlaysTab() {
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
 
-  const [filterText, setFilterText] = useState("");
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
+  const setFilter = (key: string, value: string) => setColumnFilters((f) => ({ ...f, [key]: value }));
   const filteredData = useMemo(() => {
-    if (!filterText) return overlays;
-    const q = filterText.toLowerCase();
-    return overlays.filter((o) =>
-      (o.name ?? "").toLowerCase().includes(q) ||
-      (o.era ?? "").toLowerCase().includes(q) ||
-      (o.category ?? "").toLowerCase().includes(q)
-    );
-  }, [overlays, filterText]);
+    return overlays.filter((o: any) => {
+      const f = columnFilters;
+      if (f.name && !(o.name ?? "").toLowerCase().includes(f.name.toLowerCase())) return false;
+      if (f.era && o.era !== f.era) return false;
+      if (f.category && o.category !== f.category) return false;
+      return true;
+    });
+  }, [overlays, columnFilters]);
 
-  useEffect(() => { setSelectedIds(new Set()); }, [filterText]);
+  useEffect(() => { setSelectedIds(new Set()); }, [columnFilters]);
 
   const { sortField, sortDir, toggleSort, sorted } = useTableSort(filteredData, "name");
 
@@ -615,10 +643,7 @@ function OverlaysTab() {
         </div>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Filter overlays…" value={filterText} onChange={(e) => setFilterText(e.target.value)} className="pl-9 max-w-sm" />
-      </div>
+      {/* Per-column filters are in the table header */}
 
       {selectedIds.size > 0 && (
         <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 text-sm">
@@ -644,6 +669,15 @@ function OverlaysTab() {
               <TableHead>Year Range</TableHead>
               <TableHead>Color</TableHead>
               <TableHead className="w-24"></TableHead>
+            </TableRow>
+            <TableRow className="bg-muted/30 hover:bg-muted/30">
+              <TableHead />
+              <TableHead><FilterInput value={columnFilters.name ?? ""} onChange={(v) => setFilter("name", v)} placeholder="Name…" /></TableHead>
+              <TableHead><FilterSelect value={columnFilters.era ?? ""} onChange={(v) => setFilter("era", v)} options={ERAS.map((e) => ({ value: e.id, label: e.label }))} /></TableHead>
+              <TableHead><FilterSelect value={columnFilters.category ?? ""} onChange={(v) => setFilter("category", v)} options={OVERLAY_CATEGORIES.map((c) => ({ value: c, label: c }))} /></TableHead>
+              <TableHead />
+              <TableHead />
+              <TableHead />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -764,15 +798,18 @@ function LessonsTab() {
   const [createOpen, setCreateOpen] = useState(false);
   const [newLesson, setNewLesson] = useState({ title: "", description: "", era: ERAS[0].id as string });
 
-  const [filterText, setFilterText] = useState("");
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
+  const setFilter = (key: string, value: string) => setColumnFilters((f) => ({ ...f, [key]: value }));
   const filteredData = useMemo(() => {
-    if (!filterText) return lessons;
-    const q = filterText.toLowerCase();
-    return lessons.filter((l) =>
-      (l.title ?? "").toLowerCase().includes(q) ||
-      (l.era ?? "").toLowerCase().includes(q)
-    );
-  }, [lessons, filterText]);
+    return lessons.filter((l: any) => {
+      const f = columnFilters;
+      if (f.title && !(l.title ?? "").toLowerCase().includes(f.title.toLowerCase())) return false;
+      if (f.era && l.era !== f.era) return false;
+      if (f.is_featured === "yes" && !l.is_featured) return false;
+      if (f.is_featured === "no" && l.is_featured) return false;
+      return true;
+    });
+  }, [lessons, columnFilters]);
   const { sortField, sortDir, toggleSort, sorted } = useTableSort(filteredData, "title");
 
   const fetchLessons = useCallback(async () => {
@@ -818,10 +855,7 @@ function LessonsTab() {
         <Button size="sm" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-1" /> Create Lesson</Button>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Filter lessons…" value={filterText} onChange={(e) => setFilterText(e.target.value)} className="pl-9 max-w-sm" />
-      </div>
+      {/* Per-column filters are in the table header */}
 
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading…</p>
@@ -836,6 +870,13 @@ function LessonsTab() {
               <SortableHead label="Scenes" field="scene_count" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <SortableHead label="Updated" field="updated_at" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <TableHead>Featured</TableHead>
+            </TableRow>
+            <TableRow className="bg-muted/30 hover:bg-muted/30">
+              <TableHead><FilterInput value={columnFilters.title ?? ""} onChange={(v) => setFilter("title", v)} placeholder="Title…" /></TableHead>
+              <TableHead><FilterSelect value={columnFilters.era ?? ""} onChange={(v) => setFilter("era", v)} options={ERAS.map((e) => ({ value: e.id, label: e.label }))} /></TableHead>
+              <TableHead />
+              <TableHead />
+              <TableHead><FilterSelect value={columnFilters.is_featured ?? ""} onChange={(v) => setFilter("is_featured", v)} options={[{ value: "yes", label: "Yes" }, { value: "no", label: "No" }]} placeholder="All" /></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -888,15 +929,16 @@ function UsersTab() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [filterText, setFilterText] = useState("");
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
+  const setFilter = (key: string, value: string) => setColumnFilters((f) => ({ ...f, [key]: value }));
   const filteredData = useMemo(() => {
-    if (!filterText) return users;
-    const q = filterText.toLowerCase();
-    return users.filter((u) =>
-      (u.email ?? "").toLowerCase().includes(q) ||
-      (u.display_name ?? "").toLowerCase().includes(q)
-    );
-  }, [users, filterText]);
+    return users.filter((u: any) => {
+      const f = columnFilters;
+      if (f.email && !(u.email ?? "").toLowerCase().includes(f.email.toLowerCase())) return false;
+      if (f.display_name && !(u.display_name ?? "").toLowerCase().includes(f.display_name.toLowerCase())) return false;
+      return true;
+    });
+  }, [users, columnFilters]);
   const { sortField, sortDir, toggleSort, sorted } = useTableSort(filteredData, "email");
 
   const fetchUsers = useCallback(async () => {
@@ -922,10 +964,7 @@ function UsersTab() {
     <div className="space-y-4">
       <h2 className="text-lg font-serif font-semibold text-foreground">Users</h2>
 
-      <div className="relative">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Filter users…" value={filterText} onChange={(e) => setFilterText(e.target.value)} className="pl-9 max-w-sm" />
-      </div>
+      {/* Per-column filters are in the table header */}
 
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading…</p>
@@ -938,6 +977,13 @@ function UsersTab() {
               <SortableHead label="Lessons" field="lesson_count" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <SortableHead label="Joined" field="created_at" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <TableHead className="w-28"></TableHead>
+            </TableRow>
+            <TableRow className="bg-muted/30 hover:bg-muted/30">
+              <TableHead><FilterInput value={columnFilters.email ?? ""} onChange={(v) => setFilter("email", v)} placeholder="Email…" /></TableHead>
+              <TableHead><FilterInput value={columnFilters.display_name ?? ""} onChange={(v) => setFilter("display_name", v)} placeholder="Name…" /></TableHead>
+              <TableHead />
+              <TableHead />
+              <TableHead />
             </TableRow>
           </TableHeader>
           <TableBody>
