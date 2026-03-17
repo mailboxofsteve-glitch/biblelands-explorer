@@ -33,7 +33,9 @@ export function useTextboxMarkers(
         continue;
       }
 
-      const el = createTextboxEl(tb, presenting, () => removeTextbox(tb.id));
+      const el = createTextboxEl(tb, presenting, () => removeTextbox(tb.id), () => {
+        useMapStore.getState().setEditingTextbox(tb);
+      });
 
       try {
         const marker = new mapboxgl.Marker({
