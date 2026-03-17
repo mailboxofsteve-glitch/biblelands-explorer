@@ -58,6 +58,7 @@ const TeacherTools = ({ mapRef }: TeacherToolsProps) => {
   const clearAllCustom = useMapStore((s) => s.clearAllCustom);
   const pendingPinCoords = useMapStore((s) => s.pendingPinCoords);
   const pendingTextboxCoords = useMapStore((s) => s.pendingTextboxCoords);
+  const editingTextbox = useMapStore((s) => s.editingTextbox);
   const pinDropIconType = useMapStore((s) => s.pinDropIconType);
   const routePoints = useMapStore((s) => s.routePoints);
   const customPinIds = useMapStore((s) => s.customPinIds);
