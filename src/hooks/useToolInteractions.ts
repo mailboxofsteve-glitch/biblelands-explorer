@@ -35,7 +35,7 @@ export function useToolInteractions(map: mapboxgl.Map | null) {
     return () => {
       map.off("click", onClick);
     };
-  }, [map, setPendingPinCoords, addRoutePoint]);
+  }, [map, setPendingPinCoords, addRoutePoint, setPendingTextboxCoords]);
 
   // Cursor style
   useEffect(() => {
