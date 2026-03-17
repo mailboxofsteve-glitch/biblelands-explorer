@@ -15,7 +15,7 @@ export const ERAS = [
 
 export type EraId = (typeof ERAS)[number]["id"];
 
-export type ToolMode = "none" | "pin_drop" | "draw_route";
+export type ToolMode = "none" | "pin_drop" | "draw_route" | "textbox_drop";
 
 interface UndoEntry {
   type: "pin" | "route_point";
