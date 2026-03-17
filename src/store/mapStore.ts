@@ -281,6 +281,7 @@ export const useMapStore = create<MapState>((set, get) => ({
       auto_advance_seconds: null,
       era: s.currentEra,
       hidden_location_ids: [...s.hiddenLocationIds],
+      textboxes: [...s.sceneTextboxes],
     };
     set({
       scenes: [...s.scenes, newScene],
