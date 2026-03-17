@@ -28,6 +28,7 @@ const TextboxModal = ({ open, onClose, coords }: Props) => {
   const [body, setBody] = useState("");
   const [fillColor, setFillColor] = useState("#1e3a5f");
   const [fillOpacity, setFillOpacity] = useState(0.85);
+  const [fontSize, setFontSize] = useState(1.0);
 
   const handleSave = () => {
     if (!heading.trim()) return;
@@ -39,6 +40,7 @@ const TextboxModal = ({ open, onClose, coords }: Props) => {
       body: body.trim(),
       fill_color: fillColor,
       fill_opacity: fillOpacity,
+      font_size: fontSize,
     };
     addTextbox(tb);
     onClose();
@@ -107,6 +109,17 @@ const TextboxModal = ({ open, onClose, coords }: Props) => {
             </div>
           </div>
 
+          <div className="space-y-1.5">
+            <Label>Font Size: {fontSize.toFixed(1)}×</Label>
+            <Slider
+              min={50}
+              max={200}
+              step={10}
+              value={[fontSize * 100]}
+              onValueChange={([v]) => setFontSize(v / 100)}
+            />
+          </div>
+
           {/* Preview */}
           <div
             className="rounded-lg p-3 text-white text-sm"
@@ -115,8 +128,14 @@ const TextboxModal = ({ open, onClose, coords }: Props) => {
               opacity: fillOpacity,
             }}
           >
-            <h4 className="font-bold">{heading || "Heading"}</h4>
-            {body && <p className="mt-1 text-xs opacity-90">{body}</p>}
+            <h4 className="font-bold" style={{ fontSize: `${Math.round(13 * fontSize)}px` }}>
+              {heading || "Heading"}
+            </h4>
+            {body && (
+              <p className="mt-1 opacity-90" style={{ fontSize: `${Math.round(11 * fontSize)}px` }}>
+                {body}
+              </p>
+            )}
           </div>
         </div>
 
