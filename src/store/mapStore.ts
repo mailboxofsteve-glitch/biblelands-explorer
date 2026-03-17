@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { LessonScene } from "@/types";
+import type { LessonScene, SceneTextbox } from "@/types";
 import mapboxgl from "mapbox-gl";
 
 export const ERAS = [
