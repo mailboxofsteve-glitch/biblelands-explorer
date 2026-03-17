@@ -9,6 +9,7 @@ export function useTextboxMarkers(
 ) {
   const sceneTextboxes = useMapStore((s) => s.sceneTextboxes);
   const removeTextbox = useMapStore((s) => s.removeTextbox);
+  const updateTextbox = useMapStore((s) => s.updateTextbox);
   const markersRef = useRef<Map<string, mapboxgl.Marker>>(new Map());
 
   useEffect(() => {
@@ -35,15 +36,27 @@ export function useTextboxMarkers(
       const el = createTextboxEl(tb, presenting, () => removeTextbox(tb.id));
 
       try {
-        const marker = new mapboxgl.Marker({ element: el, anchor: "top-left" })
+        const marker = new mapboxgl.Marker({
+          element: el,
+          anchor: "top-left",
+          draggable: !presenting,
+        })
           .setLngLat([tb.lng, tb.lat])
           .addTo(map);
+
+        if (!presenting) {
+          marker.on("dragend", () => {
+            const lngLat = marker.getLngLat();
+            updateTextbox(tb.id, { lng: lngLat.lng, lat: lngLat.lat });
+          });
+        }
+
         markersRef.current.set(tb.id, marker);
       } catch {
         // map container may be absent
       }
     }
-  }, [map, sceneTextboxes, presenting, removeTextbox]);
+  }, [map, sceneTextboxes, presenting, removeTextbox, updateTextbox]);
 
   // Full re-render when presenting changes
   useEffect(() => {
@@ -65,6 +78,7 @@ function createTextboxEl(
   presenting: boolean,
   onDelete: () => void
 ): HTMLDivElement {
+  const scale = tb.font_size ?? 1;
   const wrapper = document.createElement("div");
   wrapper.style.maxWidth = "240px";
   wrapper.style.minWidth = "140px";
@@ -75,13 +89,13 @@ function createTextboxEl(
   wrapper.style.color = "#ffffff";
   wrapper.style.boxShadow = "0 4px 14px rgba(0,0,0,0.35)";
   wrapper.style.position = "relative";
-  wrapper.style.cursor = "default";
+  wrapper.style.cursor = presenting ? "default" : "grab";
   wrapper.style.pointerEvents = "auto";
 
   const heading = document.createElement("h4");
   heading.textContent = tb.heading;
   heading.style.fontWeight = "700";
-  heading.style.fontSize = "13px";
+  heading.style.fontSize = `${Math.round(13 * scale)}px`;
   heading.style.lineHeight = "1.3";
   heading.style.margin = "0";
   wrapper.appendChild(heading);
@@ -89,7 +103,7 @@ function createTextboxEl(
   if (tb.body) {
     const body = document.createElement("p");
     body.textContent = tb.body;
-    body.style.fontSize = "11px";
+    body.style.fontSize = `${Math.round(11 * scale)}px`;
     body.style.marginTop = "4px";
     body.style.opacity = "0.9";
     body.style.lineHeight = "1.4";
