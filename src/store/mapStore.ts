@@ -55,6 +55,7 @@ interface MapState {
   // Textbox state
   sceneTextboxes: SceneTextbox[];
   pendingTextboxCoords: [number, number] | null;
+  editingTextbox: SceneTextbox | null;
   _textboxSyncSkip: boolean;
 
   // Scene state
