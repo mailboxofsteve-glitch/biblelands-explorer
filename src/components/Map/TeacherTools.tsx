@@ -22,9 +22,11 @@ import {
   Square,
   Camera,
   FileText,
+  Type,
 } from "lucide-react";
 import PinDropModal from "./PinDropModal";
 import RouteFinishModal from "./RouteFinishModal";
+import TextboxModal from "./TextboxModal";
 import { animateRoutesSimultaneously } from "@/lib/animateRoute";
 import { downloadMapScreenshot, generatePDFHandout } from "@/lib/exportUtils";
 import type { MapCanvasHandle } from "./MapCanvas";
