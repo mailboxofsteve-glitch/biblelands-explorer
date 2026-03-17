@@ -10,6 +10,7 @@ export function useToolInteractions(map: mapboxgl.Map | null) {
   const toolMode = useMapStore((s) => s.toolMode);
   const setPendingPinCoords = useMapStore((s) => s.setPendingPinCoords);
   const addRoutePoint = useMapStore((s) => s.addRoutePoint);
+  const setPendingTextboxCoords = useMapStore((s) => s.setPendingTextboxCoords);
   const routePoints = useMapStore((s) => s.routePoints);
   const previewAdded = useRef(false);
 
