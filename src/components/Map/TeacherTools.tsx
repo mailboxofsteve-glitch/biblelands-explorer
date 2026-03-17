@@ -22,9 +22,11 @@ import {
   Square,
   Camera,
   FileText,
+  Type,
 } from "lucide-react";
 import PinDropModal from "./PinDropModal";
 import RouteFinishModal from "./RouteFinishModal";
+import TextboxModal from "./TextboxModal";
 import { animateRoutesSimultaneously } from "@/lib/animateRoute";
 import { downloadMapScreenshot, generatePDFHandout } from "@/lib/exportUtils";
 import type { MapCanvasHandle } from "./MapCanvas";
@@ -50,10 +52,12 @@ const TeacherTools = ({ mapRef }: TeacherToolsProps) => {
   const toolMode = useMapStore((s) => s.toolMode);
   const startPinDrop = useMapStore((s) => s.startPinDrop);
   const startDrawRoute = useMapStore((s) => s.startDrawRoute);
+  const startTextboxDrop = useMapStore((s) => s.startTextboxDrop);
   const cancelTool = useMapStore((s) => s.cancelTool);
   const undoLast = useMapStore((s) => s.undoLast);
   const clearAllCustom = useMapStore((s) => s.clearAllCustom);
   const pendingPinCoords = useMapStore((s) => s.pendingPinCoords);
+  const pendingTextboxCoords = useMapStore((s) => s.pendingTextboxCoords);
   const pinDropIconType = useMapStore((s) => s.pinDropIconType);
   const routePoints = useMapStore((s) => s.routePoints);
   const customPinIds = useMapStore((s) => s.customPinIds);
@@ -62,6 +66,7 @@ const TeacherTools = ({ mapRef }: TeacherToolsProps) => {
 
   const [showPinModal, setShowPinModal] = useState(false);
   const [showRouteModal, setShowRouteModal] = useState(false);
+  const [showTextboxModal, setShowTextboxModal] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const cancelAnimRef = useRef<(() => void) | null>(null);
 
@@ -162,7 +167,7 @@ const TeacherTools = ({ mapRef }: TeacherToolsProps) => {
       {toolMode !== "none" && (
         <div className="px-3 py-2 bg-accent/10 border-b border-border/40 flex items-center justify-between">
           <span className="text-[11px] font-medium text-accent">
-            {toolMode === "pin_drop" ? "📍 Pin Drop" : "✏️ Drawing Route"}
+            {toolMode === "pin_drop" ? "📍 Pin Drop" : toolMode === "draw_route" ? "✏️ Drawing Route" : "📝 Place Text Box"}
           </span>
           <button
             onClick={cancelTool}
@@ -229,6 +234,24 @@ const TeacherTools = ({ mapRef }: TeacherToolsProps) => {
             Draw Route
           </button>
         )}
+      </div>
+
+      {/* Text box tool */}
+      <div className="px-3 py-3 border-b border-border/40">
+        <h3 className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
+          Text Box
+        </h3>
+        <button
+          onClick={startTextboxDrop}
+          className={`w-full flex items-center gap-2 text-xs py-2 px-2 rounded transition-colors ${
+            toolMode === "textbox_drop"
+              ? "bg-accent/20 text-accent"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+          }`}
+        >
+          <Type size={14} />
+          Place Text Box
+        </button>
       </div>
 
       {/* Animate routes */}
@@ -339,6 +362,14 @@ const TeacherTools = ({ mapRef }: TeacherToolsProps) => {
           onClose={() => setShowRouteModal(false)}
           points={routePoints}
           lessonId={lessonId!}
+        />
+      )}
+
+      {pendingTextboxCoords && toolMode === "textbox_drop" && (
+        <TextboxModal
+          open={true}
+          onClose={() => useMapStore.getState().clearPendingTextbox()}
+          coords={pendingTextboxCoords}
         />
       )}
     </div>

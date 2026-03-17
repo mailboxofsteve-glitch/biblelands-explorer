@@ -16,6 +16,7 @@ import { usePinMarkers } from "@/hooks/usePinMarkers";
 import { useCustomPins } from "@/hooks/useCustomPins";
 import { useCustomPinMarkers } from "@/hooks/useCustomPinMarkers";
 import { useToolInteractions } from "@/hooks/useToolInteractions";
+import { useTextboxMarkers } from "@/hooks/useTextboxMarkers";
 import { useMapStore } from "@/store/mapStore";
 
 const MAPBOX_TOKEN =
@@ -204,6 +205,9 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
 
   // Tool interactions (pin drop click, route drawing)
   useToolInteractions(mapReady ? mapRef.current : null);
+
+  // Textbox markers
+  useTextboxMarkers(mapReady ? mapRef.current : null, presenting);
 
   // Fog toggle
   useEffect(() => {

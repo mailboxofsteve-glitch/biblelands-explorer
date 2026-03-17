@@ -31,6 +31,7 @@ export type Database = {
           lesson_id: string
           pitch: number
           scene_order: number
+          textboxes: Json
           title: string
           updated_at: string
           visible_pin_ids: string[]
@@ -52,6 +53,7 @@ export type Database = {
           lesson_id: string
           pitch?: number
           scene_order?: number
+          textboxes?: Json
           title?: string
           updated_at?: string
           visible_pin_ids?: string[]
@@ -73,6 +75,7 @@ export type Database = {
           lesson_id?: string
           pitch?: number
           scene_order?: number
+          textboxes?: Json
           title?: string
           updated_at?: string
           visible_pin_ids?: string[]

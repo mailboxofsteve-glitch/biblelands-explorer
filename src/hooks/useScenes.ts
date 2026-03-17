@@ -47,6 +47,7 @@ export function useScenes(lessonId: string | undefined) {
             auto_advance_seconds: d.auto_advance_seconds ?? null,
             era: d.era ?? "nt_ministry",
             hidden_location_ids: d.hidden_location_ids ?? [],
+            textboxes: d.textboxes ?? [],
           }))
         );
       }
@@ -82,7 +83,8 @@ export function useScenes(lessonId: string | undefined) {
           auto_advance_seconds: scene.auto_advance_seconds,
           era: scene.era,
           hidden_location_ids: scene.hidden_location_ids,
-        });
+          textboxes: scene.textboxes as any,
+        } as any);
         if (error) {
           console.error("Failed to save scene:", error);
           toast.error("Failed to save scene");

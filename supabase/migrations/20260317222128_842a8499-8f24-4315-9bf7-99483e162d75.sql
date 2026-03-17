@@ -1,0 +1,1 @@
+ALTER TABLE public.lesson_scenes ADD COLUMN textboxes jsonb NOT NULL DEFAULT '[]'::jsonb;

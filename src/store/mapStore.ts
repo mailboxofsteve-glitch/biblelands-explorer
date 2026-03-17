@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { LessonScene } from "@/types";
+import type { LessonScene, SceneTextbox } from "@/types";
 import mapboxgl from "mapbox-gl";
 
 export const ERAS = [
@@ -15,7 +15,7 @@ export const ERAS = [
 
 export type EraId = (typeof ERAS)[number]["id"];
 
-export type ToolMode = "none" | "pin_drop" | "draw_route";
+export type ToolMode = "none" | "pin_drop" | "draw_route" | "textbox_drop";
 
 interface UndoEntry {
   type: "pin" | "route_point";
@@ -52,6 +52,10 @@ interface MapState {
   fogEnabled: boolean;
   labelFontSize: number;
 
+  // Textbox state
+  sceneTextboxes: SceneTextbox[];
+  pendingTextboxCoords: [number, number] | null;
+
   // Scene state
   scenes: LessonScene[];
   currentSceneIndex: number | null;
@@ -85,6 +89,15 @@ interface MapState {
   toggleHideLocation: (id: string) => void;
   setHiddenLocationIds: (ids: string[]) => void;
 
+  // Textbox actions
+  startTextboxDrop: () => void;
+  setPendingTextboxCoords: (coords: [number, number]) => void;
+  clearPendingTextbox: () => void;
+  addTextbox: (tb: SceneTextbox) => void;
+  removeTextbox: (id: string) => void;
+  updateTextbox: (id: string, updates: Partial<SceneTextbox>) => void;
+  setSceneTextboxes: (tbs: SceneTextbox[]) => void;
+
   // Year filter
   yearFilter: [number, number] | null;
   setYearFilter: (range: [number, number]) => void;
@@ -117,6 +130,8 @@ export const useMapStore = create<MapState>((set, get) => ({
   showAllLabels: false,
   fogEnabled: true,
   labelFontSize: 1.0,
+  sceneTextboxes: [],
+  pendingTextboxCoords: null,
   scenes: [],
   currentSceneIndex: null,
 
@@ -230,6 +245,15 @@ export const useMapStore = create<MapState>((set, get) => ({
 
   setHiddenLocationIds: (ids) => set({ hiddenLocationIds: ids }),
 
+  // Textbox actions
+  startTextboxDrop: () => set({ toolMode: "textbox_drop", pendingTextboxCoords: null }),
+  setPendingTextboxCoords: (coords) => set({ pendingTextboxCoords: coords }),
+  clearPendingTextbox: () => set({ pendingTextboxCoords: null, toolMode: "none" }),
+  addTextbox: (tb) => set((s) => ({ sceneTextboxes: [...s.sceneTextboxes, tb], toolMode: "none", pendingTextboxCoords: null })),
+  removeTextbox: (id) => set((s) => ({ sceneTextboxes: s.sceneTextboxes.filter((t) => t.id !== id) })),
+  updateTextbox: (id, updates) => set((s) => ({ sceneTextboxes: s.sceneTextboxes.map((t) => t.id === id ? { ...t, ...updates } : t) })),
+  setSceneTextboxes: (tbs) => set({ sceneTextboxes: tbs }),
+
   // Year filter actions
   setYearFilter: (range) => set({ yearFilter: range }),
   clearYearFilter: () => set({ yearFilter: null }),
@@ -257,6 +281,7 @@ export const useMapStore = create<MapState>((set, get) => ({
       auto_advance_seconds: null,
       era: s.currentEra,
       hidden_location_ids: [...s.hiddenLocationIds],
+      textboxes: [...s.sceneTextboxes],
     };
     set({
       scenes: [...s.scenes, newScene],
@@ -283,6 +308,7 @@ export const useMapStore = create<MapState>((set, get) => ({
       currentSceneIndex: index,
       currentEra: scene.era as EraId,
       hiddenLocationIds: [...scene.hidden_location_ids],
+      sceneTextboxes: [...(scene.textboxes ?? [])],
     });
 
     if (scene.highlighted_pin_id) {
@@ -330,6 +356,7 @@ export const useMapStore = create<MapState>((set, get) => ({
       highlighted_pin_id: s.selectedPinId,
       era: s.currentEra,
       hidden_location_ids: [...s.hiddenLocationIds],
+      textboxes: [...s.sceneTextboxes],
     };
     set({
       scenes: s.scenes.map((sc) => (sc.id === id ? updated : sc)),

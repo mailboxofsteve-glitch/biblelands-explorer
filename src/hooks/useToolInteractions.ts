@@ -10,6 +10,7 @@ export function useToolInteractions(map: mapboxgl.Map | null) {
   const toolMode = useMapStore((s) => s.toolMode);
   const setPendingPinCoords = useMapStore((s) => s.setPendingPinCoords);
   const addRoutePoint = useMapStore((s) => s.addRoutePoint);
+  const setPendingTextboxCoords = useMapStore((s) => s.setPendingTextboxCoords);
   const routePoints = useMapStore((s) => s.routePoints);
   const previewAdded = useRef(false);
 
@@ -25,6 +26,8 @@ export function useToolInteractions(map: mapboxgl.Map | null) {
         setPendingPinCoords(coords);
       } else if (mode === "draw_route") {
         addRoutePoint(coords);
+      } else if (mode === "textbox_drop") {
+        setPendingTextboxCoords(coords);
       }
     };
 
@@ -32,13 +35,13 @@ export function useToolInteractions(map: mapboxgl.Map | null) {
     return () => {
       map.off("click", onClick);
     };
-  }, [map, setPendingPinCoords, addRoutePoint]);
+  }, [map, setPendingPinCoords, addRoutePoint, setPendingTextboxCoords]);
 
   // Cursor style
   useEffect(() => {
     if (!map) return;
     const canvas = map.getCanvas();
-    if (toolMode === "pin_drop" || toolMode === "draw_route") {
+    if (toolMode === "pin_drop" || toolMode === "draw_route" || toolMode === "textbox_drop") {
       canvas.style.cursor = "crosshair";
     } else {
       canvas.style.cursor = "";

@@ -49,6 +49,7 @@ const PresentationWindow = () => {
             animate_on_enter: r.animate_on_enter,
             auto_advance_seconds: r.auto_advance_seconds ?? null,
             created_by: r.created_by,
+            textboxes: (r as any).textboxes ?? [],
           }));
           setScenes(mapped);
         }
