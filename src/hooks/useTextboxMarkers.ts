@@ -95,6 +95,13 @@ function createTextboxEl(
   wrapper.style.cursor = presenting ? "default" : "grab";
   wrapper.style.pointerEvents = "auto";
 
+  if (!presenting) {
+    wrapper.addEventListener("dblclick", (e) => {
+      e.stopPropagation();
+      onEdit();
+    });
+  }
+
   const heading = document.createElement("h4");
   heading.textContent = tb.heading;
   heading.style.fontWeight = "700";
