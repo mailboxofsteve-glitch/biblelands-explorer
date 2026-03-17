@@ -334,6 +334,17 @@ function LocationsTab() {
               <SortableHead label="Verse" field="primary_verse" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <TableHead className="w-24"></TableHead>
             </TableRow>
+            <TableRow className="bg-muted/30 hover:bg-muted/30">
+              <TableHead />
+              <TableHead><FilterInput value={columnFilters.name_ancient ?? ""} onChange={(v) => setFilter("name_ancient", v)} placeholder="Name…" /></TableHead>
+              <TableHead><FilterInput value={columnFilters.name_modern ?? ""} onChange={(v) => setFilter("name_modern", v)} placeholder="Modern…" /></TableHead>
+              <TableHead><FilterSelect value={columnFilters.location_type ?? ""} onChange={(v) => setFilter("location_type", v)} options={LOCATION_TYPES.map((t) => ({ value: t, label: t }))} /></TableHead>
+              <TableHead><FilterInput value={columnFilters.era_tags ?? ""} onChange={(v) => setFilter("era_tags", v)} placeholder="Era…" /></TableHead>
+              <TableHead />
+              <TableHead><FilterInput value={columnFilters.parent_location_id ?? ""} onChange={(v) => setFilter("parent_location_id", v)} placeholder="Parent…" /></TableHead>
+              <TableHead><FilterInput value={columnFilters.primary_verse ?? ""} onChange={(v) => setFilter("primary_verse", v)} placeholder="Verse…" /></TableHead>
+              <TableHead />
+            </TableRow>
           </TableHeader>
           <TableBody>
             {sorted.map((loc: any) => (
