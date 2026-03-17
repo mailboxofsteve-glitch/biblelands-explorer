@@ -798,15 +798,18 @@ function LessonsTab() {
   const [createOpen, setCreateOpen] = useState(false);
   const [newLesson, setNewLesson] = useState({ title: "", description: "", era: ERAS[0].id as string });
 
-  const [filterText, setFilterText] = useState("");
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
+  const setFilter = (key: string, value: string) => setColumnFilters((f) => ({ ...f, [key]: value }));
   const filteredData = useMemo(() => {
-    if (!filterText) return lessons;
-    const q = filterText.toLowerCase();
-    return lessons.filter((l) =>
-      (l.title ?? "").toLowerCase().includes(q) ||
-      (l.era ?? "").toLowerCase().includes(q)
-    );
-  }, [lessons, filterText]);
+    return lessons.filter((l: any) => {
+      const f = columnFilters;
+      if (f.title && !(l.title ?? "").toLowerCase().includes(f.title.toLowerCase())) return false;
+      if (f.era && l.era !== f.era) return false;
+      if (f.is_featured === "yes" && !l.is_featured) return false;
+      if (f.is_featured === "no" && l.is_featured) return false;
+      return true;
+    });
+  }, [lessons, columnFilters]);
   const { sortField, sortDir, toggleSort, sorted } = useTableSort(filteredData, "title");
 
   const fetchLessons = useCallback(async () => {
