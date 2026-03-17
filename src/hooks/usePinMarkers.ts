@@ -112,10 +112,20 @@ export function usePinMarkers(
   const popupRef = useRef<mapboxgl.Popup | null>(null);
   const showAllLabels = useMapStore((s) => s.showAllLabels);
   const labelFontSize = useMapStore((s) => s.labelFontSize);
+  const prevLabelStateRef = useRef({ showAllLabels, labelFontSize });
 
   // Sync markers
   useEffect(() => {
     if (!map || !map.getContainer()) return;
+
+    // Force full recreation when label display settings change
+    const prev = prevLabelStateRef.current;
+    if (prev.showAllLabels !== showAllLabels || prev.labelFontSize !== labelFontSize) {
+      for (const marker of markersRef.current.values()) marker.remove();
+      markersRef.current.clear();
+      prev.showAllLabels = showAllLabels;
+      prev.labelFontSize = labelFontSize;
+    }
 
     const hiddenSet = new Set(hiddenLocationIds);
     const currentIds = new Set(pins.map((p) => p.id));
