@@ -58,7 +58,6 @@ function SortableHead({ label, field, sortField, sortDir, onSort, className }: {
 function useTableSort<T>(data: T[], defaultField?: string) {
   const [sortField, setSortField] = useState<string | null>(defaultField ?? null);
   const [sortDir, setSortDir] = useState<SortDir>(defaultField ? "asc" : null);
-  const [filterText, setFilterText] = useState("");
 
   const toggleSort = useCallback((field: string) => {
     setSortField((prev) => {
@@ -80,7 +79,24 @@ function useTableSort<T>(data: T[], defaultField?: string) {
     });
   }, [data, sortField, sortDir]);
 
-  return { sortField, sortDir, toggleSort, filterText, setFilterText, sorted };
+  return { sortField, sortDir, toggleSort, sorted };
+}
+
+/* ── Tiny filter input for table headers ─────────────────── */
+function FilterInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  return <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder ?? "Filter…"} className="h-7 text-xs" />;
+}
+
+function FilterSelect({ value, onChange, options, placeholder }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[]; placeholder?: string }) {
+  return (
+    <Select value={value || "__all__"} onValueChange={(v) => onChange(v === "__all__" ? "" : v)}>
+      <SelectTrigger className="h-7 text-xs"><SelectValue placeholder={placeholder ?? "All"} /></SelectTrigger>
+      <SelectContent>
+        <SelectItem value="__all__">All</SelectItem>
+        {options.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+      </SelectContent>
+    </Select>
+  );
 }
 
 /* ── Year Range Input Component ─────────────────────────────── */
