@@ -871,6 +871,13 @@ function LessonsTab() {
               <SortableHead label="Updated" field="updated_at" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <TableHead>Featured</TableHead>
             </TableRow>
+            <TableRow className="bg-muted/30 hover:bg-muted/30">
+              <TableHead><FilterInput value={columnFilters.title ?? ""} onChange={(v) => setFilter("title", v)} placeholder="Title…" /></TableHead>
+              <TableHead><FilterSelect value={columnFilters.era ?? ""} onChange={(v) => setFilter("era", v)} options={ERAS.map((e) => ({ value: e.id, label: e.label }))} /></TableHead>
+              <TableHead />
+              <TableHead />
+              <TableHead><FilterSelect value={columnFilters.is_featured ?? ""} onChange={(v) => setFilter("is_featured", v)} options={[{ value: "yes", label: "Yes" }, { value: "no", label: "No" }]} placeholder="All" /></TableHead>
+            </TableRow>
           </TableHeader>
           <TableBody>
             {sorted.map((l: any) => (
