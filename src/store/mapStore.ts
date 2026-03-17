@@ -308,6 +308,7 @@ export const useMapStore = create<MapState>((set, get) => ({
       currentSceneIndex: index,
       currentEra: scene.era as EraId,
       hiddenLocationIds: [...scene.hidden_location_ids],
+      sceneTextboxes: [...(scene.textboxes ?? [])],
     });
 
     if (scene.highlighted_pin_id) {
