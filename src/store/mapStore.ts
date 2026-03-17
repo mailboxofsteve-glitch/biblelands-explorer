@@ -130,6 +130,8 @@ export const useMapStore = create<MapState>((set, get) => ({
   showAllLabels: false,
   fogEnabled: true,
   labelFontSize: 1.0,
+  sceneTextboxes: [],
+  pendingTextboxCoords: null,
   scenes: [],
   currentSceneIndex: null,
 

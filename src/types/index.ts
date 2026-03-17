@@ -51,6 +51,16 @@ export interface Lesson {
   scene_count: number;
 }
 
+export interface SceneTextbox {
+  id: string;
+  lng: number;
+  lat: number;
+  heading: string;
+  body: string;
+  fill_color: string;
+  fill_opacity: number;
+}
+
 export interface LessonScene {
   id: string;
   lesson_id: string;
@@ -69,4 +79,5 @@ export interface LessonScene {
   auto_advance_seconds: number | null;
   era: string;
   hidden_location_ids: string[];
+  textboxes: SceneTextbox[];
 }
