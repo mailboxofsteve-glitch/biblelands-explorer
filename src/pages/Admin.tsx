@@ -855,10 +855,7 @@ function LessonsTab() {
         <Button size="sm" onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-1" /> Create Lesson</Button>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Filter lessons…" value={filterText} onChange={(e) => setFilterText(e.target.value)} className="pl-9 max-w-sm" />
-      </div>
+      {/* Per-column filters are in the table header */}
 
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading…</p>
