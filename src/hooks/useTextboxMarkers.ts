@@ -25,15 +25,18 @@ export function useTextboxMarkers(
       }
     }
 
-    // Create / update markers
+    // Create / update markers — rebuild if content changed
     for (const tb of sceneTextboxes) {
-      if (markersRef.current.has(tb.id)) {
-        // Update position only
-        markersRef.current.get(tb.id)!.setLngLat([tb.lng, tb.lat]);
-        continue;
+      const existing = markersRef.current.get(tb.id);
+      if (existing) {
+        // Remove and recreate to pick up content/style changes
+        existing.remove();
+        markersRef.current.delete(tb.id);
       }
 
-      const el = createTextboxEl(tb, presenting, () => removeTextbox(tb.id));
+      const el = createTextboxEl(tb, presenting, () => removeTextbox(tb.id), () => {
+        useMapStore.getState().setEditingTextbox(tb);
+      });
 
       try {
         const marker = new mapboxgl.Marker({
@@ -76,7 +79,8 @@ export function useTextboxMarkers(
 function createTextboxEl(
   tb: SceneTextbox,
   presenting: boolean,
-  onDelete: () => void
+  onDelete: () => void,
+  onEdit: () => void
 ): HTMLDivElement {
   const scale = tb.font_size ?? 1;
   const wrapper = document.createElement("div");
@@ -91,6 +95,13 @@ function createTextboxEl(
   wrapper.style.position = "relative";
   wrapper.style.cursor = presenting ? "default" : "grab";
   wrapper.style.pointerEvents = "auto";
+
+  if (!presenting) {
+    wrapper.addEventListener("dblclick", (e) => {
+      e.stopPropagation();
+      onEdit();
+    });
+  }
 
   const heading = document.createElement("h4");
   heading.textContent = tb.heading;

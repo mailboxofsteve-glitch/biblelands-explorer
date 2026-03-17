@@ -55,6 +55,7 @@ interface MapState {
   // Textbox state
   sceneTextboxes: SceneTextbox[];
   pendingTextboxCoords: [number, number] | null;
+  editingTextbox: SceneTextbox | null;
   _textboxSyncSkip: boolean;
 
   // Scene state
@@ -98,6 +99,7 @@ interface MapState {
   removeTextbox: (id: string) => void;
   updateTextbox: (id: string, updates: Partial<SceneTextbox>) => void;
   setSceneTextboxes: (tbs: SceneTextbox[]) => void;
+  setEditingTextbox: (tb: SceneTextbox | null) => void;
 
   // Year filter
   yearFilter: [number, number] | null;
@@ -133,6 +135,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   labelFontSize: 1.0,
   sceneTextboxes: [],
   pendingTextboxCoords: null,
+  editingTextbox: null,
   _textboxSyncSkip: false,
   scenes: [],
   currentSceneIndex: null,
@@ -255,6 +258,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   removeTextbox: (id) => set((s) => ({ sceneTextboxes: s.sceneTextboxes.filter((t) => t.id !== id) })),
   updateTextbox: (id, updates) => set((s) => ({ sceneTextboxes: s.sceneTextboxes.map((t) => t.id === id ? { ...t, ...updates } : t) })),
   setSceneTextboxes: (tbs) => set({ sceneTextboxes: tbs }),
+  setEditingTextbox: (tb) => set({ editingTextbox: tb }),
 
   // Year filter actions
   setYearFilter: (range) => set({ yearFilter: range }),

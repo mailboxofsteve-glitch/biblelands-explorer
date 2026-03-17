@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMapStore } from "@/store/mapStore";
 import type { SceneTextbox } from "@/types";
 import {
@@ -17,11 +17,13 @@ import { Button } from "@/components/ui/button";
 interface Props {
   open: boolean;
   onClose: () => void;
-  coords: [number, number];
+  coords?: [number, number];
+  editingTextbox?: SceneTextbox | null;
 }
 
-const TextboxModal = ({ open, onClose, coords }: Props) => {
+const TextboxModal = ({ open, onClose, coords, editingTextbox }: Props) => {
   const addTextbox = useMapStore((s) => s.addTextbox);
+  const updateTextbox = useMapStore((s) => s.updateTextbox);
   const clearPendingTextbox = useMapStore((s) => s.clearPendingTextbox);
 
   const [heading, setHeading] = useState("");
@@ -30,24 +32,56 @@ const TextboxModal = ({ open, onClose, coords }: Props) => {
   const [fillOpacity, setFillOpacity] = useState(0.85);
   const [fontSize, setFontSize] = useState(1.0);
 
+  const isEditing = !!editingTextbox;
+
+  // Pre-fill fields when editing
+  useEffect(() => {
+    if (editingTextbox) {
+      setHeading(editingTextbox.heading);
+      setBody(editingTextbox.body);
+      setFillColor(editingTextbox.fill_color);
+      setFillOpacity(editingTextbox.fill_opacity);
+      setFontSize(editingTextbox.font_size ?? 1.0);
+    } else {
+      setHeading("");
+      setBody("");
+      setFillColor("#1e3a5f");
+      setFillOpacity(0.85);
+      setFontSize(1.0);
+    }
+  }, [editingTextbox, open]);
+
   const handleSave = () => {
     if (!heading.trim()) return;
-    const tb: SceneTextbox = {
-      id: crypto.randomUUID(),
-      lng: coords[0],
-      lat: coords[1],
-      heading: heading.trim(),
-      body: body.trim(),
-      fill_color: fillColor,
-      fill_opacity: fillOpacity,
-      font_size: fontSize,
-    };
-    addTextbox(tb);
+    if (isEditing) {
+      updateTextbox(editingTextbox.id, {
+        heading: heading.trim(),
+        body: body.trim(),
+        fill_color: fillColor,
+        fill_opacity: fillOpacity,
+        font_size: fontSize,
+      });
+    } else {
+      if (!coords) return;
+      const tb: SceneTextbox = {
+        id: crypto.randomUUID(),
+        lng: coords[0],
+        lat: coords[1],
+        heading: heading.trim(),
+        body: body.trim(),
+        fill_color: fillColor,
+        fill_opacity: fillOpacity,
+        font_size: fontSize,
+      };
+      addTextbox(tb);
+    }
     onClose();
   };
 
   const handleClose = () => {
-    clearPendingTextbox();
+    if (!isEditing) {
+      clearPendingTextbox();
+    }
     onClose();
   };
 
@@ -55,7 +89,7 @@ const TextboxModal = ({ open, onClose, coords }: Props) => {
     <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Text Box</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit Text Box" : "Add Text Box"}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -144,7 +178,7 @@ const TextboxModal = ({ open, onClose, coords }: Props) => {
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={!heading.trim()}>
-            Add
+            {isEditing ? "Save" : "Add"}
           </Button>
         </DialogFooter>
       </DialogContent>
