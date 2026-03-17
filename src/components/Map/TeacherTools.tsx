@@ -167,7 +167,7 @@ const TeacherTools = ({ mapRef }: TeacherToolsProps) => {
       {toolMode !== "none" && (
         <div className="px-3 py-2 bg-accent/10 border-b border-border/40 flex items-center justify-between">
           <span className="text-[11px] font-medium text-accent">
-            {toolMode === "pin_drop" ? "📍 Pin Drop" : "✏️ Drawing Route"}
+            {toolMode === "pin_drop" ? "📍 Pin Drop" : toolMode === "draw_route" ? "✏️ Drawing Route" : "📝 Place Text Box"}
           </span>
           <button
             onClick={cancelTool}
