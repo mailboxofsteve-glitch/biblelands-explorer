@@ -26,6 +26,8 @@ export function useToolInteractions(map: mapboxgl.Map | null) {
         setPendingPinCoords(coords);
       } else if (mode === "draw_route") {
         addRoutePoint(coords);
+      } else if (mode === "textbox_drop") {
+        setPendingTextboxCoords(coords);
       }
     };
 
