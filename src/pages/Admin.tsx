@@ -180,19 +180,22 @@ function LocationsTab() {
     return m;
   }, [parentLocations]);
 
-  const [filterText, setFilterText] = useState("");
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
+  const setFilter = (key: string, value: string) => setColumnFilters((f) => ({ ...f, [key]: value }));
   const filteredData = useMemo(() => {
-    if (!filterText) return locations;
-    const q = filterText.toLowerCase();
-    return locations.filter((l: any) =>
-      (l.name_ancient ?? "").toLowerCase().includes(q) ||
-      (l.name_modern ?? "").toLowerCase().includes(q) ||
-      (l.location_type ?? "").toLowerCase().includes(q) ||
-      (l.primary_verse ?? "").toLowerCase().includes(q)
-    );
-  }, [locations, filterText]);
+    return locations.filter((l: any) => {
+      const f = columnFilters;
+      if (f.name_ancient && !(l.name_ancient ?? "").toLowerCase().includes(f.name_ancient.toLowerCase())) return false;
+      if (f.name_modern && !(l.name_modern ?? "").toLowerCase().includes(f.name_modern.toLowerCase())) return false;
+      if (f.location_type && l.location_type !== f.location_type) return false;
+      if (f.era_tags && !(l.era_tags ?? []).some((e: string) => e.toLowerCase().includes(f.era_tags.toLowerCase()))) return false;
+      if (f.parent_location_id && !(parentNameMap[l.parent_location_id] ?? "").toLowerCase().includes(f.parent_location_id.toLowerCase())) return false;
+      if (f.primary_verse && !(l.primary_verse ?? "").toLowerCase().includes(f.primary_verse.toLowerCase())) return false;
+      return true;
+    });
+  }, [locations, columnFilters, parentNameMap]);
 
-  useEffect(() => { setSelectedIds(new Set()); }, [filterText]);
+  useEffect(() => { setSelectedIds(new Set()); }, [columnFilters]);
 
   const { sortField, sortDir, toggleSort, sorted } = useTableSort(filteredData, "name_ancient");
 
