@@ -52,6 +52,10 @@ interface MapState {
   fogEnabled: boolean;
   labelFontSize: number;
 
+  // Textbox state
+  sceneTextboxes: SceneTextbox[];
+  pendingTextboxCoords: [number, number] | null;
+
   // Scene state
   scenes: LessonScene[];
   currentSceneIndex: number | null;
