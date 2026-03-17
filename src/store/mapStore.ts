@@ -356,6 +356,7 @@ export const useMapStore = create<MapState>((set, get) => ({
       highlighted_pin_id: s.selectedPinId,
       era: s.currentEra,
       hidden_location_ids: [...s.hiddenLocationIds],
+      textboxes: [...s.sceneTextboxes],
     };
     set({
       scenes: s.scenes.map((sc) => (sc.id === id ? updated : sc)),

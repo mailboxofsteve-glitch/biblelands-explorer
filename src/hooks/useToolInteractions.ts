@@ -41,7 +41,7 @@ export function useToolInteractions(map: mapboxgl.Map | null) {
   useEffect(() => {
     if (!map) return;
     const canvas = map.getCanvas();
-    if (toolMode === "pin_drop" || toolMode === "draw_route") {
+    if (toolMode === "pin_drop" || toolMode === "draw_route" || toolMode === "textbox_drop") {
       canvas.style.cursor = "crosshair";
     } else {
       canvas.style.cursor = "";
