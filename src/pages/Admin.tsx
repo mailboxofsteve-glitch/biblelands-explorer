@@ -978,6 +978,13 @@ function UsersTab() {
               <SortableHead label="Joined" field="created_at" sortField={sortField} sortDir={sortDir} onSort={toggleSort} />
               <TableHead className="w-28"></TableHead>
             </TableRow>
+            <TableRow className="bg-muted/30 hover:bg-muted/30">
+              <TableHead><FilterInput value={columnFilters.email ?? ""} onChange={(v) => setFilter("email", v)} placeholder="Email…" /></TableHead>
+              <TableHead><FilterInput value={columnFilters.display_name ?? ""} onChange={(v) => setFilter("display_name", v)} placeholder="Name…" /></TableHead>
+              <TableHead />
+              <TableHead />
+              <TableHead />
+            </TableRow>
           </TableHeader>
           <TableBody>
             {sorted.map((u: any) => (
