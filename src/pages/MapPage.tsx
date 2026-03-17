@@ -47,8 +47,30 @@ const MapPage = () => {
   const toggleFog = useMapStore((s) => s.toggleFog);
   const labelFontSize = useMapStore((s) => s.labelFontSize);
   const setLabelFontSize = useMapStore((s) => s.setLabelFontSize);
+  const sceneTextboxes = useMapStore((s) => s.sceneTextboxes);
+  const currentSceneIndex = useMapStore((s) => s.currentSceneIndex);
+  const scenes = useMapStore((s) => s.scenes);
   const { persistScene } = useScenes(lessonId);
   const { overlays } = useOverlays();
+
+  // Auto-persist textbox changes to the current scene
+  useEffect(() => {
+    const store = useMapStore.getState();
+    if (store._textboxSyncSkip) {
+      useMapStore.setState({ _textboxSyncSkip: false });
+      return;
+    }
+    if (currentSceneIndex == null) return;
+    const scene = scenes[currentSceneIndex];
+    if (!scene) return;
+
+    const updated = { ...scene, textboxes: [...sceneTextboxes] };
+    useMapStore.setState({
+      scenes: scenes.map((s, i) => (i === currentSceneIndex ? updated : s)),
+    });
+    persistScene(updated);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sceneTextboxes]);
 
   const enterPresentation = useCallback(() => {
     setPresenting(true);
