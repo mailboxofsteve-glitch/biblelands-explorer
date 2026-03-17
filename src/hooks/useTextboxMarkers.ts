@@ -25,12 +25,13 @@ export function useTextboxMarkers(
       }
     }
 
-    // Create / update markers
+    // Create / update markers — rebuild if content changed
     for (const tb of sceneTextboxes) {
-      if (markersRef.current.has(tb.id)) {
-        // Update position only
-        markersRef.current.get(tb.id)!.setLngLat([tb.lng, tb.lat]);
-        continue;
+      const existing = markersRef.current.get(tb.id);
+      if (existing) {
+        // Remove and recreate to pick up content/style changes
+        existing.remove();
+        markersRef.current.delete(tb.id);
       }
 
       const el = createTextboxEl(tb, presenting, () => removeTextbox(tb.id), () => {

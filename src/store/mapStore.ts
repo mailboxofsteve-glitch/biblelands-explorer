@@ -258,6 +258,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   removeTextbox: (id) => set((s) => ({ sceneTextboxes: s.sceneTextboxes.filter((t) => t.id !== id) })),
   updateTextbox: (id, updates) => set((s) => ({ sceneTextboxes: s.sceneTextboxes.map((t) => t.id === id ? { ...t, ...updates } : t) })),
   setSceneTextboxes: (tbs) => set({ sceneTextboxes: tbs }),
+  setEditingTextbox: (tb) => set({ editingTextbox: tb }),
 
   // Year filter actions
   setYearFilter: (range) => set({ yearFilter: range }),
