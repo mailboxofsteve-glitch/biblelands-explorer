@@ -305,10 +305,7 @@ function LocationsTab() {
         </div>
       </div>
 
-      <div className="relative">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Filter locations…" value={filterText} onChange={(e) => setFilterText(e.target.value)} className="pl-9 max-w-sm" />
-      </div>
+      {/* Per-column filters are in the table header */}
 
       {selectedIds.size > 0 && (
         <div className="flex items-center gap-3 rounded-md border border-destructive/30 bg-destructive/5 px-4 py-2 text-sm">
