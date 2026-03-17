@@ -964,10 +964,7 @@ function UsersTab() {
     <div className="space-y-4">
       <h2 className="text-lg font-serif font-semibold text-foreground">Users</h2>
 
-      <div className="relative">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Filter users…" value={filterText} onChange={(e) => setFilterText(e.target.value)} className="pl-9 max-w-sm" />
-      </div>
+      {/* Per-column filters are in the table header */}
 
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading…</p>
