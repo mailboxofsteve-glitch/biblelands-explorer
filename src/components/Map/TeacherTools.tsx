@@ -66,6 +66,7 @@ const TeacherTools = ({ mapRef }: TeacherToolsProps) => {
 
   const [showPinModal, setShowPinModal] = useState(false);
   const [showRouteModal, setShowRouteModal] = useState(false);
+  const [showTextboxModal, setShowTextboxModal] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const cancelAnimRef = useRef<(() => void) | null>(null);
 
