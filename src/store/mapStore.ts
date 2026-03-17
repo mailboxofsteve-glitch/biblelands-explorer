@@ -245,6 +245,15 @@ export const useMapStore = create<MapState>((set, get) => ({
 
   setHiddenLocationIds: (ids) => set({ hiddenLocationIds: ids }),
 
+  // Textbox actions
+  startTextboxDrop: () => set({ toolMode: "textbox_drop", pendingTextboxCoords: null }),
+  setPendingTextboxCoords: (coords) => set({ pendingTextboxCoords: coords }),
+  clearPendingTextbox: () => set({ pendingTextboxCoords: null, toolMode: "none" }),
+  addTextbox: (tb) => set((s) => ({ sceneTextboxes: [...s.sceneTextboxes, tb], toolMode: "none", pendingTextboxCoords: null })),
+  removeTextbox: (id) => set((s) => ({ sceneTextboxes: s.sceneTextboxes.filter((t) => t.id !== id) })),
+  updateTextbox: (id, updates) => set((s) => ({ sceneTextboxes: s.sceneTextboxes.map((t) => t.id === id ? { ...t, ...updates } : t) })),
+  setSceneTextboxes: (tbs) => set({ sceneTextboxes: tbs }),
+
   // Year filter actions
   setYearFilter: (range) => set({ yearFilter: range }),
   clearYearFilter: () => set({ yearFilter: null }),
