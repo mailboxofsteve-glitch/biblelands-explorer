@@ -670,6 +670,15 @@ function OverlaysTab() {
               <TableHead>Color</TableHead>
               <TableHead className="w-24"></TableHead>
             </TableRow>
+            <TableRow className="bg-muted/30 hover:bg-muted/30">
+              <TableHead />
+              <TableHead><FilterInput value={columnFilters.name ?? ""} onChange={(v) => setFilter("name", v)} placeholder="Name…" /></TableHead>
+              <TableHead><FilterSelect value={columnFilters.era ?? ""} onChange={(v) => setFilter("era", v)} options={ERAS.map((e) => ({ value: e.id, label: e.label }))} /></TableHead>
+              <TableHead><FilterSelect value={columnFilters.category ?? ""} onChange={(v) => setFilter("category", v)} options={OVERLAY_CATEGORIES.map((c) => ({ value: c, label: c }))} /></TableHead>
+              <TableHead />
+              <TableHead />
+              <TableHead />
+            </TableRow>
           </TableHeader>
           <TableBody>
             {sorted.map((ov: any) => (
