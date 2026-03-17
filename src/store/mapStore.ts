@@ -89,6 +89,15 @@ interface MapState {
   toggleHideLocation: (id: string) => void;
   setHiddenLocationIds: (ids: string[]) => void;
 
+  // Textbox actions
+  startTextboxDrop: () => void;
+  setPendingTextboxCoords: (coords: [number, number]) => void;
+  clearPendingTextbox: () => void;
+  addTextbox: (tb: SceneTextbox) => void;
+  removeTextbox: (id: string) => void;
+  updateTextbox: (id: string, updates: Partial<SceneTextbox>) => void;
+  setSceneTextboxes: (tbs: SceneTextbox[]) => void;
+
   // Year filter
   yearFilter: [number, number] | null;
   setYearFilter: (range: [number, number]) => void;
