@@ -52,10 +52,12 @@ const TeacherTools = ({ mapRef }: TeacherToolsProps) => {
   const toolMode = useMapStore((s) => s.toolMode);
   const startPinDrop = useMapStore((s) => s.startPinDrop);
   const startDrawRoute = useMapStore((s) => s.startDrawRoute);
+  const startTextboxDrop = useMapStore((s) => s.startTextboxDrop);
   const cancelTool = useMapStore((s) => s.cancelTool);
   const undoLast = useMapStore((s) => s.undoLast);
   const clearAllCustom = useMapStore((s) => s.clearAllCustom);
   const pendingPinCoords = useMapStore((s) => s.pendingPinCoords);
+  const pendingTextboxCoords = useMapStore((s) => s.pendingTextboxCoords);
   const pinDropIconType = useMapStore((s) => s.pinDropIconType);
   const routePoints = useMapStore((s) => s.routePoints);
   const customPinIds = useMapStore((s) => s.customPinIds);
