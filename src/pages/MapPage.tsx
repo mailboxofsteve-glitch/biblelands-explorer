@@ -209,6 +209,13 @@ const MapPage = () => {
               presenting ? "-translate-x-full absolute left-0 top-0 bottom-0 z-0 pointer-events-none" : "relative"
             }`}
           >
+            <Link
+              to="/dashboard"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors border-b border-border/40"
+            >
+              <ArrowLeft size={14} />
+              <span className="font-medium">Dashboard</span>
+            </Link>
             <div className="px-4 py-3 border-b border-border/40">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-serif font-semibold text-foreground tracking-wide">

@@ -101,23 +101,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="border-b border-border/40 px-4 sm:px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <BookOpen className="h-6 w-6 text-accent" />
-          <span className="text-xl font-serif font-bold tracking-wide text-foreground">BibleLands</span>
-        </div>
-        <div className="flex gap-2">
-          {isAdmin && (
-            <Button variant="ghost" size="sm" onClick={() => navigate("/admin")}>
-              <Settings className="h-4 w-4 mr-1" /> Admin
-            </Button>
-          )}
-          <Button variant="ghost" size="sm" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4 mr-1" /> Sign Out
-          </Button>
-        </div>
-      </header>
+      <AppHeader />
 
       <main className="flex-1 px-4 sm:px-6 py-8 sm:py-10 max-w-5xl mx-auto w-full space-y-6">
         {/* Welcome */}
