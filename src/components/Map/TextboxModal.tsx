@@ -66,6 +66,8 @@ const TextboxModal = ({ open, onClose, coords, editingTextbox }: Props) => {
         fill_color: fillColor,
         fill_opacity: fillOpacity,
         font_size: fontSize,
+        width,
+        height,
       });
     } else {
       if (!coords) return;
@@ -78,6 +80,8 @@ const TextboxModal = ({ open, onClose, coords, editingTextbox }: Props) => {
         fill_color: fillColor,
         fill_opacity: fillOpacity,
         font_size: fontSize,
+        width,
+        height,
       };
       addTextbox(tb);
     }
