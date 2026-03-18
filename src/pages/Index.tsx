@@ -1,6 +1,7 @@
-import { BookOpen, Map, Layers, Plus } from "lucide-react";
+import { Map, Layers, BookOpen, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import AppHeader from "@/components/AppHeader";
 
 const features = [
   {
