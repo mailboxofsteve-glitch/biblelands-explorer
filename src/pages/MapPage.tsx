@@ -18,8 +18,9 @@ import { useOverlays } from "@/hooks/useOverlays";
 import { animateRoutesSimultaneously } from "@/lib/animateRoute";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
-import { Maximize, Settings, Keyboard, Monitor } from "lucide-react";
+import { Maximize, Settings, Keyboard, Monitor, ArrowLeft } from "lucide-react";
 import GroundViewButton from "@/components/Map/GroundViewButton";
+import { Link } from "react-router-dom";
 import PresenterView from "@/components/Map/PresenterView";
 
 const MapPage = () => {
