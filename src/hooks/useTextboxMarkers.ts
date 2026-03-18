@@ -84,8 +84,11 @@ function createTextboxEl(
 ): HTMLDivElement {
   const scale = tb.font_size ?? 1;
   const wrapper = document.createElement("div");
-  wrapper.style.maxWidth = "240px";
-  wrapper.style.minWidth = "140px";
+  wrapper.style.width = `${tb.width ?? 240}px`;
+  if (tb.height && tb.height > 0) {
+    wrapper.style.height = `${tb.height}px`;
+    wrapper.style.overflowY = "auto";
+  }
   wrapper.style.padding = "10px 14px";
   wrapper.style.borderRadius = "8px";
   wrapper.style.backgroundColor = tb.fill_color;

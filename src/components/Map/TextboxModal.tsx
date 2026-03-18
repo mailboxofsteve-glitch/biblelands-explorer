@@ -31,6 +31,8 @@ const TextboxModal = ({ open, onClose, coords, editingTextbox }: Props) => {
   const [fillColor, setFillColor] = useState("#1e3a5f");
   const [fillOpacity, setFillOpacity] = useState(0.85);
   const [fontSize, setFontSize] = useState(1.0);
+  const [width, setWidth] = useState(240);
+  const [height, setHeight] = useState(0);
 
   const isEditing = !!editingTextbox;
 
@@ -42,12 +44,16 @@ const TextboxModal = ({ open, onClose, coords, editingTextbox }: Props) => {
       setFillColor(editingTextbox.fill_color);
       setFillOpacity(editingTextbox.fill_opacity);
       setFontSize(editingTextbox.font_size ?? 1.0);
+      setWidth(editingTextbox.width ?? 240);
+      setHeight(editingTextbox.height ?? 0);
     } else {
       setHeading("");
       setBody("");
       setFillColor("#1e3a5f");
       setFillOpacity(0.85);
       setFontSize(1.0);
+      setWidth(240);
+      setHeight(0);
     }
   }, [editingTextbox, open]);
 
@@ -60,6 +66,8 @@ const TextboxModal = ({ open, onClose, coords, editingTextbox }: Props) => {
         fill_color: fillColor,
         fill_opacity: fillOpacity,
         font_size: fontSize,
+        width,
+        height,
       });
     } else {
       if (!coords) return;
@@ -72,6 +80,8 @@ const TextboxModal = ({ open, onClose, coords, editingTextbox }: Props) => {
         fill_color: fillColor,
         fill_opacity: fillOpacity,
         font_size: fontSize,
+        width,
+        height,
       };
       addTextbox(tb);
     }
@@ -154,12 +164,38 @@ const TextboxModal = ({ open, onClose, coords, editingTextbox }: Props) => {
             />
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Width: {width}px</Label>
+              <Slider
+                min={100}
+                max={500}
+                step={10}
+                value={[width]}
+                onValueChange={([v]) => setWidth(v)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Height: {height === 0 ? "Auto" : `${height}px`}</Label>
+              <Slider
+                min={0}
+                max={400}
+                step={10}
+                value={[height]}
+                onValueChange={([v]) => setHeight(v)}
+              />
+            </div>
+          </div>
+
           {/* Preview */}
           <div
-            className="rounded-lg p-3 text-white text-sm"
+            className="rounded-lg p-3 text-white text-sm overflow-auto"
             style={{
               backgroundColor: fillColor,
               opacity: fillOpacity,
+              width: `${Math.min(width, 400)}px`,
+              height: height > 0 ? `${height}px` : "auto",
             }}
           >
             <h4 className="font-bold" style={{ fontSize: `${Math.round(13 * fontSize)}px` }}>
