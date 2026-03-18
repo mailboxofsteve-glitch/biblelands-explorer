@@ -16,8 +16,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  BookOpen,
-  ArrowLeft,
   Search,
   Copy,
   ExternalLink,
@@ -25,6 +23,7 @@ import {
   Layers,
   Map as MapIcon,
 } from "lucide-react";
+import AppHeader from "@/components/AppHeader";
 
 interface LibraryLesson {
   id: string;
@@ -161,18 +160,7 @@ const Library = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="border-b border-border/40 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <BookOpen className="h-6 w-6 text-accent" />
-          <span className="text-xl font-serif font-bold tracking-wide text-foreground">
-            Community Library
-          </span>
-        </div>
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-4 w-4 mr-1" /> Back
-        </Button>
-      </header>
+      <AppHeader />
 
       <main className="flex-1 px-6 py-8 max-w-6xl mx-auto w-full space-y-6">
         {/* Filter bar */}

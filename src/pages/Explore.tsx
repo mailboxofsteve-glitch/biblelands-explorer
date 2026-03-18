@@ -16,6 +16,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import AppHeader from "@/components/AppHeader";
 
 function ExploreControls({ mapRef }: { mapRef: React.RefObject<MapCanvasHandle | null> }) {
   const showAllLabels = useMapStore((s) => s.showAllLabels);
@@ -105,29 +106,13 @@ function ExploreControls({ mapRef }: { mapRef: React.RefObject<MapCanvasHandle |
 }
 
 const Explore = () => {
-  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const mapRef = useRef<MapCanvasHandle | null>(null);
   const [controlsOpen, setControlsOpen] = useState(false);
 
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden bg-background">
-      {/* Top bar */}
-      <header className="flex items-center gap-3 px-3 py-2 border-b border-border/40 bg-card/80 backdrop-blur-sm z-30 shrink-0">
-        <button
-          onClick={() => navigate("/")}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft size={14} />
-          <span>Back</span>
-        </button>
-        <span className="text-sm font-serif font-semibold text-foreground tracking-wide">
-          BibleLands
-        </span>
-        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-          Explore
-        </span>
-      </header>
+      <AppHeader />
 
       <div className="flex flex-1 min-h-0">
         {/* Desktop sidebar */}

@@ -1,6 +1,7 @@
-import { BookOpen, Map, Layers, Plus } from "lucide-react";
+import { Map, Layers, BookOpen, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import AppHeader from "@/components/AppHeader";
 
 const features = [
   {
@@ -25,24 +26,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <header className="border-b border-border/40 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <BookOpen className="h-6 w-6 text-accent" />
-          <span className="text-xl font-serif font-bold tracking-wide text-foreground">BibleLands</span>
-        </div>
-        <nav className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
-            Lessons
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/explore")}>
-            Explore
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>
-            Log In
-          </Button>
-        </nav>
-      </header>
+      <AppHeader />
 
       {/* Hero */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 text-center">
