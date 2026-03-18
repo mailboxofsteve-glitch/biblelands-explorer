@@ -16,6 +16,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import AppHeader from "@/components/AppHeader";
 
 function ExploreControls({ mapRef }: { mapRef: React.RefObject<MapCanvasHandle | null> }) {
   const showAllLabels = useMapStore((s) => s.showAllLabels);
