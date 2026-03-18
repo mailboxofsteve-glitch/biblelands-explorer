@@ -16,8 +16,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  BookOpen,
-  ArrowLeft,
   Search,
   Copy,
   ExternalLink,
@@ -25,6 +23,7 @@ import {
   Layers,
   Map as MapIcon,
 } from "lucide-react";
+import AppHeader from "@/components/AppHeader";
 
 interface LibraryLesson {
   id: string;
