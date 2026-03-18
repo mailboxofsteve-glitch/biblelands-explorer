@@ -60,6 +60,8 @@ export interface SceneTextbox {
   fill_color: string;
   fill_opacity: number;
   font_size: number;
+  width: number;
+  height: number;
 }
 
 export interface LessonScene {

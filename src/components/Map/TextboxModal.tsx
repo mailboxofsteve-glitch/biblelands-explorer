@@ -31,6 +31,8 @@ const TextboxModal = ({ open, onClose, coords, editingTextbox }: Props) => {
   const [fillColor, setFillColor] = useState("#1e3a5f");
   const [fillOpacity, setFillOpacity] = useState(0.85);
   const [fontSize, setFontSize] = useState(1.0);
+  const [width, setWidth] = useState(240);
+  const [height, setHeight] = useState(0);
 
   const isEditing = !!editingTextbox;
 
@@ -42,12 +44,16 @@ const TextboxModal = ({ open, onClose, coords, editingTextbox }: Props) => {
       setFillColor(editingTextbox.fill_color);
       setFillOpacity(editingTextbox.fill_opacity);
       setFontSize(editingTextbox.font_size ?? 1.0);
+      setWidth(editingTextbox.width ?? 240);
+      setHeight(editingTextbox.height ?? 0);
     } else {
       setHeading("");
       setBody("");
       setFillColor("#1e3a5f");
       setFillOpacity(0.85);
       setFontSize(1.0);
+      setWidth(240);
+      setHeight(0);
     }
   }, [editingTextbox, open]);
 
