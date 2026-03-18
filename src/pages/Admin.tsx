@@ -582,12 +582,21 @@ function OverlaysTab() {
       toast({ title: "Invalid GeoJSON", variant: "destructive" }); return;
     }
 
+    const existingStyle = (editing?.default_style as Record<string, unknown>) ?? {};
+    const updatedStyle = {
+      ...existingStyle,
+      "line-color": form.default_color,
+      "fill-color": form.default_color,
+      "circle-color": form.default_color,
+    };
+
     const payload: any = {
       name: form.name,
       slug: form.slug || form.name.toLowerCase().replace(/\s+/g, "-"),
       era: form.era,
       category: form.category,
       default_color: form.default_color,
+      default_style: updatedStyle,
       geojson: parsedGeo,
       is_preloaded: form.is_preloaded,
       created_by: user?.id,
