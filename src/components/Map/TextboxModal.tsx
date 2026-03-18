@@ -164,12 +164,38 @@ const TextboxModal = ({ open, onClose, coords, editingTextbox }: Props) => {
             />
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Width: {width}px</Label>
+              <Slider
+                min={100}
+                max={500}
+                step={10}
+                value={[width]}
+                onValueChange={([v]) => setWidth(v)}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Height: {height === 0 ? "Auto" : `${height}px`}</Label>
+              <Slider
+                min={0}
+                max={400}
+                step={10}
+                value={[height]}
+                onValueChange={([v]) => setHeight(v)}
+              />
+            </div>
+          </div>
+
           {/* Preview */}
           <div
-            className="rounded-lg p-3 text-white text-sm"
+            className="rounded-lg p-3 text-white text-sm overflow-auto"
             style={{
               backgroundColor: fillColor,
               opacity: fillOpacity,
+              width: `${Math.min(width, 400)}px`,
+              height: height > 0 ? `${height}px` : "auto",
             }}
           >
             <h4 className="font-bold" style={{ fontSize: `${Math.round(13 * fontSize)}px` }}>
