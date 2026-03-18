@@ -1,6 +1,18 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { ERAS, type EraId, useMapStore } from "@/store/mapStore";
 import { supabase } from "@/integrations/supabase/client";
+import { Tent, Footprints, Scale, Crown, GitBranch, Link, Cross, ScrollText, type LucideIcon } from "lucide-react";
+
+const ERA_ICONS: Record<EraId, LucideIcon> = {
+  patriarchs: Tent,
+  exodus: Footprints,
+  judges: Scale,
+  united_kingdom: Crown,
+  divided_kingdom: GitBranch,
+  exile: Link,
+  nt_ministry: Cross,
+  early_church: ScrollText,
+};
 
 // Approximate year ranges per era for positioning
 const ERA_YEAR_RANGES: Record<EraId, [number, number]> = {
@@ -156,13 +168,17 @@ export default function BottomTimeline() {
                   : "flex-1 hover:bg-secondary/40"
               } ${isActive ? "text-accent font-semibold" : "text-muted-foreground"}`}
             >
-              <span
-                className={`whitespace-nowrap transition-all duration-300 ${
-                  isExpanded ? "text-lg font-serif" : "text-lg uppercase tracking-wider"
-                }`}
-              >
-                {isExpanded ? era.label : era.label.split(" ").map(w => w[0]).join("")}
-              </span>
+              {(() => {
+                const Icon = ERA_ICONS[era.id as EraId];
+                return isExpanded ? (
+                  <span className="flex items-center gap-2 whitespace-nowrap text-lg font-serif">
+                    <Icon size={18} />
+                    {era.label}
+                  </span>
+                ) : (
+                  <Icon size={16} />
+                );
+              })()}
               {isActive && (
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />
               )}
