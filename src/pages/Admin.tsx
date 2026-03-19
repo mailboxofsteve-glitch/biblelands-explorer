@@ -153,7 +153,7 @@ function LocationsTab() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
-  const [form, setForm] = useState({ name_ancient: "", name_modern: "", location_type: "city", era_tags: [] as string[], primary_verse: "", description: "", lat: "32.0", lng: "35.5", year_start: "", year_end: "", parent_location_id: "" });
+  const [form, setForm] = useState({ name_ancient: "", name_modern: "", location_type: "city", era_tags: [] as string[], primary_verse: "", description: "", lat: "32.0", lng: "35.5", year_start: "", year_end: "", parent_location_id: "", model_url: "", model_scale: "1.0", model_rotation_x: "0", model_rotation_y: "0", model_rotation_z: "0", model_altitude: "0", model_opt_out: false });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
