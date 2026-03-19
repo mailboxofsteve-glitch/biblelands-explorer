@@ -192,8 +192,12 @@ const TextboxModal = ({ open, onClose, coords, editingTextbox }: Props) => {
           <div
             className="rounded-lg p-3 text-white text-sm overflow-auto"
             style={{
-              backgroundColor: fillColor,
-              opacity: fillOpacity,
+              backgroundColor: (() => {
+                const r = parseInt(fillColor.slice(1, 3), 16);
+                const g = parseInt(fillColor.slice(3, 5), 16);
+                const b = parseInt(fillColor.slice(5, 7), 16);
+                return `rgba(${r},${g},${b},${fillOpacity})`;
+              })(),
               width: `${Math.min(width, 400)}px`,
               height: height > 0 ? `${height}px` : "auto",
             }}

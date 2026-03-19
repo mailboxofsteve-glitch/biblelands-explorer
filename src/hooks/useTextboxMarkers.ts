@@ -98,8 +98,7 @@ function createTextboxEl(
   }
   wrapper.style.padding = "10px 14px";
   wrapper.style.borderRadius = "8px";
-  wrapper.style.backgroundColor = tb.fill_color;
-  wrapper.style.opacity = String(tb.fill_opacity);
+  wrapper.style.backgroundColor = hexToRgba(tb.fill_color, tb.fill_opacity);
   wrapper.style.color = "#ffffff";
   wrapper.style.boxShadow = "0 4px 14px rgba(0,0,0,0.35)";
   wrapper.style.position = "relative";
