@@ -166,6 +166,15 @@ export const useMapStore = create<MapState>((set, get) => ({
   toggleShowAllLabels: () => set((s) => ({ showAllLabels: !s.showAllLabels })),
   toggleFog: () => set((s) => ({ fogEnabled: !s.fogEnabled })),
   setLabelFontSize: (size) => set({ labelFontSize: size }),
+  toggleProjectorMode: () => set((s) => {
+    const next = !s.projectorMode;
+    if (next) {
+      document.documentElement.classList.add("projector-mode");
+    } else {
+      document.documentElement.classList.remove("projector-mode");
+    }
+    return { projectorMode: next };
+  }),
 
   startPinDrop: (iconType) =>
     set({ toolMode: "pin_drop", pinDropIconType: iconType, pendingPinCoords: null }),
