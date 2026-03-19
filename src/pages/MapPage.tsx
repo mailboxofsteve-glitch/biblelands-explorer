@@ -46,6 +46,8 @@ const MapPage = () => {
   const toggleShowAllLabels = useMapStore((s) => s.toggleShowAllLabels);
   const fogEnabled = useMapStore((s) => s.fogEnabled);
   const toggleFog = useMapStore((s) => s.toggleFog);
+  const projectorMode = useMapStore((s) => s.projectorMode);
+  const toggleProjectorMode = useMapStore((s) => s.toggleProjectorMode);
   const labelFontSize = useMapStore((s) => s.labelFontSize);
   const setLabelFontSize = useMapStore((s) => s.setLabelFontSize);
   const sceneTextboxes = useMapStore((s) => s.sceneTextboxes);
