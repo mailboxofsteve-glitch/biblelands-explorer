@@ -51,6 +51,7 @@ interface MapState {
   showAllLabels: boolean;
   fogEnabled: boolean;
   labelFontSize: number;
+  projectorMode: boolean;
 
   // Textbox state
   sceneTextboxes: SceneTextbox[];
