@@ -17,6 +17,7 @@ import { useCustomPins } from "@/hooks/useCustomPins";
 import { useCustomPinMarkers } from "@/hooks/useCustomPinMarkers";
 import { useToolInteractions } from "@/hooks/useToolInteractions";
 import { useTextboxMarkers } from "@/hooks/useTextboxMarkers";
+import { use3DModels } from "@/hooks/use3DModels";
 import { useMapStore } from "@/store/mapStore";
 
 const MAPBOX_TOKEN =
