@@ -315,7 +315,7 @@ export const useMapStore = create<MapState>((set, get) => ({
       currentEra: scene.era as EraId,
       hiddenLocationIds: [...scene.hidden_location_ids],
       sceneTextboxes: [...(scene.textboxes ?? [])],
-      _textboxSyncSkip: true,
+      _textboxSyncSource: "load" as const,
     });
 
     if (scene.highlighted_pin_id) {

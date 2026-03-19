@@ -57,8 +57,8 @@ const MapPage = () => {
   // Auto-persist textbox changes to the current scene
   useEffect(() => {
     const store = useMapStore.getState();
-    if (store._textboxSyncSkip) {
-      useMapStore.setState({ _textboxSyncSkip: false });
+    if (store._textboxSyncSource === "load") {
+      useMapStore.setState({ _textboxSyncSource: "edit" });
       return;
     }
     if (currentSceneIndex == null) return;
