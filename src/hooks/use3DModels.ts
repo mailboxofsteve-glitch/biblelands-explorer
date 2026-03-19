@@ -198,7 +198,7 @@ export function use3DModels(
 }
 
 function positionModel(group: THREE.Group, pin: LocationPin) {
-  const scale = pin.model_scale ?? 1.0;
+  const scale = pin.model_scale ?? DEFAULT_MODEL_SCALE;
   const altitude = pin.model_altitude ?? 0;
   const rotX = THREE.MathUtils.degToRad(pin.model_rotation_x ?? 0);
   const rotY = THREE.MathUtils.degToRad(pin.model_rotation_y ?? 0);
