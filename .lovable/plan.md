@@ -1,48 +1,46 @@
 
 
-## Fix Textbox Opacity + Investigate Disappearing Textboxes
+## Add Marker Clustering for Location Pins
 
-### 1. Disappearing Textboxes
+### Approach
 
-**Finding**: Both scenes (`793ca...` and `d39844...`) currently have `textboxes: []` in the database. The textboxes were overwritten to empty at some point.
+Use Mapbox GL's **native GeoJSON source clustering** instead of HTML markers for location pins. This is the most performant approach — Mapbox handles clustering on the GPU via WebWorkers, no extra library needed.
 
-**Root cause**: The auto-persist effect in `MapPage.tsx` (line 58-74) fires on every `sceneTextboxes` change. It uses a `_textboxSyncSkip` flag to avoid persisting when `loadScene` sets textboxes. However, if two consecutive scene loads have the same textbox array (e.g., both empty), the Zustand state doesn't change, the effect doesn't fire, and `_textboxSyncSkip` stays `true`. On the next *real* textbox edit, the persist is incorrectly skipped, and the change is lost. Alternatively, calling `updateScene` while the wrong scene's textboxes are loaded would overwrite with stale data.
+The current `usePinMarkers` hook creates individual HTML `mapboxgl.Marker` elements. We'll replace it with a GeoJSON source + circle/symbol layers for clusters, and keep individual HTML markers only for unclustered points (to preserve the existing custom marker styling and popup interactions).
 
-**Fix**: Replace the brittle `_textboxSyncSkip` flag with a `_textboxSyncSource` discriminator. Instead of a boolean, store a `"load"` or `"edit"` origin. The auto-persist effect should only persist when the change source is `"edit"` (the default). `loadScene` sets source to `"load"`, and the effect resets it without persisting.
+### How It Works
 
-**Changes — `src/store/mapStore.ts`**:
-- Replace `_textboxSyncSkip: boolean` with `_textboxSyncSource: "edit" | "load"` (default `"edit"`)
-- In `loadScene`, set `_textboxSyncSource: "load"`
+1. Add a GeoJSON source with `cluster: true` containing all location pin coordinates
+2. Render **cluster circles** as a Mapbox layer (styled to match the ancient theme)
+3. Render **cluster count labels** as a symbol layer
+4. For **unclustered points**, continue using HTML markers (preserving existing popup, selection, hide/show behavior)
+5. On cluster click, zoom into the cluster to expand it
+6. Re-compute which pins are unclustered on every map move/zoom
 
-**Changes — `src/pages/MapPage.tsx`** (line 58-74):
-- Read `_textboxSyncSource` instead of `_textboxSyncSkip`
-- If `"load"`, reset to `"edit"` and return without persisting
-- If `"edit"`, persist as usual
+### Changes
 
-**Unfortunately the data is already lost.** I cannot restore the textboxes that were in those two scenes — they were overwritten in the database. You'll need to re-add them manually.
+**`src/hooks/usePinMarkers.ts`** — Major refactor:
+- Add a `pin-clusters` GeoJSON source with `cluster: true, clusterMaxZoom: 14, clusterRadius: 50`
+- Add `clusters` circle layer (dark brown fill matching theme, sized by point_count)
+- Add `cluster-count` symbol layer showing the number
+- Track unclustered point IDs by querying the source on `moveend`/`sourcedata` and only create HTML markers for those
+- On cluster click, call `map.getSource(...).getClusterExpansionZoom()` and fly to it
+- Keep all existing popup, selection, hidden-pin, and label logic for unclustered markers
 
----
+**`src/index.css`** — Add cursor style for cluster layer:
+```css
+.mapboxgl-canvas-container.mapboxgl-interactive { cursor: grab; }
+```
 
-### 2. Zoom Affects Textbox Opacity
+**`src/components/Map/MapCanvas.tsx`** — No changes needed; it already passes pins to `usePinMarkers`.
 
-**Root cause**: Mapbox GL's **fog/atmosphere** system applies opacity attenuation to HTML markers (`.mapboxgl-marker`) based on distance from the camera. When you zoom out, fog makes markers progressively transparent. This is separate from the `fill_opacity` fix — the RGBA background is correct, but Mapbox is adding its own `opacity` inline style to the marker container.
+### Cluster Visual Style
+- Circle fill: `#2a1e0e` (matching pin background) with border `#8a6040`
+- Sizes: small (< 10 pins) 30px, medium (< 50) 40px, large 50px
+- Count text: `#e8d5a0` (matching popup theme)
 
-**Fix**: Add a CSS rule that prevents fog from attenuating textbox markers. We'll add a `data-textbox` attribute to textbox marker elements and override the fog opacity via CSS.
-
-**Changes — `src/hooks/useTextboxMarkers.ts`**:
-- Add `wrapper.dataset.textbox = "true"` in `createTextboxEl`
-
-**Changes — `src/index.css`**:
-- Add rule: `.mapboxgl-marker:has([data-textbox]) { opacity: 1 !important; }`
-
----
-
-### Summary of File Changes
-
-| File | Change |
-|------|--------|
-| `src/store/mapStore.ts` | Replace `_textboxSyncSkip` with `_textboxSyncSource` |
-| `src/pages/MapPage.tsx` | Update auto-persist effect to use new source flag |
-| `src/hooks/useTextboxMarkers.ts` | Add `data-textbox` attribute to wrapper |
-| `src/index.css` | Add CSS rule to prevent fog opacity on textbox markers |
+### Interaction
+- Click cluster → zoom to expand
+- Clusters auto-dissolve as user zooms in
+- Individual pins appear and behave exactly as before once unclustered
 
