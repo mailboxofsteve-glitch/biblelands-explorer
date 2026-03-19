@@ -4,43 +4,28 @@
 
 ### Root Cause
 
-The `use3DModels` hook has a stale-ref bug: it tracks whether the custom layer was added via `layerAddedRef`, but Mapbox silently removes custom layers on every `style.load` event. The ref stays `true`, so the layer is never re-created after the initial style load completes.
+The models ARE being loaded and added to the scene, but they're **invisible because the default scale is 1.0 meters** — literally a 1-meter object on a map viewed at zoom level 6. At that zoom, a 1-meter object is sub-pixel. The GLTF model geometry spans roughly -1 to +2.4 units, so at scale 1.0 it's about 3 meters across in the real world.
 
-Additionally, when `mapReady` toggles (which happens on style load in `MapCanvas`), the Three.js scene/camera/renderer refs from the old layer's `onAdd` become invalid but are never cleared.
+The database confirms all cities have `model_scale = 1` and `model_url = NULL`, which means they correctly fall through to the default city model, but the scale makes them invisible.
 
-### Fix (single file: `src/hooks/use3DModels.ts`)
+### Fix
 
-1. **Listen for `style.load` and re-add the layer**: After adding the custom layer, register a `style.load` handler on the map that resets `layerAddedRef` and clears the scene/camera/renderer refs. This ensures the next effect run will re-create the layer.
+**`src/hooks/use3DModels.ts`**:
+- Change the default scale constant from `1.0` to a much larger value (e.g., `2000`) so city models are visible at typical map zoom levels. A 3-unit GLTF model at scale 2000 = ~6km footprint, which is reasonable for representing a city on a biblical map.
+- Apply this default only when `pin.model_scale` is null (i.e., never explicitly set by admin). If an admin sets a custom scale, use that value.
 
-2. **Guard `addOrUpdateModels` on scene existence**: Already done (`if (!scene) return`), but ensure the `else` branch also checks this.
+**`src/pages/Admin.tsx`**:
+- Update the scale slider default to `2000` and increase the max range to accommodate map-scale values (e.g., max 10000).
+- Update the initial form state so new locations start with a sensible default.
 
-3. **Reset layer ref when map changes**: At the top of the main effect, detect if the map instance changed and reset `layerAddedRef`.
-
-4. **Add a `map.on('style.load', ...)` listener** inside the effect that:
-   - Sets `layerAddedRef.current = false`
-   - Clears `sceneRef`, `cameraRef`, `rendererRef`
-   - Clears `modelsRef`
-   
-   This way, the next time the effect runs (triggered by `mapReady` going true), it will re-create the layer fresh.
-
-5. **Add diagnostic console.log** statements (temporary) to confirm the layer is being added and models are loading, to verify the fix works.
-
-### Technical Details
-
-```text
-Effect flow after fix:
-  map ready + pins loaded
-    → layerAddedRef = false (reset by style.load handler)
-    → !layerAddedRef && !map.getLayer(LAYER_ID) → true
-    → map.addLayer(customLayer)
-    → onAdd fires → scene/camera/renderer created
-    → addOrUpdateModels() → loads GLTFs for city pins
-    → map.triggerRepaint() → models render
-```
+**`supabase migration`**:
+- Update the `model_scale` column default from `1.0` to `2000` so new locations get a visible default.
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/hooks/use3DModels.ts` | Add style.load listener to reset refs; track map instance to reset layer state; ensure proper re-initialization |
+| `src/hooks/use3DModels.ts` | Default scale constant → 2000 |
+| `src/pages/Admin.tsx` | Scale slider range and default |
+| Migration SQL | `ALTER COLUMN model_scale SET DEFAULT 2000` |
 
