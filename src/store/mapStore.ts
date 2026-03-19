@@ -136,7 +136,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   sceneTextboxes: [],
   pendingTextboxCoords: null,
   editingTextbox: null,
-  _textboxSyncSkip: false,
+  _textboxSyncSource: "edit",
   scenes: [],
   currentSceneIndex: null,
 
