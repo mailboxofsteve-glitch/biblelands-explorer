@@ -9,6 +9,7 @@ import {
   ChevronRight,
   X,
   ClipboardList,
+  Sun,
 } from "lucide-react";
 import GroundViewButton from "./GroundViewButton";
 import type { MapCanvasHandle } from "./MapCanvas";
