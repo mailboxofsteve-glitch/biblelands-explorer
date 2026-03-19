@@ -1,31 +1,81 @@
 
+Fix the 3D model rendering in two parts:
 
-## Fix 3D Models Not Rendering
+1. Make sure the location is actually eligible to render
+- The uploaded model for `944cc397-091a-4039-acee-14b68996d4a7` is saved correctly in the backend and the storage bucket is public.
+- But that location belongs to the `patriarchs` era, while the map store defaults to `nt_ministry`.
+- So on the default map view, Ai is filtered out before the 3D hook even runs.
+- I’ll make the current-era behavior easier to understand in the UI and verify the hook only depends on pins that are truly visible.
 
-### Root Cause
+2. Correct the 3D transform math in `use3DModels`
+- Right now the hook only sets:
+  - raw Mercator position
+  - raw projection matrix
+  - simple scale/rotation
+- That is not the full Mapbox + Three.js custom-layer transform.
+- For GLTF/GLB models, we need the standard model matrix composition:
+  - translate to Mercator coordinate
+  - scale with Mercator meter conversion
+  - flip Y axis for Mapbox coordinates
+  - apply a base orientation transform so model-up matches map-up
+- Without that, models can render underground, sideways, or outside the visible frustum even though they loaded successfully.
 
-The models ARE being loaded and added to the scene, but they're **invisible because the default scale is 1.0 meters** — literally a 1-meter object on a map viewed at zoom level 6. At that zoom, a 1-meter object is sub-pixel. The GLTF model geometry spans roughly -1 to +2.4 units, so at scale 1.0 it's about 3 meters across in the real world.
+Implementation steps:
+- Update `src/hooks/use3DModels.ts`
+  - Replace the current direct `group.position/group.scale/group.rotation` approach with the standard custom-layer transform pattern using a composed `THREE.Matrix4`.
+  - Add a per-model root container so the Mercator transform and the user rotation settings are applied in the correct order.
+  - Add a base X-axis rotation for GLTF scene alignment.
+  - Keep caching and style reload recovery intact.
+- Improve altitude handling
+  - Use terrain-aware elevation when available so models sit on the ground instead of at sea level.
+  - Continue applying `model_altitude` as an offset above terrain.
+- Add lightweight debug logging during implementation
+  - Confirm when a model is included/excluded by era filtering.
+  - Confirm successful GLB/GLTF load and final transform values.
+  - Remove noisy logs once verified.
 
-The database confirms all cities have `model_scale = 1` and `model_url = NULL`, which means they correctly fall through to the default city model, but the scale makes them invisible.
+Important finding from the investigation:
+- The model file itself appears fine:
+  - bucket exists and is public
+  - object exists
+  - location row has the uploaded `model_url`
+  - `model_scale` is now `2000`
+- So the remaining issue is not storage; it is render eligibility + transform setup.
 
-### Fix
+Technical details
 
-**`src/hooks/use3DModels.ts`**:
-- Change the default scale constant from `1.0` to a much larger value (e.g., `2000`) so city models are visible at typical map zoom levels. A 3-unit GLTF model at scale 2000 = ~6km footprint, which is reasonable for representing a city on a biblical map.
-- Apply this default only when `pin.model_scale` is null (i.e., never explicitly set by admin). If an admin sets a custom scale, use that value.
+```text
+Current failure path:
+location exists
+→ usePins filters by currentEra
+→ Ai excluded unless era = patriarchs
+→ if included, current custom-layer transform is incomplete
+→ model may still not appear even though loaded
+```
 
-**`src/pages/Admin.tsx`**:
-- Update the scale slider default to `2000` and increase the max range to accommodate map-scale values (e.g., max 10000).
-- Update the initial form state so new locations start with a sensible default.
+```text
+Planned render flow:
+visible pin in current era
+→ load/cached GLB
+→ compute Mercator coordinate at terrain elevation + altitude offset
+→ compose model matrix:
+   translation * scale * axis-fix * user-rotation
+→ render through Mapbox custom layer camera
+→ model appears anchored to terrain
+```
 
-**`supabase migration`**:
-- Update the `model_scale` column default from `1.0` to `2000` so new locations get a visible default.
+Files to update:
+- `src/hooks/use3DModels.ts` — main fix
+- `src/store/mapStore.ts` or related UI surface — optional small follow-up if we want a better default era or clearer era visibility behavior
+- Potentially `src/pages/Explore.tsx` / `src/pages/MapPage.tsx` — only if needed to surface current-era context more clearly
 
-### Files Changed
+Expected result:
+- Uploaded GLB models and the default city model will render when their location is in the currently selected era.
+- Ai will appear after switching to the Patriarchs era.
+- Models should remain visible across style reloads and sit correctly on the map instead of disappearing below terrain.
 
-| File | Change |
-|------|--------|
-| `src/hooks/use3DModels.ts` | Default scale constant → 2000 |
-| `src/pages/Admin.tsx` | Scale slider range and default |
-| Migration SQL | `ALTER COLUMN model_scale SET DEFAULT 2000` |
-
+<lov-actions>
+<lov-suggestion message="Test this end-to-end by switching the map to the Patriarchs era and verifying that Ai’s uploaded 3D model appears on the map.">Verify that it works</lov-suggestion>
+<lov-suggestion message="Make the current era more obvious in the map UI so it’s clear why some cities or 3D models are hidden.">Show active era clearly</lov-suggestion>
+<lov-suggestion message="Add a temporary 3D model debug mode that highlights model anchor points and shows whether a model is filtered, loaded, or rendered.">Add 3D debug mode</lov-suggestion>
+</lov-actions>
