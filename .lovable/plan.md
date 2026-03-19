@@ -1,27 +1,48 @@
 
 
-## Fix: Textbox Fill Opacity Making Entire Element Dim
+## Fix Textbox Opacity + Investigate Disappearing Textboxes
 
-### Root Cause
-In `useTextboxMarkers.ts` line 95, `wrapper.style.opacity = String(tb.fill_opacity)` applies CSS `opacity` to the **entire element** — background, text, delete button, everything. Even at 100%, any value below 1.0 dims all content. The user's intent is for opacity to affect only the **background fill**, not the text.
+### 1. Disappearing Textboxes
 
-### Fix
-**`src/hooks/useTextboxMarkers.ts`** — Replace the two lines setting `backgroundColor` and `opacity` separately with a single RGBA background. Parse the hex `fill_color` into RGB components and combine with `fill_opacity` as the alpha channel. Remove `wrapper.style.opacity`.
+**Finding**: Both scenes (`793ca...` and `d39844...`) currently have `textboxes: []` in the database. The textboxes were overwritten to empty at some point.
 
-**`src/components/Map/TextboxModal.tsx`** — Same fix in the preview div: use RGBA background instead of separate `opacity` style, so the preview accurately reflects how the textbox will look on the map.
+**Root cause**: The auto-persist effect in `MapPage.tsx` (line 58-74) fires on every `sceneTextboxes` change. It uses a `_textboxSyncSkip` flag to avoid persisting when `loadScene` sets textboxes. However, if two consecutive scene loads have the same textbox array (e.g., both empty), the Zustand state doesn't change, the effect doesn't fire, and `_textboxSyncSkip` stays `true`. On the next *real* textbox edit, the persist is incorrectly skipped, and the change is lost. Alternatively, calling `updateScene` while the wrong scene's textboxes are loaded would overwrite with stale data.
 
-### Helper
-Add a small inline hex-to-rgba conversion:
-```typescript
-function hexToRgba(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
-```
+**Fix**: Replace the brittle `_textboxSyncSkip` flag with a `_textboxSyncSource` discriminator. Instead of a boolean, store a `"load"` or `"edit"` origin. The auto-persist effect should only persist when the change source is `"edit"` (the default). `loadScene` sets source to `"load"`, and the effect resets it without persisting.
 
-### Changes
-- **`src/hooks/useTextboxMarkers.ts`**: Add `hexToRgba` helper, replace lines 94-95 with `wrapper.style.backgroundColor = hexToRgba(tb.fill_color, tb.fill_opacity)` and remove the `opacity` line.
-- **`src/components/Map/TextboxModal.tsx`**: Same approach in the preview `<div>` — use `backgroundColor: hexToRgba(...)` and remove the `opacity` style prop.
+**Changes — `src/store/mapStore.ts`**:
+- Replace `_textboxSyncSkip: boolean` with `_textboxSyncSource: "edit" | "load"` (default `"edit"`)
+- In `loadScene`, set `_textboxSyncSource: "load"`
+
+**Changes — `src/pages/MapPage.tsx`** (line 58-74):
+- Read `_textboxSyncSource` instead of `_textboxSyncSkip`
+- If `"load"`, reset to `"edit"` and return without persisting
+- If `"edit"`, persist as usual
+
+**Unfortunately the data is already lost.** I cannot restore the textboxes that were in those two scenes — they were overwritten in the database. You'll need to re-add them manually.
+
+---
+
+### 2. Zoom Affects Textbox Opacity
+
+**Root cause**: Mapbox GL's **fog/atmosphere** system applies opacity attenuation to HTML markers (`.mapboxgl-marker`) based on distance from the camera. When you zoom out, fog makes markers progressively transparent. This is separate from the `fill_opacity` fix — the RGBA background is correct, but Mapbox is adding its own `opacity` inline style to the marker container.
+
+**Fix**: Add a CSS rule that prevents fog from attenuating textbox markers. We'll add a `data-textbox` attribute to textbox marker elements and override the fog opacity via CSS.
+
+**Changes — `src/hooks/useTextboxMarkers.ts`**:
+- Add `wrapper.dataset.textbox = "true"` in `createTextboxEl`
+
+**Changes — `src/index.css`**:
+- Add rule: `.mapboxgl-marker:has([data-textbox]) { opacity: 1 !important; }`
+
+---
+
+### Summary of File Changes
+
+| File | Change |
+|------|--------|
+| `src/store/mapStore.ts` | Replace `_textboxSyncSkip` with `_textboxSyncSource` |
+| `src/pages/MapPage.tsx` | Update auto-persist effect to use new source flag |
+| `src/hooks/useTextboxMarkers.ts` | Add `data-textbox` attribute to wrapper |
+| `src/index.css` | Add CSS rule to prevent fog opacity on textbox markers |
 
