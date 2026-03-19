@@ -74,6 +74,7 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
   const showAllLabels = useMapStore((s) => s.showAllLabels);
   const hiddenLocationIds = useMapStore((s) => s.hiddenLocationIds);
   const fogEnabled = useMapStore((s) => s.fogEnabled);
+  const projectorMode = useMapStore((s) => s.projectorMode);
 
   useImperativeHandle(ref, () => ({
     getMap: () => mapRef.current,
