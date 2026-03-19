@@ -508,10 +508,10 @@ function LocationsTab() {
                   <div>
                     <Label className="text-xs">Scale ({form.model_scale})</Label>
                     <Slider
-                      min={0.1}
-                      max={50}
-                      step={0.1}
-                      value={[parseFloat(form.model_scale) || 1]}
+                      min={100}
+                      max={10000}
+                      step={100}
+                      value={[parseFloat(form.model_scale) || 2000]}
                       onValueChange={([v]) => setForm((f) => ({ ...f, model_scale: String(v) }))}
                     />
                   </div>
