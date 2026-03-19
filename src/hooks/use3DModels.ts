@@ -12,9 +12,6 @@ interface ModelEntry {
   pinId: string;
 }
 
-/**
- * Renders 3D GLB/glTF models on the Mapbox terrain using a Three.js custom layer.
- */
 export function use3DModels(
   map: mapboxgl.Map | null,
   pins: LocationPin[],
@@ -27,17 +24,42 @@ export function use3DModels(
   const loaderRef = useRef(new GLTFLoader());
   const modelCacheRef = useRef<Map<string, THREE.Group>>(new Map());
   const layerAddedRef = useRef(false);
+  const mapInstanceRef = useRef<mapboxgl.Map | null>(null);
+
+  // Reset state when map instance changes or on style.load
+  useEffect(() => {
+    if (!map) return;
+
+    // If map instance changed, reset everything
+    if (mapInstanceRef.current !== map) {
+      layerAddedRef.current = false;
+      sceneRef.current = null;
+      cameraRef.current = null;
+      rendererRef.current = null;
+      modelsRef.current.clear();
+      mapInstanceRef.current = map;
+    }
+
+    const onStyleLoad = () => {
+      layerAddedRef.current = false;
+      sceneRef.current = null;
+      cameraRef.current = null;
+      rendererRef.current = null;
+      modelsRef.current.clear();
+    };
+
+    map.on("style.load", onStyleLoad);
+    return () => {
+      map.off("style.load", onStyleLoad);
+    };
+  }, [map]);
 
   useEffect(() => {
     if (!map) return;
 
-    // Filter pins that should have 3D models
     const modelPins = pins.filter((pin) => {
-      // Explicitly opted out
       if (pin.model_url === "none") return false;
-      // Has a custom model URL
       if (pin.model_url) return true;
-      // Default: city-type locations get the default model
       if (pin.location_type === "city") return true;
       return false;
     });
@@ -51,7 +73,6 @@ export function use3DModels(
       const currentIds = new Set(modelPins.map((p) => p.id));
       const existing = modelsRef.current;
 
-      // Remove models no longer needed
       for (const [id, entry] of existing) {
         if (!currentIds.has(id)) {
           scene.remove(entry.group);
@@ -59,19 +80,16 @@ export function use3DModels(
         }
       }
 
-      // Add/update models
       for (const pin of modelPins) {
         const modelUrl = pin.model_url || DEFAULT_CITY_MODEL_URL;
         const isHidden = hiddenSet.has(pin.id);
 
         if (existing.has(pin.id)) {
-          // Update visibility
           const entry = existing.get(pin.id)!;
           entry.group.visible = !isHidden;
           continue;
         }
 
-        // Load and place model
         const cached = modelCacheRef.current.get(modelUrl);
         if (cached) {
           const clone = cached.clone();
@@ -102,7 +120,6 @@ export function use3DModels(
       map.triggerRepaint();
     };
 
-    // Create custom layer if not already added
     if (!layerAddedRef.current && !map.getLayer(LAYER_ID)) {
       const customLayer: mapboxgl.CustomLayerInterface = {
         id: LAYER_ID,
@@ -119,7 +136,6 @@ export function use3DModels(
           });
           renderer.autoClear = false;
 
-          // Add ambient + directional light
           scene.add(new THREE.AmbientLight(0xffffff, 0.7));
           const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
           dirLight.position.set(1, 3, 2);
@@ -129,7 +145,6 @@ export function use3DModels(
           cameraRef.current = camera;
           rendererRef.current = renderer;
 
-          // Now that the layer is ready, add models
           addOrUpdateModels();
         },
 
@@ -139,7 +154,6 @@ export function use3DModels(
           const renderer = rendererRef.current;
           if (!scene || !camera || !renderer) return;
 
-          // Apply Mapbox's projection matrix to the Three.js camera
           const m = new THREE.Matrix4().fromArray(matrix);
           camera.projectionMatrix = m;
 
@@ -154,45 +168,34 @@ export function use3DModels(
       } catch (e) {
         console.warn("Failed to add 3D model layer:", e);
       }
-    } else {
+    } else if (sceneRef.current) {
       addOrUpdateModels();
     }
-
-    return () => {
-      // Don't remove the layer on every re-render — only on full unmount
-    };
   }, [map, pins, hiddenLocationIds]);
 
   // Full cleanup on unmount
   useEffect(() => {
     return () => {
-      if (map && layerAddedRef.current) {
+      const m = mapInstanceRef.current;
+      if (m && layerAddedRef.current) {
         try {
-          if (map.getLayer(LAYER_ID)) {
-            map.removeLayer(LAYER_ID);
-          }
+          if (m.getLayer(LAYER_ID)) m.removeLayer(LAYER_ID);
         } catch { /* map may already be removed */ }
         layerAddedRef.current = false;
       }
-      // Clear scene
       const scene = sceneRef.current;
       if (scene) {
-        while (scene.children.length > 0) {
-          scene.remove(scene.children[0]);
-        }
+        while (scene.children.length > 0) scene.remove(scene.children[0]);
       }
       modelsRef.current.clear();
       sceneRef.current = null;
       cameraRef.current = null;
       rendererRef.current = null;
+      mapInstanceRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }
 
-/**
- * Position and scale a Three.js group to sit at the correct map coordinates.
- */
 function positionModel(group: THREE.Group, pin: LocationPin) {
   const scale = pin.model_scale ?? 1.0;
   const altitude = pin.model_altitude ?? 0;
@@ -200,19 +203,17 @@ function positionModel(group: THREE.Group, pin: LocationPin) {
   const rotY = THREE.MathUtils.degToRad(pin.model_rotation_y ?? 0);
   const rotZ = THREE.MathUtils.degToRad(pin.model_rotation_z ?? 0);
 
-  // Convert lng/lat to Mercator coordinates
   const merc = mapboxgl.MercatorCoordinate.fromLngLat(
     { lng: pin.coordinates[0], lat: pin.coordinates[1] },
     altitude
   );
 
-  // Scale factor: Mapbox Mercator units per meter at this latitude
   const meterScale = merc.meterInMercatorCoordinateUnits();
 
   group.position.set(merc.x, merc.y, merc.z ?? 0);
   group.scale.set(
     scale * meterScale,
-    -scale * meterScale, // Flip Y (Mapbox Y is inverted)
+    -scale * meterScale,
     scale * meterScale
   );
   group.rotation.set(rotX, rotY, rotZ);
