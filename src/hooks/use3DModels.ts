@@ -6,6 +6,7 @@ import type { LocationPin } from "./usePins";
 
 const LAYER_ID = "3d-models-layer";
 const DEFAULT_CITY_MODEL_URL = "/models/default-city.gltf";
+const DEFAULT_MODEL_SCALE = 2000;
 
 interface ModelEntry {
   group: THREE.Group;
