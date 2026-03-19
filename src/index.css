@@ -105,6 +105,9 @@
   border-top-color: #1a1208;
 }
 
+/* Cluster cursor */
+.mapboxgl-canvas-container.mapboxgl-interactive { cursor: grab; }
+
 /* Prevent Mapbox fog from dimming textbox markers */
 .mapboxgl-marker:has([data-textbox]) {
   opacity: 1 !important;
