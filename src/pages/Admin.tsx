@@ -225,7 +225,7 @@ function LocationsTab() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ name_ancient: "", name_modern: "", location_type: "city", era_tags: [], primary_verse: "", description: "", lat: "32.0", lng: "35.5", year_start: "", year_end: "", parent_location_id: "", model_url: "", model_scale: "1.0", model_rotation_x: "0", model_rotation_y: "0", model_rotation_z: "0", model_altitude: "0", model_opt_out: false });
+    setForm({ name_ancient: "", name_modern: "", location_type: "city", era_tags: [], primary_verse: "", description: "", lat: "32.0", lng: "35.5", year_start: "", year_end: "", parent_location_id: "", model_url: "", model_scale: "2000", model_rotation_x: "0", model_rotation_y: "0", model_rotation_z: "0", model_altitude: "0", model_opt_out: false });
     setModalOpen(true);
   };
 
