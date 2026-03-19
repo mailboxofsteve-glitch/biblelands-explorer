@@ -18,7 +18,7 @@ import { useOverlays } from "@/hooks/useOverlays";
 import { animateRoutesSimultaneously } from "@/lib/animateRoute";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
-import { Maximize, Settings, Keyboard, Monitor, ArrowLeft } from "lucide-react";
+import { Maximize, Settings, Keyboard, Monitor, ArrowLeft, Sun } from "lucide-react";
 import GroundViewButton from "@/components/Map/GroundViewButton";
 import { Link } from "react-router-dom";
 import PresenterView from "@/components/Map/PresenterView";
@@ -46,6 +46,8 @@ const MapPage = () => {
   const toggleShowAllLabels = useMapStore((s) => s.toggleShowAllLabels);
   const fogEnabled = useMapStore((s) => s.fogEnabled);
   const toggleFog = useMapStore((s) => s.toggleFog);
+  const projectorMode = useMapStore((s) => s.projectorMode);
+  const toggleProjectorMode = useMapStore((s) => s.toggleProjectorMode);
   const labelFontSize = useMapStore((s) => s.labelFontSize);
   const setLabelFontSize = useMapStore((s) => s.setLabelFontSize);
   const sceneTextboxes = useMapStore((s) => s.sceneTextboxes);
@@ -235,6 +237,16 @@ const MapPage = () => {
                     <Switch
                       checked={showAllLabels}
                       onCheckedChange={toggleShowAllLabels}
+                      className="scale-75"
+                    />
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer" title="Projector Mode — boost brightness">
+                    <span className="text-[10px] text-muted-foreground">
+                      <Sun size={12} className={projectorMode ? "text-accent" : ""} />
+                    </span>
+                    <Switch
+                      checked={projectorMode}
+                      onCheckedChange={toggleProjectorMode}
                       className="scale-75"
                     />
                   </label>

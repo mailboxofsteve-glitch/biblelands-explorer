@@ -74,6 +74,7 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
   const showAllLabels = useMapStore((s) => s.showAllLabels);
   const hiddenLocationIds = useMapStore((s) => s.hiddenLocationIds);
   const fogEnabled = useMapStore((s) => s.fogEnabled);
+  const projectorMode = useMapStore((s) => s.projectorMode);
 
   useImperativeHandle(ref, () => ({
     getMap: () => mapRef.current,
@@ -218,17 +219,18 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
     const map = mapRef.current;
     if (!map || !mapReady) return;
     if (fogEnabled) {
+      const bright = projectorMode;
       map.setFog({
-        color: "rgb(220, 210, 195)",
-        "high-color": "rgb(180, 165, 145)",
+        color: bright ? "rgb(235, 225, 210)" : "rgb(220, 210, 195)",
+        "high-color": bright ? "rgb(200, 185, 165)" : "rgb(180, 165, 145)",
         "horizon-blend": 0.08,
-        "space-color": "rgb(25, 25, 35)",
+        "space-color": bright ? "rgb(35, 35, 50)" : "rgb(25, 25, 35)",
         "star-intensity": 0.3,
       });
     } else {
       map.setFog(null as any);
     }
-  }, [fogEnabled, mapReady]);
+  }, [fogEnabled, mapReady, projectorMode]);
 
 
 
@@ -245,8 +247,8 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
         className="h-full w-full"
         style={
           skin === "ancient"
-            ? { filter: "sepia(40%) brightness(0.9)" }
-            : undefined
+            ? { filter: projectorMode ? "sepia(15%) brightness(1.15) contrast(1.1)" : "sepia(40%) brightness(0.9)" }
+            : projectorMode ? { filter: "brightness(1.1) contrast(1.05)" } : undefined
         }
       />
       <MapSkinToggle skin={skin} onToggle={toggleSkin} />

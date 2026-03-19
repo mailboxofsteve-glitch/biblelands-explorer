@@ -9,6 +9,7 @@ import {
   ChevronRight,
   X,
   ClipboardList,
+  Sun,
 } from "lucide-react";
 import GroundViewButton from "./GroundViewButton";
 import type { MapCanvasHandle } from "./MapCanvas";
@@ -26,6 +27,8 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
   const { allOverlays: overlays } = useOverlays();
   const showAllLabels = useMapStore((s) => s.showAllLabels);
   const toggleShowAllLabels = useMapStore((s) => s.toggleShowAllLabels);
+  const projectorMode = useMapStore((s) => s.projectorMode);
+  const toggleProjectorMode = useMapStore((s) => s.toggleProjectorMode);
 
   const [showNotes, setShowNotes] = useState(false);
   const [autoProgress, setAutoProgress] = useState(0);
@@ -232,6 +235,20 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
           <div className="w-px h-5 bg-border/40 mx-1" />
 
           <GroundViewButton mapRef={mapRef} compact />
+
+          <div className="w-px h-5 bg-border/40 mx-1" />
+
+          <button
+            onClick={toggleProjectorMode}
+            className={`p-1.5 rounded transition-colors ${
+              projectorMode
+                ? "bg-accent/20 text-accent"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+            }`}
+            title="Projector Mode — boost brightness for projection"
+          >
+            <Sun size={16} />
+          </button>
 
           <div className="w-px h-5 bg-border/40 mx-1" />
 

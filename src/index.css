@@ -112,3 +112,36 @@
 .mapboxgl-marker:has([data-textbox]) {
   opacity: 1 !important;
 }
+
+/* ── Projector Mode overrides ────────────────────────────── */
+.projector-mode {
+  --card: 30 20% 12%;
+  --muted-foreground: 33 30% 55%;
+}
+
+.projector-mode .pin-marker-wrapper > div:first-child {
+  background: hsl(30 20% 16%) !important;
+  border-color: hsl(44 73% 50%) !important;
+  border-width: 2.5px !important;
+}
+
+.projector-mode .pin-tooltip {
+  color: #fff !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.85), 0 0 2px rgba(0,0,0,0.6) !important;
+  -webkit-text-stroke: 0.3px hsl(30 28% 8%);
+}
+
+.projector-mode .pin-popup-container .mapboxgl-popup-content,
+.projector-mode .custom-pin-popup-container .mapboxgl-popup-content {
+  filter: brightness(1.15) contrast(1.05);
+}
+
+.projector-mode .mapboxgl-ctrl-group {
+  background: hsl(30 20% 14%) !important;
+  border-color: hsl(44 73% 46%) !important;
+}
+
+.projector-mode .mapboxgl-ctrl-group button {
+  filter: brightness(1.3);
+}
