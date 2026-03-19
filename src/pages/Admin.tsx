@@ -243,6 +243,13 @@ function LocationsTab() {
       year_start: loc.year_start != null ? String(loc.year_start) : "",
       year_end: loc.year_end != null ? String(loc.year_end) : "",
       parent_location_id: loc.parent_location_id ?? "",
+      model_url: loc.model_url === "none" ? "" : (loc.model_url ?? ""),
+      model_scale: String(loc.model_scale ?? 1.0),
+      model_rotation_x: String(loc.model_rotation_x ?? 0),
+      model_rotation_y: String(loc.model_rotation_y ?? 0),
+      model_rotation_z: String(loc.model_rotation_z ?? 0),
+      model_altitude: String(loc.model_altitude ?? 0),
+      model_opt_out: loc.model_url === "none",
     });
     setModalOpen(true);
   };
