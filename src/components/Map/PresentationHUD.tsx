@@ -239,6 +239,20 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
           <div className="w-px h-5 bg-border/40 mx-1" />
 
           <button
+            onClick={toggleProjectorMode}
+            className={`p-1.5 rounded transition-colors ${
+              projectorMode
+                ? "bg-accent/20 text-accent"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+            }`}
+            title="Projector Mode — boost brightness for projection"
+          >
+            <Sun size={16} />
+          </button>
+
+          <div className="w-px h-5 bg-border/40 mx-1" />
+
+          <button
             onClick={() => setShowNotes(!showNotes)}
             className={`p-1.5 rounded transition-colors ${
               showNotes

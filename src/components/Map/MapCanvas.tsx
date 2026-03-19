@@ -247,8 +247,8 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
         className="h-full w-full"
         style={
           skin === "ancient"
-            ? { filter: "sepia(40%) brightness(0.9)" }
-            : undefined
+            ? { filter: projectorMode ? "sepia(15%) brightness(1.15) contrast(1.1)" : "sepia(40%) brightness(0.9)" }
+            : projectorMode ? { filter: "brightness(1.1) contrast(1.05)" } : undefined
         }
       />
       <MapSkinToggle skin={skin} onToggle={toggleSkin} />
