@@ -458,6 +458,86 @@ function LocationsTab() {
             </div>
             <div><Label>Primary Verse</Label><Input value={form.primary_verse} onChange={(e) => setForm((f) => ({ ...f, primary_verse: e.target.value }))} placeholder="e.g. Genesis 12:1" /></div>
             <div><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={2} /></div>
+
+            {/* 3D Model Section */}
+            <div className="border border-border rounded-md p-3 space-y-3">
+              <Label className="flex items-center gap-1.5 text-sm font-semibold"><Box className="h-3.5 w-3.5" /> 3D Model</Label>
+
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={form.model_opt_out}
+                  onCheckedChange={(checked) => setForm((f) => ({ ...f, model_opt_out: !!checked }))}
+                />
+                <Label className="text-sm text-muted-foreground">No 3D model (opt out)</Label>
+              </div>
+
+              {!form.model_opt_out && (
+                <>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">
+                      {form.location_type === "city" ? "Leave empty to use default city model" : "Paste .glb/.gltf URL or upload below"}
+                    </Label>
+                    <Input
+                      value={form.model_url}
+                      onChange={(e) => setForm((f) => ({ ...f, model_url: e.target.value }))}
+                      placeholder="https://example.com/model.glb"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-xs">Upload .glb file</Label>
+                    <Input
+                      type="file"
+                      accept=".glb,.gltf"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const filePath = `models/${Date.now()}-${file.name}`;
+                        const { error } = await supabase.storage.from("glb-models").upload(filePath, file);
+                        if (error) {
+                          toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+                          return;
+                        }
+                        const { data: urlData } = supabase.storage.from("glb-models").getPublicUrl(filePath);
+                        setForm((f) => ({ ...f, model_url: urlData.publicUrl }));
+                        toast({ title: "Model uploaded" });
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-xs">Scale ({form.model_scale})</Label>
+                    <Slider
+                      min={0.1}
+                      max={50}
+                      step={0.1}
+                      value={[parseFloat(form.model_scale) || 1]}
+                      onValueChange={([v]) => setForm((f) => ({ ...f, model_scale: String(v) }))}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <Label className="text-xs">Rotation X ({form.model_rotation_x}°)</Label>
+                      <Slider min={0} max={360} step={1} value={[parseFloat(form.model_rotation_x) || 0]} onValueChange={([v]) => setForm((f) => ({ ...f, model_rotation_x: String(v) }))} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Rotation Y ({form.model_rotation_y}°)</Label>
+                      <Slider min={0} max={360} step={1} value={[parseFloat(form.model_rotation_y) || 0]} onValueChange={([v]) => setForm((f) => ({ ...f, model_rotation_y: String(v) }))} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Rotation Z ({form.model_rotation_z}°)</Label>
+                      <Slider min={0} max={360} step={1} value={[parseFloat(form.model_rotation_z) || 0]} onValueChange={([v]) => setForm((f) => ({ ...f, model_rotation_z: String(v) }))} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs">Altitude offset (m): {form.model_altitude}</Label>
+                    <Input type="number" step="1" value={form.model_altitude} onChange={(e) => setForm((f) => ({ ...f, model_altitude: e.target.value }))} />
+                  </div>
+                </>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setModalOpen(false)}>Cancel</Button>
