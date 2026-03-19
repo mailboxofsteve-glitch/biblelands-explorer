@@ -76,6 +76,13 @@ export function useTextboxMarkers(
   }, []);
 }
 
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
 function createTextboxEl(
   tb: SceneTextbox,
   presenting: boolean,
@@ -91,8 +98,7 @@ function createTextboxEl(
   }
   wrapper.style.padding = "10px 14px";
   wrapper.style.borderRadius = "8px";
-  wrapper.style.backgroundColor = tb.fill_color;
-  wrapper.style.opacity = String(tb.fill_opacity);
+  wrapper.style.backgroundColor = hexToRgba(tb.fill_color, tb.fill_opacity);
   wrapper.style.color = "#ffffff";
   wrapper.style.boxShadow = "0 4px 14px rgba(0,0,0,0.35)";
   wrapper.style.position = "relative";
