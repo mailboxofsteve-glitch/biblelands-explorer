@@ -135,6 +135,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   showAllLabels: false,
   fogEnabled: true,
   labelFontSize: 1.0,
+  projectorMode: false,
   sceneTextboxes: [],
   pendingTextboxCoords: null,
   editingTextbox: null,
