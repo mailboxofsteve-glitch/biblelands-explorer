@@ -56,7 +56,7 @@ interface MapState {
   sceneTextboxes: SceneTextbox[];
   pendingTextboxCoords: [number, number] | null;
   editingTextbox: SceneTextbox | null;
-  _textboxSyncSkip: boolean;
+  _textboxSyncSource: "edit" | "load";
 
   // Scene state
   scenes: LessonScene[];
@@ -136,7 +136,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   sceneTextboxes: [],
   pendingTextboxCoords: null,
   editingTextbox: null,
-  _textboxSyncSkip: false,
+  _textboxSyncSource: "edit",
   scenes: [],
   currentSceneIndex: null,
 
@@ -315,7 +315,7 @@ export const useMapStore = create<MapState>((set, get) => ({
       currentEra: scene.era as EraId,
       hiddenLocationIds: [...scene.hidden_location_ids],
       sceneTextboxes: [...(scene.textboxes ?? [])],
-      _textboxSyncSkip: true,
+      _textboxSyncSource: "load" as const,
     });
 
     if (scene.highlighted_pin_id) {

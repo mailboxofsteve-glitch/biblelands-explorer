@@ -91,6 +91,7 @@ function createTextboxEl(
 ): HTMLDivElement {
   const scale = tb.font_size ?? 1;
   const wrapper = document.createElement("div");
+  wrapper.dataset.textbox = "true";
   wrapper.style.width = `${tb.width ?? 240}px`;
   if (tb.height && tb.height > 0) {
     wrapper.style.height = `${tb.height}px`;

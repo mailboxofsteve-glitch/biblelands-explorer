@@ -104,3 +104,8 @@
 .custom-pin-popup-container .mapboxgl-popup-tip-anchor-bottom .mapboxgl-popup-tip {
   border-top-color: #1a1208;
 }
+
+/* Prevent Mapbox fog from dimming textbox markers */
+.mapboxgl-marker:has([data-textbox]) {
+  opacity: 1 !important;
+}
