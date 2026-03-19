@@ -219,17 +219,18 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
     const map = mapRef.current;
     if (!map || !mapReady) return;
     if (fogEnabled) {
+      const bright = projectorMode;
       map.setFog({
-        color: "rgb(220, 210, 195)",
-        "high-color": "rgb(180, 165, 145)",
+        color: bright ? "rgb(235, 225, 210)" : "rgb(220, 210, 195)",
+        "high-color": bright ? "rgb(200, 185, 165)" : "rgb(180, 165, 145)",
         "horizon-blend": 0.08,
-        "space-color": "rgb(25, 25, 35)",
+        "space-color": bright ? "rgb(35, 35, 50)" : "rgb(25, 25, 35)",
         "star-intensity": 0.3,
       });
     } else {
       map.setFog(null as any);
     }
-  }, [fogEnabled, mapReady]);
+  }, [fogEnabled, mapReady, projectorMode]);
 
 
 
