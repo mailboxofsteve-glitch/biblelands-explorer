@@ -145,6 +145,12 @@ export type Database = {
           geojson_feature: Json | null
           id: string
           location_type: string | null
+          model_altitude: number | null
+          model_rotation_x: number | null
+          model_rotation_y: number | null
+          model_rotation_z: number | null
+          model_scale: number | null
+          model_url: string | null
           name_ancient: string
           name_hebrew: string | null
           name_modern: string | null
@@ -161,6 +167,12 @@ export type Database = {
           geojson_feature?: Json | null
           id?: string
           location_type?: string | null
+          model_altitude?: number | null
+          model_rotation_x?: number | null
+          model_rotation_y?: number | null
+          model_rotation_z?: number | null
+          model_scale?: number | null
+          model_url?: string | null
           name_ancient: string
           name_hebrew?: string | null
           name_modern?: string | null
@@ -177,6 +189,12 @@ export type Database = {
           geojson_feature?: Json | null
           id?: string
           location_type?: string | null
+          model_altitude?: number | null
+          model_rotation_x?: number | null
+          model_rotation_y?: number | null
+          model_rotation_z?: number | null
+          model_scale?: number | null
+          model_url?: string | null
           name_ancient?: string
           name_hebrew?: string | null
           name_modern?: string | null
@@ -418,6 +436,12 @@ export type Database = {
           lat: number | null
           lng: number | null
           location_type: string | null
+          model_altitude: number | null
+          model_rotation_x: number | null
+          model_rotation_y: number | null
+          model_rotation_z: number | null
+          model_scale: number | null
+          model_url: string | null
           name_ancient: string | null
           name_hebrew: string | null
           name_modern: string | null
@@ -433,6 +457,12 @@ export type Database = {
           lat?: never
           lng?: never
           location_type?: string | null
+          model_altitude?: number | null
+          model_rotation_x?: number | null
+          model_rotation_y?: number | null
+          model_rotation_z?: number | null
+          model_scale?: number | null
+          model_url?: string | null
           name_ancient?: string | null
           name_hebrew?: string | null
           name_modern?: string | null
@@ -448,6 +478,12 @@ export type Database = {
           lat?: never
           lng?: never
           location_type?: string | null
+          model_altitude?: number | null
+          model_rotation_x?: number | null
+          model_rotation_y?: number | null
+          model_rotation_z?: number | null
+          model_scale?: number | null
+          model_url?: string | null
           name_ancient?: string | null
           name_hebrew?: string | null
           name_modern?: string | null

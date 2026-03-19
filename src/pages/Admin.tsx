@@ -13,7 +13,8 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { BookOpen, LogOut, MapPin, Layers, GraduationCap, Users, Plus, Pencil, Trash2, ArrowLeft, Map, ArrowUpDown, ArrowUp, ArrowDown, Upload, CheckSquare, Square, FileUp, Loader2, Download } from "lucide-react";
+import { BookOpen, LogOut, MapPin, Layers, GraduationCap, Users, Plus, Pencil, Trash2, ArrowLeft, Map, ArrowUpDown, ArrowUp, ArrowDown, Upload, CheckSquare, Square, FileUp, Loader2, Download, Box } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
@@ -152,7 +153,7 @@ function LocationsTab() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
-  const [form, setForm] = useState({ name_ancient: "", name_modern: "", location_type: "city", era_tags: [] as string[], primary_verse: "", description: "", lat: "32.0", lng: "35.5", year_start: "", year_end: "", parent_location_id: "" });
+  const [form, setForm] = useState({ name_ancient: "", name_modern: "", location_type: "city", era_tags: [] as string[], primary_verse: "", description: "", lat: "32.0", lng: "35.5", year_start: "", year_end: "", parent_location_id: "", model_url: "", model_scale: "1.0", model_rotation_x: "0", model_rotation_y: "0", model_rotation_z: "0", model_altitude: "0", model_opt_out: false });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
@@ -224,7 +225,7 @@ function LocationsTab() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ name_ancient: "", name_modern: "", location_type: "city", era_tags: [], primary_verse: "", description: "", lat: "32.0", lng: "35.5", year_start: "", year_end: "", parent_location_id: "" });
+    setForm({ name_ancient: "", name_modern: "", location_type: "city", era_tags: [], primary_verse: "", description: "", lat: "32.0", lng: "35.5", year_start: "", year_end: "", parent_location_id: "", model_url: "", model_scale: "1.0", model_rotation_x: "0", model_rotation_y: "0", model_rotation_z: "0", model_altitude: "0", model_opt_out: false });
     setModalOpen(true);
   };
 
@@ -242,12 +243,20 @@ function LocationsTab() {
       year_start: loc.year_start != null ? String(loc.year_start) : "",
       year_end: loc.year_end != null ? String(loc.year_end) : "",
       parent_location_id: loc.parent_location_id ?? "",
+      model_url: loc.model_url === "none" ? "" : (loc.model_url ?? ""),
+      model_scale: String(loc.model_scale ?? 1.0),
+      model_rotation_x: String(loc.model_rotation_x ?? 0),
+      model_rotation_y: String(loc.model_rotation_y ?? 0),
+      model_rotation_z: String(loc.model_rotation_z ?? 0),
+      model_altitude: String(loc.model_altitude ?? 0),
+      model_opt_out: loc.model_url === "none",
     });
     setModalOpen(true);
   };
 
   const handleSave = async () => {
     const pointWkt = `SRID=4326;POINT(${parseFloat(form.lng)} ${parseFloat(form.lat)})`;
+    const modelUrl = form.model_opt_out ? "none" : (form.model_url || null);
     const payload: any = {
       name_ancient: form.name_ancient,
       name_modern: form.name_modern || null,
@@ -259,6 +268,12 @@ function LocationsTab() {
       year_start: form.year_start ? parseInt(form.year_start) : null,
       year_end: form.year_end ? parseInt(form.year_end) : null,
       parent_location_id: form.parent_location_id || null,
+      model_url: modelUrl,
+      model_scale: parseFloat(form.model_scale) || 1.0,
+      model_rotation_x: parseFloat(form.model_rotation_x) || 0,
+      model_rotation_y: parseFloat(form.model_rotation_y) || 0,
+      model_rotation_z: parseFloat(form.model_rotation_z) || 0,
+      model_altitude: parseFloat(form.model_altitude) || 0,
     };
 
     if (editing) {
@@ -443,6 +458,86 @@ function LocationsTab() {
             </div>
             <div><Label>Primary Verse</Label><Input value={form.primary_verse} onChange={(e) => setForm((f) => ({ ...f, primary_verse: e.target.value }))} placeholder="e.g. Genesis 12:1" /></div>
             <div><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={2} /></div>
+
+            {/* 3D Model Section */}
+            <div className="border border-border rounded-md p-3 space-y-3">
+              <Label className="flex items-center gap-1.5 text-sm font-semibold"><Box className="h-3.5 w-3.5" /> 3D Model</Label>
+
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={form.model_opt_out}
+                  onCheckedChange={(checked) => setForm((f) => ({ ...f, model_opt_out: !!checked }))}
+                />
+                <Label className="text-sm text-muted-foreground">No 3D model (opt out)</Label>
+              </div>
+
+              {!form.model_opt_out && (
+                <>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">
+                      {form.location_type === "city" ? "Leave empty to use default city model" : "Paste .glb/.gltf URL or upload below"}
+                    </Label>
+                    <Input
+                      value={form.model_url}
+                      onChange={(e) => setForm((f) => ({ ...f, model_url: e.target.value }))}
+                      placeholder="https://example.com/model.glb"
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-xs">Upload .glb file</Label>
+                    <Input
+                      type="file"
+                      accept=".glb,.gltf"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const filePath = `models/${Date.now()}-${file.name}`;
+                        const { error } = await supabase.storage.from("glb-models").upload(filePath, file);
+                        if (error) {
+                          toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+                          return;
+                        }
+                        const { data: urlData } = supabase.storage.from("glb-models").getPublicUrl(filePath);
+                        setForm((f) => ({ ...f, model_url: urlData.publicUrl }));
+                        toast({ title: "Model uploaded" });
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <Label className="text-xs">Scale ({form.model_scale})</Label>
+                    <Slider
+                      min={0.1}
+                      max={50}
+                      step={0.1}
+                      value={[parseFloat(form.model_scale) || 1]}
+                      onValueChange={([v]) => setForm((f) => ({ ...f, model_scale: String(v) }))}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <Label className="text-xs">Rotation X ({form.model_rotation_x}°)</Label>
+                      <Slider min={0} max={360} step={1} value={[parseFloat(form.model_rotation_x) || 0]} onValueChange={([v]) => setForm((f) => ({ ...f, model_rotation_x: String(v) }))} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Rotation Y ({form.model_rotation_y}°)</Label>
+                      <Slider min={0} max={360} step={1} value={[parseFloat(form.model_rotation_y) || 0]} onValueChange={([v]) => setForm((f) => ({ ...f, model_rotation_y: String(v) }))} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Rotation Z ({form.model_rotation_z}°)</Label>
+                      <Slider min={0} max={360} step={1} value={[parseFloat(form.model_rotation_z) || 0]} onValueChange={([v]) => setForm((f) => ({ ...f, model_rotation_z: String(v) }))} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs">Altitude offset (m): {form.model_altitude}</Label>
+                    <Input type="number" step="1" value={form.model_altitude} onChange={(e) => setForm((f) => ({ ...f, model_altitude: e.target.value }))} />
+                  </div>
+                </>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setModalOpen(false)}>Cancel</Button>

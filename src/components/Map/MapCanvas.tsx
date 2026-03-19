@@ -17,6 +17,7 @@ import { useCustomPins } from "@/hooks/useCustomPins";
 import { useCustomPinMarkers } from "@/hooks/useCustomPinMarkers";
 import { useToolInteractions } from "@/hooks/useToolInteractions";
 import { useTextboxMarkers } from "@/hooks/useTextboxMarkers";
+import { use3DModels } from "@/hooks/use3DModels";
 import { useMapStore } from "@/store/mapStore";
 
 const MAPBOX_TOKEN =
@@ -208,6 +209,9 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
 
   // Textbox markers
   useTextboxMarkers(mapReady ? mapRef.current : null, presenting);
+
+  // 3D models on locations
+  use3DModels(mapReady ? mapRef.current : null, pins, hiddenLocationIds);
 
   // Fog toggle
   useEffect(() => {

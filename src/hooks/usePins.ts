@@ -15,6 +15,12 @@ export interface LocationPin {
   year_start: number | null;
   year_end: number | null;
   parent_location_id: string | null;
+  model_url: string | null;
+  model_scale: number | null;
+  model_rotation_x: number | null;
+  model_rotation_y: number | null;
+  model_rotation_z: number | null;
+  model_altitude: number | null;
 }
 
 export function usePins() {
@@ -28,7 +34,7 @@ export function usePins() {
       setLoading(true);
       const { data, error } = await supabase
         .from("locations_with_coords" as any)
-        .select("id, name_ancient, name_modern, name_hebrew, lng, lat, location_type, era_tags, primary_verse, description, year_start, year_end, parent_location_id")
+        .select("id, name_ancient, name_modern, name_hebrew, lng, lat, location_type, era_tags, primary_verse, description, year_start, year_end, parent_location_id, model_url, model_scale, model_rotation_x, model_rotation_y, model_rotation_z, model_altitude")
         .contains("era_tags", [currentEra]);
 
       if (error) {
