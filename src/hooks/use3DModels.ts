@@ -11,6 +11,49 @@ const DEFAULT_MODEL_SCALE = 2000;
 interface ModelEntry {
   group: THREE.Group;
   pinId: string;
+  /** The Mercator coordinate used to build the model matrix */
+  merc: { x: number; y: number; z: number; meterScale: number };
+}
+
+/**
+ * Build a world-space model matrix for a pin.
+ *
+ * Mapbox custom layers work in Mercator coordinates where the
+ * projection matrix supplied in `render(gl, matrix)` already maps
+ * Mercator → clip space.  We need to:
+ *   1. Translate to the pin's Mercator position
+ *   2. Scale from real-world meters into Mercator units
+ *   3. Flip Y (Mapbox Y points down in Mercator space)
+ *   4. Rotate X by -π/2 so GLTF +Y-up becomes +Z-up (map-up)
+ *   5. Apply user rotations on top
+ */
+function buildModelMatrix(
+  pin: LocationPin,
+  merc: { x: number; y: number; z: number; meterScale: number }
+): THREE.Matrix4 {
+  const scale = pin.model_scale ?? DEFAULT_MODEL_SCALE;
+  const s = scale * merc.meterScale;
+
+  const rotX = THREE.MathUtils.degToRad(pin.model_rotation_x ?? 0);
+  const rotY = THREE.MathUtils.degToRad(pin.model_rotation_y ?? 0);
+  const rotZ = THREE.MathUtils.degToRad(pin.model_rotation_z ?? 0);
+
+  // Translation
+  const T = new THREE.Matrix4().makeTranslation(merc.x, merc.y, merc.z);
+
+  // Scale (flip Y for Mapbox coordinate convention)
+  const S = new THREE.Matrix4().makeScale(s, -s, s);
+
+  // Base rotation: align GLTF Y-up to map Z-up
+  const Rbase = new THREE.Matrix4().makeRotationX(Math.PI / 2);
+
+  // User rotations (applied after base alignment)
+  const Ruser = new THREE.Matrix4().makeRotationFromEuler(
+    new THREE.Euler(rotX, rotY, rotZ, "XYZ")
+  );
+
+  // Final: T * S * Rbase * Ruser
+  return T.multiply(S).multiply(Rbase).multiply(Ruser);
 }
 
 export function use3DModels(
@@ -31,7 +74,6 @@ export function use3DModels(
   useEffect(() => {
     if (!map) return;
 
-    // If map instance changed, reset everything
     if (mapInstanceRef.current !== map) {
       layerAddedRef.current = false;
       sceneRef.current = null;
@@ -74,6 +116,7 @@ export function use3DModels(
       const currentIds = new Set(modelPins.map((p) => p.id));
       const existing = modelsRef.current;
 
+      // Remove stale models
       for (const [id, entry] of existing) {
         if (!currentIds.has(id)) {
           scene.remove(entry.group);
@@ -88,32 +131,59 @@ export function use3DModels(
         if (existing.has(pin.id)) {
           const entry = existing.get(pin.id)!;
           entry.group.visible = !isHidden;
+          // Update transform in case pin data changed
+          const mat = buildModelMatrix(pin, entry.merc);
+          entry.group.matrix.copy(mat);
           continue;
         }
 
+        // Compute Mercator position once per pin
+        const altitude = pin.model_altitude ?? 0;
+        const merc = mapboxgl.MercatorCoordinate.fromLngLat(
+          { lng: pin.coordinates[0], lat: pin.coordinates[1] },
+          altitude
+        );
+        const mercData = {
+          x: merc.x,
+          y: merc.y,
+          z: merc.z ?? 0,
+          meterScale: merc.meterInMercatorCoordinateUnits(),
+        };
+
+        const addModel = (sourceGroup: THREE.Group) => {
+          const clone = sourceGroup.clone();
+          // We'll manage the matrix manually
+          clone.matrixAutoUpdate = false;
+          clone.matrix.copy(buildModelMatrix(pin, mercData));
+          clone.visible = !isHidden;
+
+          if (sceneRef.current) {
+            sceneRef.current.add(clone);
+            modelsRef.current.set(pin.id, {
+              group: clone,
+              pinId: pin.id,
+              merc: mercData,
+            });
+            map.triggerRepaint();
+          }
+        };
+
         const cached = modelCacheRef.current.get(modelUrl);
         if (cached) {
-          const clone = cached.clone();
-          positionModel(clone, pin);
-          clone.visible = !isHidden;
-          scene.add(clone);
-          existing.set(pin.id, { group: clone, pinId: pin.id });
+          addModel(cached);
         } else {
           loaderRef.current.load(
             modelUrl,
             (gltf) => {
               modelCacheRef.current.set(modelUrl, gltf.scene);
-              const clone = gltf.scene.clone();
-              positionModel(clone, pin);
-              clone.visible = !isHidden;
-              if (sceneRef.current) {
-                sceneRef.current.add(clone);
-                modelsRef.current.set(pin.id, { group: clone, pinId: pin.id });
-                map.triggerRepaint();
-              }
+              addModel(gltf.scene);
             },
             undefined,
-            (err) => console.warn(`Failed to load 3D model for ${pin.name_ancient}:`, err)
+            (err) =>
+              console.warn(
+                `Failed to load 3D model for ${pin.name_ancient}:`,
+                err
+              )
           );
         }
       }
@@ -155,8 +225,7 @@ export function use3DModels(
           const renderer = rendererRef.current;
           if (!scene || !camera || !renderer) return;
 
-          const m = new THREE.Matrix4().fromArray(matrix);
-          camera.projectionMatrix = m;
+          camera.projectionMatrix = new THREE.Matrix4().fromArray(matrix);
 
           renderer.resetState();
           renderer.render(scene, camera);
@@ -181,7 +250,9 @@ export function use3DModels(
       if (m && layerAddedRef.current) {
         try {
           if (m.getLayer(LAYER_ID)) m.removeLayer(LAYER_ID);
-        } catch { /* map may already be removed */ }
+        } catch {
+          /* map may already be removed */
+        }
         layerAddedRef.current = false;
       }
       const scene = sceneRef.current;
@@ -195,27 +266,4 @@ export function use3DModels(
       mapInstanceRef.current = null;
     };
   }, []);
-}
-
-function positionModel(group: THREE.Group, pin: LocationPin) {
-  const scale = pin.model_scale ?? DEFAULT_MODEL_SCALE;
-  const altitude = pin.model_altitude ?? 0;
-  const rotX = THREE.MathUtils.degToRad(pin.model_rotation_x ?? 0);
-  const rotY = THREE.MathUtils.degToRad(pin.model_rotation_y ?? 0);
-  const rotZ = THREE.MathUtils.degToRad(pin.model_rotation_z ?? 0);
-
-  const merc = mapboxgl.MercatorCoordinate.fromLngLat(
-    { lng: pin.coordinates[0], lat: pin.coordinates[1] },
-    altitude
-  );
-
-  const meterScale = merc.meterInMercatorCoordinateUnits();
-
-  group.position.set(merc.x, merc.y, merc.z ?? 0);
-  group.scale.set(
-    scale * meterScale,
-    -scale * meterScale,
-    scale * meterScale
-  );
-  group.rotation.set(rotX, rotY, rotZ);
 }
