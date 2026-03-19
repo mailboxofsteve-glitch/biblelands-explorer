@@ -269,7 +269,7 @@ function LocationsTab() {
       year_end: form.year_end ? parseInt(form.year_end) : null,
       parent_location_id: form.parent_location_id || null,
       model_url: modelUrl,
-      model_scale: parseFloat(form.model_scale) || 1.0,
+      model_scale: parseFloat(form.model_scale) || 2000,
       model_rotation_x: parseFloat(form.model_rotation_x) || 0,
       model_rotation_y: parseFloat(form.model_rotation_y) || 0,
       model_rotation_z: parseFloat(form.model_rotation_z) || 0,
