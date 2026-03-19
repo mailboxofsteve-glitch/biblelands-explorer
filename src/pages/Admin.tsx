@@ -244,7 +244,7 @@ function LocationsTab() {
       year_end: loc.year_end != null ? String(loc.year_end) : "",
       parent_location_id: loc.parent_location_id ?? "",
       model_url: loc.model_url === "none" ? "" : (loc.model_url ?? ""),
-      model_scale: String(loc.model_scale ?? 1.0),
+      model_scale: String(loc.model_scale ?? 2000),
       model_rotation_x: String(loc.model_rotation_x ?? 0),
       model_rotation_y: String(loc.model_rotation_y ?? 0),
       model_rotation_z: String(loc.model_rotation_z ?? 0),
