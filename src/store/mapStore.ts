@@ -71,6 +71,7 @@ interface MapState {
   toggleShowAllLabels: () => void;
   toggleFog: () => void;
   setLabelFontSize: (size: number) => void;
+  toggleProjectorMode: () => void;
 
   // Tool actions
   startPinDrop: (iconType: string) => void;
