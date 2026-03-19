@@ -153,7 +153,7 @@ function LocationsTab() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
-  const [form, setForm] = useState({ name_ancient: "", name_modern: "", location_type: "city", era_tags: [] as string[], primary_verse: "", description: "", lat: "32.0", lng: "35.5", year_start: "", year_end: "", parent_location_id: "", model_url: "", model_scale: "1.0", model_rotation_x: "0", model_rotation_y: "0", model_rotation_z: "0", model_altitude: "0", model_opt_out: false });
+  const [form, setForm] = useState({ name_ancient: "", name_modern: "", location_type: "city", era_tags: [] as string[], primary_verse: "", description: "", lat: "32.0", lng: "35.5", year_start: "", year_end: "", parent_location_id: "", model_url: "", model_scale: "2000", model_rotation_x: "0", model_rotation_y: "0", model_rotation_z: "0", model_altitude: "0", model_opt_out: false });
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
@@ -225,7 +225,7 @@ function LocationsTab() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ name_ancient: "", name_modern: "", location_type: "city", era_tags: [], primary_verse: "", description: "", lat: "32.0", lng: "35.5", year_start: "", year_end: "", parent_location_id: "", model_url: "", model_scale: "1.0", model_rotation_x: "0", model_rotation_y: "0", model_rotation_z: "0", model_altitude: "0", model_opt_out: false });
+    setForm({ name_ancient: "", name_modern: "", location_type: "city", era_tags: [], primary_verse: "", description: "", lat: "32.0", lng: "35.5", year_start: "", year_end: "", parent_location_id: "", model_url: "", model_scale: "2000", model_rotation_x: "0", model_rotation_y: "0", model_rotation_z: "0", model_altitude: "0", model_opt_out: false });
     setModalOpen(true);
   };
 
@@ -244,7 +244,7 @@ function LocationsTab() {
       year_end: loc.year_end != null ? String(loc.year_end) : "",
       parent_location_id: loc.parent_location_id ?? "",
       model_url: loc.model_url === "none" ? "" : (loc.model_url ?? ""),
-      model_scale: String(loc.model_scale ?? 1.0),
+      model_scale: String(loc.model_scale ?? 2000),
       model_rotation_x: String(loc.model_rotation_x ?? 0),
       model_rotation_y: String(loc.model_rotation_y ?? 0),
       model_rotation_z: String(loc.model_rotation_z ?? 0),
@@ -269,7 +269,7 @@ function LocationsTab() {
       year_end: form.year_end ? parseInt(form.year_end) : null,
       parent_location_id: form.parent_location_id || null,
       model_url: modelUrl,
-      model_scale: parseFloat(form.model_scale) || 1.0,
+      model_scale: parseFloat(form.model_scale) || 2000,
       model_rotation_x: parseFloat(form.model_rotation_x) || 0,
       model_rotation_y: parseFloat(form.model_rotation_y) || 0,
       model_rotation_z: parseFloat(form.model_rotation_z) || 0,
@@ -508,10 +508,10 @@ function LocationsTab() {
                   <div>
                     <Label className="text-xs">Scale ({form.model_scale})</Label>
                     <Slider
-                      min={0.1}
-                      max={50}
-                      step={0.1}
-                      value={[parseFloat(form.model_scale) || 1]}
+                      min={100}
+                      max={10000}
+                      step={100}
+                      value={[parseFloat(form.model_scale) || 2000]}
                       onValueChange={([v]) => setForm((f) => ({ ...f, model_scale: String(v) }))}
                     />
                   </div>

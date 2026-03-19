@@ -1,0 +1,1 @@
+ALTER TABLE public.locations ALTER COLUMN model_scale SET DEFAULT 2000;
