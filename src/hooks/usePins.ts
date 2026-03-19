@@ -15,6 +15,12 @@ export interface LocationPin {
   year_start: number | null;
   year_end: number | null;
   parent_location_id: string | null;
+  model_url: string | null;
+  model_scale: number | null;
+  model_rotation_x: number | null;
+  model_rotation_y: number | null;
+  model_rotation_z: number | null;
+  model_altitude: number | null;
 }
 
 export function usePins() {
