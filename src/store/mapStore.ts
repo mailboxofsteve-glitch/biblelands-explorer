@@ -47,6 +47,9 @@ interface MapState {
   // Hidden locations (greyed in controls, hidden in presentation)
   hiddenLocationIds: string[];
 
+  // 3D models
+  show3DModels: boolean;
+
   // Labels
   showAllLabels: boolean;
   fogEnabled: boolean;
@@ -72,6 +75,7 @@ interface MapState {
   toggleFog: () => void;
   setLabelFontSize: (size: number) => void;
   toggleProjectorMode: () => void;
+  toggleShow3DModels: () => void;
 
   // Tool actions
   startPinDrop: (iconType: string) => void;
@@ -134,6 +138,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   yearFilter: null,
   showAllLabels: false,
   fogEnabled: true,
+  show3DModels: true,
   labelFontSize: 1.0,
   projectorMode: false,
   sceneTextboxes: [],
@@ -166,6 +171,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   toggleShowAllLabels: () => set((s) => ({ showAllLabels: !s.showAllLabels })),
   toggleFog: () => set((s) => ({ fogEnabled: !s.fogEnabled })),
   setLabelFontSize: (size) => set({ labelFontSize: size }),
+  toggleShow3DModels: () => set((s) => ({ show3DModels: !s.show3DModels })),
   toggleProjectorMode: () => set((s) => {
     const next = !s.projectorMode;
     if (next) {

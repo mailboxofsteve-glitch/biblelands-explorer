@@ -32,6 +32,8 @@ export default function MobileToolbar({
   const toggleFog = useMapStore((s) => s.toggleFog);
   const labelFontSize = useMapStore((s) => s.labelFontSize);
   const setLabelFontSize = useMapStore((s) => s.setLabelFontSize);
+  const show3DModels = useMapStore((s) => s.show3DModels);
+  const toggleShow3DModels = useMapStore((s) => s.toggleShow3DModels);
 
   const toggle = (panel: MobilePanel) => {
     setActivePanel((prev) => (prev === panel ? null : panel));
@@ -99,6 +101,14 @@ export default function MobileToolbar({
                   <Switch
                     checked={showAllLabels}
                     onCheckedChange={toggleShowAllLabels}
+                    className="scale-75"
+                  />
+                </label>
+                <label className="flex items-center gap-1.5 cursor-pointer" title="Show 3D models">
+                  <span className="text-[10px] text-muted-foreground">3D</span>
+                  <Switch
+                    checked={show3DModels}
+                    onCheckedChange={toggleShow3DModels}
                     className="scale-75"
                   />
                 </label>

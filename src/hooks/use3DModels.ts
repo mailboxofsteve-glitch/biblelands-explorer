@@ -3,6 +3,7 @@ import mapboxgl from "mapbox-gl";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import type { LocationPin } from "./usePins";
+import { useMapStore } from "@/store/mapStore";
 
 const LAYER_ID = "3d-models-layer";
 const DEFAULT_CITY_MODEL_URL = "/models/default-city.gltf";
@@ -97,8 +98,20 @@ export function use3DModels(
     };
   }, [map]);
 
+  const show3DModels = useMapStore((s) => s.show3DModels);
+
+  // Toggle visibility of all models when show3DModels changes
   useEffect(() => {
-    if (!map) return;
+    const scene = sceneRef.current;
+    if (!scene) return;
+    for (const [, entry] of modelsRef.current) {
+      entry.group.visible = show3DModels && !hiddenLocationIds.includes(entry.pinId);
+    }
+    if (map) map.triggerRepaint();
+  }, [show3DModels, map, hiddenLocationIds]);
+
+  useEffect(() => {
+    if (!map || !show3DModels) return;
 
     const modelPins = pins.filter((pin) => {
       if (pin.model_url === "none") return false;
@@ -126,7 +139,7 @@ export function use3DModels(
 
       for (const pin of modelPins) {
         const modelUrl = pin.model_url || DEFAULT_CITY_MODEL_URL;
-        const isHidden = hiddenSet.has(pin.id);
+        const isHidden = hiddenSet.has(pin.id) || !show3DModels;
 
         if (existing.has(pin.id)) {
           const entry = existing.get(pin.id)!;
@@ -257,7 +270,7 @@ export function use3DModels(
     } else if (sceneRef.current) {
       addOrUpdateModels();
     }
-  }, [map, pins, hiddenLocationIds]);
+  }, [map, pins, hiddenLocationIds, show3DModels]);
 
   // Full cleanup on unmount
   useEffect(() => {

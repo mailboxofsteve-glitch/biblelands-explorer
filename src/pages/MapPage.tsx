@@ -48,6 +48,8 @@ const MapPage = () => {
   const toggleFog = useMapStore((s) => s.toggleFog);
   const projectorMode = useMapStore((s) => s.projectorMode);
   const toggleProjectorMode = useMapStore((s) => s.toggleProjectorMode);
+  const show3DModels = useMapStore((s) => s.show3DModels);
+  const toggleShow3DModels = useMapStore((s) => s.toggleShow3DModels);
   const labelFontSize = useMapStore((s) => s.labelFontSize);
   const setLabelFontSize = useMapStore((s) => s.setLabelFontSize);
   const sceneTextboxes = useMapStore((s) => s.sceneTextboxes);
@@ -247,6 +249,14 @@ const MapPage = () => {
                     <Switch
                       checked={projectorMode}
                       onCheckedChange={toggleProjectorMode}
+                      className="scale-75"
+                    />
+                   </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer" title="Show 3D building models">
+                    <span className="text-[10px] text-muted-foreground">3D</span>
+                    <Switch
+                      checked={show3DModels}
+                      onCheckedChange={toggleShow3DModels}
                       className="scale-75"
                     />
                   </label>
