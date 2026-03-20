@@ -47,6 +47,9 @@ interface MapState {
   // Hidden locations (greyed in controls, hidden in presentation)
   hiddenLocationIds: string[];
 
+  // 3D models
+  show3DModels: boolean;
+
   // Labels
   showAllLabels: boolean;
   fogEnabled: boolean;
