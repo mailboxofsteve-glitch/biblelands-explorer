@@ -139,7 +139,7 @@ export function use3DModels(
 
       for (const pin of modelPins) {
         const modelUrl = pin.model_url || DEFAULT_CITY_MODEL_URL;
-        const isHidden = hiddenSet.has(pin.id);
+        const isHidden = hiddenSet.has(pin.id) || !show3DModels;
 
         if (existing.has(pin.id)) {
           const entry = existing.get(pin.id)!;

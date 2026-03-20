@@ -251,6 +251,14 @@ const MapPage = () => {
                       onCheckedChange={toggleProjectorMode}
                       className="scale-75"
                     />
+                   </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer" title="Show 3D building models">
+                    <span className="text-[10px] text-muted-foreground">3D</span>
+                    <Switch
+                      checked={show3DModels}
+                      onCheckedChange={toggleShow3DModels}
+                      className="scale-75"
+                    />
                   </label>
                 </div>
               </div>

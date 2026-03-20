@@ -32,6 +32,8 @@ export default function MobileToolbar({
   const toggleFog = useMapStore((s) => s.toggleFog);
   const labelFontSize = useMapStore((s) => s.labelFontSize);
   const setLabelFontSize = useMapStore((s) => s.setLabelFontSize);
+  const show3DModels = useMapStore((s) => s.show3DModels);
+  const toggleShow3DModels = useMapStore((s) => s.toggleShow3DModels);
 
   const toggle = (panel: MobilePanel) => {
     setActivePanel((prev) => (prev === panel ? null : panel));
