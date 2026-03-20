@@ -48,6 +48,8 @@ const MapPage = () => {
   const toggleFog = useMapStore((s) => s.toggleFog);
   const projectorMode = useMapStore((s) => s.projectorMode);
   const toggleProjectorMode = useMapStore((s) => s.toggleProjectorMode);
+  const show3DModels = useMapStore((s) => s.show3DModels);
+  const toggleShow3DModels = useMapStore((s) => s.toggleShow3DModels);
   const labelFontSize = useMapStore((s) => s.labelFontSize);
   const setLabelFontSize = useMapStore((s) => s.setLabelFontSize);
   const sceneTextboxes = useMapStore((s) => s.sceneTextboxes);
