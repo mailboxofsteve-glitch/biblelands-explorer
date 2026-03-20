@@ -171,6 +171,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   toggleShowAllLabels: () => set((s) => ({ showAllLabels: !s.showAllLabels })),
   toggleFog: () => set((s) => ({ fogEnabled: !s.fogEnabled })),
   setLabelFontSize: (size) => set({ labelFontSize: size }),
+  toggleShow3DModels: () => set((s) => ({ show3DModels: !s.show3DModels })),
   toggleProjectorMode: () => set((s) => {
     const next = !s.projectorMode;
     if (next) {
