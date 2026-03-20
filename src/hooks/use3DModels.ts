@@ -67,7 +67,14 @@ export function use3DModels(
   const cameraRef = useRef<THREE.Camera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const modelsRef = useRef<Map<string, ModelEntry>>(new Map());
-  const loaderRef = useRef(new GLTFLoader());
+  const loaderRef = useRef(() => {
+    const loader = new GLTFLoader();
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.7/");
+    loader.setDRACOLoader(dracoLoader);
+    return loader;
+  });
+  const gltfLoader = useRef(loaderRef.current());
   const modelCacheRef = useRef<Map<string, THREE.Group>>(new Map());
   const layerAddedRef = useRef(false);
   const mapInstanceRef = useRef<mapboxgl.Map | null>(null);
