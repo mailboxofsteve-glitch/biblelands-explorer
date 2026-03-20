@@ -77,6 +77,7 @@ export function use3DModels(
   const gltfLoader = useRef(loaderRef.current());
   const modelCacheRef = useRef<Map<string, THREE.Group>>(new Map());
   const layerAddedRef = useRef(false);
+  const contextLostRef = useRef(false);
   const mapInstanceRef = useRef<mapboxgl.Map | null>(null);
 
   // Reset state when map instance changes or on style.load
@@ -241,6 +242,7 @@ export function use3DModels(
             canvas: _map.getCanvas(),
             context: gl,
             antialias: true,
+            preserveDrawingBuffer: false,
           });
           renderer.autoClear = false;
 
@@ -255,10 +257,44 @@ export function use3DModels(
           cameraRef.current = camera;
           rendererRef.current = renderer;
 
+          // Handle WebGL context loss/restoration
+          const canvas = _map.getCanvas();
+          canvas.addEventListener("webglcontextlost", (e) => {
+            e.preventDefault();
+            console.warn("[3D] WebGL context lost — pausing 3D rendering");
+            contextLostRef.current = true;
+          }, false);
+          canvas.addEventListener("webglcontextrestored", () => {
+            console.info("[3D] WebGL context restored — reinitializing renderer");
+            contextLostRef.current = false;
+            // Recreate renderer with the new context
+            const newGl = canvas.getContext("webgl2") || canvas.getContext("webgl");
+            if (newGl) {
+              const newRenderer = new THREE.WebGLRenderer({
+                canvas,
+                context: newGl,
+                antialias: true,
+                preserveDrawingBuffer: false,
+              });
+              newRenderer.autoClear = false;
+              rendererRef.current = newRenderer;
+            }
+            // Reload all models
+            if (sceneRef.current) {
+              while (sceneRef.current.children.length > 3) {
+                sceneRef.current.remove(sceneRef.current.children[sceneRef.current.children.length - 1]);
+              }
+              modelsRef.current.clear();
+            }
+            addOrUpdateModels();
+            _map.triggerRepaint();
+          }, false);
+
           addOrUpdateModels();
         },
 
         render(_gl, matrix) {
+          if (contextLostRef.current) return;
           const scene = sceneRef.current;
           const camera = cameraRef.current;
           const renderer = rendererRef.current;

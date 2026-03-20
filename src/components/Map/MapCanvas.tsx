@@ -109,8 +109,17 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
       }
       map.setTerrain({ source: "mapbox-dem", exaggeration: 2.0 });
 
+      // Use a separate DEM source for hillshade to avoid GPU contention
+      if (!map.getSource("mapbox-dem-hillshade")) {
+        map.addSource("mapbox-dem-hillshade", {
+          type: "raster-dem",
+          url: "mapbox://mapbox.mapbox-terrain-dem-v1",
+          tileSize: 512,
+          maxzoom: 14,
+        });
+      }
+
       if (!map.getLayer("hillshade-layer")) {
-        // Insert before first symbol layer for proper z-order
         const layers = map.getStyle()?.layers;
         let firstSymbol: string | undefined;
         if (layers) {
@@ -122,7 +131,7 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
           map.addLayer({
             id: "hillshade-layer",
             type: "hillshade",
-            source: "mapbox-dem",
+            source: "mapbox-dem-hillshade",
             paint: {
               "hillshade-exaggeration": 0.6,
               "hillshade-shadow-color": "#473B2B",

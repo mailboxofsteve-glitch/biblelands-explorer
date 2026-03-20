@@ -225,41 +225,45 @@ const MapPage = () => {
                 <h2 className="text-sm font-serif font-semibold text-foreground tracking-wide">
                   Controls
                 </h2>
-                <div className="flex items-center gap-2">
-                  <label className="flex items-center gap-1.5 cursor-pointer" title="Atmospheric fog">
-                    <span className="text-[10px] text-muted-foreground">Fog</span>
-                    <Switch
-                      checked={fogEnabled}
-                      onCheckedChange={toggleFog}
-                      className="scale-75"
-                    />
-                  </label>
-                  <label className="flex items-center gap-1.5 cursor-pointer" title="Show all labels on map">
-                    <span className="text-[10px] text-muted-foreground">Labels</span>
-                    <Switch
-                      checked={showAllLabels}
-                      onCheckedChange={toggleShowAllLabels}
-                      className="scale-75"
-                    />
-                  </label>
-                  <label className="flex items-center gap-1.5 cursor-pointer" title="Projector Mode — boost brightness">
-                    <span className="text-[10px] text-muted-foreground">
-                      <Sun size={12} className={projectorMode ? "text-accent" : ""} />
-                    </span>
-                    <Switch
-                      checked={projectorMode}
-                      onCheckedChange={toggleProjectorMode}
-                      className="scale-75"
-                    />
-                   </label>
-                  <label className="flex items-center gap-1.5 cursor-pointer" title="Show 3D building models">
-                    <span className="text-[10px] text-muted-foreground">3D</span>
-                    <Switch
-                      checked={show3DModels}
-                      onCheckedChange={toggleShow3DModels}
-                      className="scale-75"
-                    />
-                  </label>
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-1.5 cursor-pointer" title="Atmospheric fog">
+                      <span className="text-[10px] text-muted-foreground">Fog</span>
+                      <Switch
+                        checked={fogEnabled}
+                        onCheckedChange={toggleFog}
+                        className="scale-75"
+                      />
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer" title="Show all labels on map">
+                      <span className="text-[10px] text-muted-foreground">Labels</span>
+                      <Switch
+                        checked={showAllLabels}
+                        onCheckedChange={toggleShowAllLabels}
+                        className="scale-75"
+                      />
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-1.5 cursor-pointer" title="Projector Mode — boost brightness">
+                      <span className="text-[10px] text-muted-foreground">
+                        <Sun size={12} className={projectorMode ? "text-accent" : ""} />
+                      </span>
+                      <Switch
+                        checked={projectorMode}
+                        onCheckedChange={toggleProjectorMode}
+                        className="scale-75"
+                      />
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer" title="Show 3D building models">
+                      <span className="text-[10px] text-muted-foreground">3D</span>
+                      <Switch
+                        checked={show3DModels}
+                        onCheckedChange={toggleShow3DModels}
+                        className="scale-75"
+                      />
+                    </label>
+                  </div>
                 </div>
               </div>
 
