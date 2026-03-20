@@ -139,6 +139,7 @@ export const useMapStore = create<MapState>((set, get) => ({
   yearFilter: null,
   showAllLabels: false,
   fogEnabled: true,
+  show3DModels: true,
   labelFontSize: 1.0,
   projectorMode: false,
   sceneTextboxes: [],
