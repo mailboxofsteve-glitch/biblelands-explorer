@@ -152,10 +152,24 @@ export function use3DModels(
 
         const addModel = (sourceGroup: THREE.Group) => {
           const clone = sourceGroup.clone();
+
+          // Fix materials for Y-flip winding order
+          clone.traverse((child) => {
+            if ((child as THREE.Mesh).isMesh) {
+              const mesh = child as THREE.Mesh;
+              if (Array.isArray(mesh.material)) {
+                mesh.material.forEach((m) => { m.side = THREE.DoubleSide; });
+              } else {
+                mesh.material.side = THREE.DoubleSide;
+              }
+            }
+          });
+
           // We'll manage the matrix manually
           clone.matrixAutoUpdate = false;
           clone.matrix.copy(buildModelMatrix(pin, mercData));
           clone.visible = !isHidden;
+          clone.updateMatrixWorld(true);
 
           if (sceneRef.current) {
             sceneRef.current.add(clone);
