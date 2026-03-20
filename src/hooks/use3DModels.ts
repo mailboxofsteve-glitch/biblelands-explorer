@@ -270,7 +270,7 @@ export function use3DModels(
     } else if (sceneRef.current) {
       addOrUpdateModels();
     }
-  }, [map, pins, hiddenLocationIds]);
+  }, [map, pins, hiddenLocationIds, show3DModels]);
 
   // Full cleanup on unmount
   useEffect(() => {
