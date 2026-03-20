@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import type { LocationPin } from "./usePins";
 import { useMapStore } from "@/store/mapStore";
 
@@ -66,7 +67,14 @@ export function use3DModels(
   const cameraRef = useRef<THREE.Camera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const modelsRef = useRef<Map<string, ModelEntry>>(new Map());
-  const loaderRef = useRef(new GLTFLoader());
+  const loaderRef = useRef(() => {
+    const loader = new GLTFLoader();
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.7/");
+    loader.setDRACOLoader(dracoLoader);
+    return loader;
+  });
+  const gltfLoader = useRef(loaderRef.current());
   const modelCacheRef = useRef<Map<string, THREE.Group>>(new Map());
   const layerAddedRef = useRef(false);
   const mapInstanceRef = useRef<mapboxgl.Map | null>(null);
@@ -201,7 +209,7 @@ export function use3DModels(
         if (cached) {
           addModel(cached);
         } else {
-          loaderRef.current.load(
+          gltfLoader.current.load(
             modelUrl,
             (gltf) => {
               modelCacheRef.current.set(modelUrl, gltf.scene);
@@ -209,8 +217,8 @@ export function use3DModels(
             },
             undefined,
             (err) =>
-              console.warn(
-                `Failed to load 3D model for ${pin.name_ancient}:`,
+              console.error(
+                `[3D] Failed to load model for ${pin.name_ancient} (${modelUrl}):`,
                 err
               )
           );
