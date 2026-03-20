@@ -1,49 +1,56 @@
 
 
-## Add Projector Mode for High-Light Environments
+## Fix 3D Models Rendering as Flat White Silhouettes
 
-A toggleable "Projector Mode" that boosts contrast and brightness for screen projection in well-lit rooms, without changing the default aesthetic.
+### Root Cause
 
-### Approach
+The models load and position correctly (the shapes are visible), but they appear as flat white shapes with no shading. Two issues:
 
-Add a CSS class (`projector-mode`) to the root element that applies targeted overrides. A toggle button will be available in the presentation HUD and the map controls.
+1. **Flipped normals from negative Y scale**: The transform uses `makeScale(s, -s, s)` to flip Y for Mapbox coordinates. This flips the triangle winding order, causing normals to point inward. Three.js defaults to `FrontSide` rendering, so the lighting calculations produce incorrect/uniform results — making everything appear flat white.
+
+2. **Normal matrix not updated**: With `matrixAutoUpdate = false` and manual `matrix` assignment, the normal matrix (used for lighting calculations) may not be recomputed properly during render. This further breaks shading.
+
+### Fix (`src/hooks/use3DModels.ts`)
+
+1. **Set all materials to `DoubleSide`**: After cloning a model, traverse all meshes and set `material.side = THREE.DoubleSide`. This ensures faces render correctly regardless of the winding order flip from the negative Y scale.
+
+2. **Force matrix world update**: After setting `clone.matrix`, call `clone.updateMatrixWorld(true)` so Three.js recomputes the normal matrix for proper lighting.
+
+3. **Improve lighting setup**: Adjust the directional light to better illuminate the scene. Add a secondary hemisphere light for more natural ambient fill, replacing the single flat ambient light.
 
 ### Changes
 
-**1. `src/store/mapStore.ts`** — Add `projectorMode` boolean + `toggleProjectorMode` action to the store.
+**`src/hooks/use3DModels.ts`**:
 
-**2. `src/index.css`** — Add a `.projector-mode` class with overrides:
-- Map canvas filter: reduce sepia, increase brightness and contrast (`sepia(15%) brightness(1.15) contrast(1.1)`)
-- Pin markers: brighter backgrounds, thicker/lighter borders, white label text with dark text-stroke for readability
-- Popup backgrounds: slightly lighter with higher-contrast text
-- HUD elements: more opaque backgrounds, bolder text
-- Fog adjustments handled in MapCanvas
+In the `addModel` function, after cloning:
+```typescript
+// Fix materials for Y-flip winding order
+clone.traverse((child) => {
+  if ((child as THREE.Mesh).isMesh) {
+    const mesh = child as THREE.Mesh;
+    if (Array.isArray(mesh.material)) {
+      mesh.material.forEach(m => { m.side = THREE.DoubleSide; });
+    } else {
+      mesh.material.side = THREE.DoubleSide;
+    }
+  }
+});
+clone.updateMatrixWorld(true);
+```
 
-**3. `src/components/Map/MapCanvas.tsx`** — Read `projectorMode` from store; adjust the CSS filter on the map container and the fog colors when projector mode is active. In projector mode: `sepia(15%) brightness(1.15) contrast(1.1)` instead of `sepia(40%) brightness(0.9)`.
-
-**4. `src/hooks/usePinMarkers.ts`** — Read `projectorMode` from store in `createMarkerEl`. When active:
-- Pin dot background: `#4a3820` → slightly lighter
-- Pin border: `#c8a020` (gold, more visible)
-- Label text: white with dark text-stroke (`-webkit-text-stroke: 0.5px #1a1208; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8)`)
-- Label font-weight: bold
-
-**5. `src/components/Map/PresentationHUD.tsx`** — Add a projector-mode toggle button (sun icon) in the bottom HUD bar, next to the Labels toggle.
-
-**6. `src/pages/MapPage.tsx`** — Add the same toggle in the left sidebar controls so teachers can preview projector mode before presenting.
-
-### What stays the same
-- The normal (non-projector) appearance is completely unchanged
-- The parchment/candlelight aesthetic is preserved — projector mode just brightens and increases contrast within the same color palette
-- All other functionality (overlays, scenes, animations) works identically
+In the `onAdd` function, improve lighting:
+```typescript
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+dirLight.position.set(0.5, -0.5, 1); // Light from above-front
+scene.add(dirLight);
+const hemiLight = new THREE.HemisphereLight(0xfdfcfa, 0x473b2b, 0.4);
+scene.add(hemiLight);
+```
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/store/mapStore.ts` | Add `projectorMode` state + toggle |
-| `src/index.css` | `.projector-mode` CSS overrides |
-| `src/components/Map/MapCanvas.tsx` | Conditional filter + fog for projector mode |
-| `src/hooks/usePinMarkers.ts` | Brighter markers/labels in projector mode |
-| `src/components/Map/PresentationHUD.tsx` | Projector mode toggle button |
-| `src/pages/MapPage.tsx` | Projector mode toggle in sidebar |
+| `src/hooks/use3DModels.ts` | DoubleSide materials, matrix world update, improved lighting |
 
