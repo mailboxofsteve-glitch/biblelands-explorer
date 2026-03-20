@@ -98,8 +98,20 @@ export function use3DModels(
     };
   }, [map]);
 
+  const show3DModels = useMapStore((s) => s.show3DModels);
+
+  // Toggle visibility of all models when show3DModels changes
   useEffect(() => {
-    if (!map) return;
+    const scene = sceneRef.current;
+    if (!scene) return;
+    for (const [, entry] of modelsRef.current) {
+      entry.group.visible = show3DModels && !new Set(hiddenLocationIds).includes(entry.pinId);
+    }
+    if (map) map.triggerRepaint();
+  }, [show3DModels, map, hiddenLocationIds]);
+
+  useEffect(() => {
+    if (!map || !show3DModels) return;
 
     const modelPins = pins.filter((pin) => {
       if (pin.model_url === "none") return false;
