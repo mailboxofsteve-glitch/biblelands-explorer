@@ -2,10 +2,9 @@ import React, { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Center, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
-import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
-
-const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.7/");
+// Configure Draco for useGLTF (drei uses three-stdlib internally)
+const DRACO_CDN = "https://www.gstatic.com/draco/versioned/decoders/1.5.7/";
+useGLTF.preload("/models/default-city.gltf");
 
 const DEFAULT_MODEL = "/models/default-city.gltf";
 
