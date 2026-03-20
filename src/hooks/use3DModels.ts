@@ -152,10 +152,24 @@ export function use3DModels(
 
         const addModel = (sourceGroup: THREE.Group) => {
           const clone = sourceGroup.clone();
+
+          // Fix materials for Y-flip winding order
+          clone.traverse((child) => {
+            if ((child as THREE.Mesh).isMesh) {
+              const mesh = child as THREE.Mesh;
+              if (Array.isArray(mesh.material)) {
+                mesh.material.forEach((m) => { m.side = THREE.DoubleSide; });
+              } else {
+                mesh.material.side = THREE.DoubleSide;
+              }
+            }
+          });
+
           // We'll manage the matrix manually
           clone.matrixAutoUpdate = false;
           clone.matrix.copy(buildModelMatrix(pin, mercData));
           clone.visible = !isHidden;
+          clone.updateMatrixWorld(true);
 
           if (sceneRef.current) {
             sceneRef.current.add(clone);
@@ -207,10 +221,12 @@ export function use3DModels(
           });
           renderer.autoClear = false;
 
-          scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-          const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-          dirLight.position.set(1, 3, 2);
+          scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+          const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+          dirLight.position.set(0.5, -0.5, 1);
           scene.add(dirLight);
+          const hemiLight = new THREE.HemisphereLight(0xfdfcfa, 0x473b2b, 0.4);
+          scene.add(hemiLight);
 
           sceneRef.current = scene;
           cameraRef.current = camera;
