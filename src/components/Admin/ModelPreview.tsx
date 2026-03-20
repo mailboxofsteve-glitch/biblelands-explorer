@@ -28,9 +28,7 @@ function Model({
   rotationY?: number;
   rotationZ?: number;
 }) {
-  const { scene } = useGLTF(url, undefined, undefined, (loader) => {
-    loader.setDRACOLoader(dracoLoader);
-  });
+  const { scene } = useGLTF(url, DRACO_CDN);
   const cloned = React.useMemo(() => {
     const c = scene.clone();
     c.traverse((child) => {
