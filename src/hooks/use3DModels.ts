@@ -77,6 +77,7 @@ export function use3DModels(
   const gltfLoader = useRef(loaderRef.current());
   const modelCacheRef = useRef<Map<string, THREE.Group>>(new Map());
   const layerAddedRef = useRef(false);
+  const contextLostRef = useRef(false);
   const mapInstanceRef = useRef<mapboxgl.Map | null>(null);
 
   // Reset state when map instance changes or on style.load
