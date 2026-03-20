@@ -3,6 +3,7 @@ import mapboxgl from "mapbox-gl";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import type { LocationPin } from "./usePins";
+import { useMapStore } from "@/store/mapStore";
 
 const LAYER_ID = "3d-models-layer";
 const DEFAULT_CITY_MODEL_URL = "/models/default-city.gltf";
