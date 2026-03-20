@@ -1,56 +1,37 @@
 
 
-## Fix 3D Models Rendering as Flat White Silhouettes
+## Add 3D Models Toggle + Screenshot Assessment
 
-### Root Cause
+### Screenshot Assessment
+The 3D models in the screenshot **are rendering correctly**. The default city model shows:
+- Proper 3D depth with distinct faces visible
+- Correct lighting (lighter tops, darker sides from the directional + hemisphere lights)
+- Appropriate positioning on terrain
+- The model is a simple low-poly ancient building cluster — blocky shapes with pointed towers — which is exactly what the bundled `default-city.gltf` is designed to look like
 
-The models load and position correctly (the shapes are visible), but they appear as flat white shapes with no shading. Two issues:
+### Toggle Implementation
 
-1. **Flipped normals from negative Y scale**: The transform uses `makeScale(s, -s, s)` to flip Y for Mapbox coordinates. This flips the triangle winding order, causing normals to point inward. Three.js defaults to `FrontSide` rendering, so the lighting calculations produce incorrect/uniform results — making everything appear flat white.
+Add a `show3DModels` boolean to the map store and wire it into the sidebar controls, matching the existing Fog/Labels/Projector toggle pattern.
 
-2. **Normal matrix not updated**: With `matrixAutoUpdate = false` and manual `matrix` assignment, the normal matrix (used for lighting calculations) may not be recomputed properly during render. This further breaks shading.
-
-### Fix (`src/hooks/use3DModels.ts`)
-
-1. **Set all materials to `DoubleSide`**: After cloning a model, traverse all meshes and set `material.side = THREE.DoubleSide`. This ensures faces render correctly regardless of the winding order flip from the negative Y scale.
-
-2. **Force matrix world update**: After setting `clone.matrix`, call `clone.updateMatrixWorld(true)` so Three.js recomputes the normal matrix for proper lighting.
-
-3. **Improve lighting setup**: Adjust the directional light to better illuminate the scene. Add a secondary hemisphere light for more natural ambient fill, replacing the single flat ambient light.
-
-### Changes
+**`src/store/mapStore.ts`**:
+- Add `show3DModels: boolean` (default `true`) to state
+- Add `toggleShow3DModels` action
 
 **`src/hooks/use3DModels.ts`**:
+- Read `show3DModels` from store
+- When `false`, hide all model groups (set `visible = false`) and skip loading new ones
+- When toggled back on, restore visibility
 
-In the `addModel` function, after cloning:
-```typescript
-// Fix materials for Y-flip winding order
-clone.traverse((child) => {
-  if ((child as THREE.Mesh).isMesh) {
-    const mesh = child as THREE.Mesh;
-    if (Array.isArray(mesh.material)) {
-      mesh.material.forEach(m => { m.side = THREE.DoubleSide; });
-    } else {
-      mesh.material.side = THREE.DoubleSide;
-    }
-  }
-});
-clone.updateMatrixWorld(true);
-```
+**`src/pages/MapPage.tsx`**:
+- Add a "3D" toggle switch in the sidebar controls row (next to Fog, Labels, Projector)
 
-In the `onAdd` function, improve lighting:
-```typescript
-scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
-dirLight.position.set(0.5, -0.5, 1); // Light from above-front
-scene.add(dirLight);
-const hemiLight = new THREE.HemisphereLight(0xfdfcfa, 0x473b2b, 0.4);
-scene.add(hemiLight);
-```
-
-### Files Changed
+**`src/components/Map/MobileToolbar.tsx`**:
+- Add the same toggle in the mobile controls sheet
 
 | File | Change |
 |------|--------|
-| `src/hooks/use3DModels.ts` | DoubleSide materials, matrix world update, improved lighting |
+| `src/store/mapStore.ts` | Add `show3DModels` + toggle action |
+| `src/hooks/use3DModels.ts` | Respect `show3DModels` flag |
+| `src/pages/MapPage.tsx` | Add toggle switch in sidebar |
+| `src/components/Map/MobileToolbar.tsx` | Add toggle in mobile controls |
 
