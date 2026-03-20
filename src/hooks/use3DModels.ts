@@ -105,7 +105,7 @@ export function use3DModels(
     const scene = sceneRef.current;
     if (!scene) return;
     for (const [, entry] of modelsRef.current) {
-      entry.group.visible = show3DModels && !new Set(hiddenLocationIds).includes(entry.pinId);
+      entry.group.visible = show3DModels && !hiddenLocationIds.includes(entry.pinId);
     }
     if (map) map.triggerRepaint();
   }, [show3DModels, map, hiddenLocationIds]);
