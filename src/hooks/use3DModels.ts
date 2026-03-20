@@ -209,7 +209,7 @@ export function use3DModels(
         if (cached) {
           addModel(cached);
         } else {
-          loaderRef.current.load(
+          gltfLoader.current.load(
             modelUrl,
             (gltf) => {
               modelCacheRef.current.set(modelUrl, gltf.scene);
@@ -217,8 +217,8 @@ export function use3DModels(
             },
             undefined,
             (err) =>
-              console.warn(
-                `Failed to load 3D model for ${pin.name_ancient}:`,
+              console.error(
+                `[3D] Failed to load model for ${pin.name_ancient} (${modelUrl}):`,
                 err
               )
           );
