@@ -535,6 +535,14 @@ function LocationsTab() {
                     <Label className="text-xs">Altitude offset (m): {form.model_altitude}</Label>
                     <Input type="number" step="1" value={form.model_altitude} onChange={(e) => setForm((f) => ({ ...f, model_altitude: e.target.value }))} />
                   </div>
+
+                  <ModelPreview
+                    modelUrl={form.model_url || null}
+                    rotationX={parseFloat(form.model_rotation_x) || 0}
+                    rotationY={parseFloat(form.model_rotation_y) || 0}
+                    rotationZ={parseFloat(form.model_rotation_z) || 0}
+                    isCity={form.location_type === "city"}
+                  />
                 </>
               )}
             </div>

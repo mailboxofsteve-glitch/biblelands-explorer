@@ -151,10 +151,12 @@ export function use3DModels(
         }
 
         // Compute Mercator position once per pin
-        const altitude = pin.model_altitude ?? 0;
+        const altitudeOffset = pin.model_altitude ?? 0;
+        const lngLat: mapboxgl.LngLatLike = { lng: pin.coordinates[0], lat: pin.coordinates[1] };
+        const terrainElev = map.queryTerrainElevation(lngLat) ?? 0;
         const merc = mapboxgl.MercatorCoordinate.fromLngLat(
-          { lng: pin.coordinates[0], lat: pin.coordinates[1] },
-          altitude
+          lngLat,
+          terrainElev + altitudeOffset
         );
         const mercData = {
           x: merc.x,
