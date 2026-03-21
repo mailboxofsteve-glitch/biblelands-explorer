@@ -267,19 +267,9 @@ export function use3DModels(
           canvas.addEventListener("webglcontextrestored", () => {
             console.info("[3D] WebGL context restored — reinitializing renderer");
             contextLostRef.current = false;
-            const newGl = canvas.getContext("webgl2") || canvas.getContext("webgl");
-            if (newGl) {
-              const newRenderer = new THREE.WebGLRenderer({
-                canvas,
-                context: newGl,
-                antialias: true,
-                preserveDrawingBuffer: false,
-              });
-              newRenderer.autoClear = false;
-              rendererRef.current = newRenderer;
-            }
             sceneRef.current = null;
             cameraRef.current = null;
+            rendererRef.current = null;
             modelsRef.current.clear();
             modelCacheRef.current.clear();
             layerAddedRef.current = false;
