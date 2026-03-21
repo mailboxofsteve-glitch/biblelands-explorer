@@ -285,16 +285,8 @@ canvas.addEventListener("webglcontextrestored", () => {
   layerAddedRef.current = false;
   _map.triggerRepaint();
 }, false);
-            // Reload all models
-            if (sceneRef.current) {
-              while (sceneRef.current.children.length > 3) {
-                sceneRef.current.remove(sceneRef.current.children[sceneRef.current.children.length - 1]);
-              }
-              modelsRef.current.clear();
-            }
-            addOrUpdateModels();
-            _map.triggerRepaint();
-          }, false);
+
+          addOrUpdateModels();
 
           addOrUpdateModels();
         },
