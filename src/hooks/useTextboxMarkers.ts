@@ -61,11 +61,6 @@ export function useTextboxMarkers(
     }
   }, [map, sceneTextboxes, presenting, removeTextbox, updateTextbox]);
 
-  // Full re-render when presenting changes
-  useEffect(() => {
-    for (const marker of markersRef.current.values()) marker.remove();
-    markersRef.current.clear();
-  }, [presenting]);
 
   // Cleanup on unmount
   useEffect(() => {
