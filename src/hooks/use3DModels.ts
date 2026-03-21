@@ -264,10 +264,9 @@ export function use3DModels(
             console.warn("[3D] WebGL context lost — pausing 3D rendering");
             contextLostRef.current = true;
           }, false);
-          canvas.addEventListener("webglcontextrestored", () => {
+canvas.addEventListener("webglcontextrestored", () => {
   console.info("[3D] WebGL context restored — reinitializing renderer");
   contextLostRef.current = false;
-  // Recreate renderer with the new context
   const newGl = canvas.getContext("webgl2") || canvas.getContext("webgl");
   if (newGl) {
     const newRenderer = new THREE.WebGLRenderer({
@@ -279,7 +278,6 @@ export function use3DModels(
     newRenderer.autoClear = false;
     rendererRef.current = newRenderer;
   }
-  // ADD THESE LINES — clears stale Three.js state so the layer rebuilds cleanly
   sceneRef.current = null;
   cameraRef.current = null;
   modelsRef.current.clear();
