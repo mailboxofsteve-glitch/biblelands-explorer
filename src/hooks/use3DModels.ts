@@ -324,6 +324,7 @@ export function use3DModels(
       modelsRef.current.clear();
       sceneRef.current = null;
       cameraRef.current = null;
+      rendererRef.current?.dispose();
       rendererRef.current = null;
       mapInstanceRef.current = null;
     };
