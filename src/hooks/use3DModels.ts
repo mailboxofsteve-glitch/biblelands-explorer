@@ -97,6 +97,7 @@ export function use3DModels(
       layerAddedRef.current = false;
       sceneRef.current = null;
       cameraRef.current = null;
+      rendererRef.current?.dispose();
       rendererRef.current = null;
       modelsRef.current.clear();
     };
