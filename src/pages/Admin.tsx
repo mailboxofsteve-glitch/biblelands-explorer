@@ -539,9 +539,11 @@ function LocationsTab() {
 
                   <ModelPreview
                     modelUrl={form.model_url || null}
+                    scale={parseFloat(form.model_scale) || 2000}
                     rotationX={parseFloat(form.model_rotation_x) || 0}
                     rotationY={parseFloat(form.model_rotation_y) || 0}
                     rotationZ={parseFloat(form.model_rotation_z) || 0}
+                    altitude={parseFloat(form.model_altitude) || 0}
                     isCity={form.location_type === "city"}
                   />
                 </>
