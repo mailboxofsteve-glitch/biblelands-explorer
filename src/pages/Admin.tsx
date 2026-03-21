@@ -13,7 +13,8 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { BookOpen, LogOut, MapPin, Layers, GraduationCap, Users, Plus, Pencil, Trash2, ArrowLeft, Map, ArrowUpDown, ArrowUp, ArrowDown, Upload, CheckSquare, Square, FileUp, Loader2, Download, Box } from "lucide-react";
+import { BookOpen, LogOut, MapPin, Layers, GraduationCap, Users, Plus, Pencil, Trash2, ArrowLeft, Map, ArrowUpDown, ArrowUp, ArrowDown, Upload, CheckSquare, Square, FileUp, Loader2, Download, Box, Mountain } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Slider } from "@/components/ui/slider";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -534,7 +535,47 @@ function LocationsTab() {
 
                   <div>
                     <Label className="text-xs">Altitude offset (m): {form.model_altitude}</Label>
-                    <Input type="number" step="1" value={form.model_altitude} onChange={(e) => setForm((f) => ({ ...f, model_altitude: e.target.value }))} />
+                    <div className="flex items-center gap-2">
+                      <Input type="number" step="1" value={form.model_altitude} onChange={(e) => setForm((f) => ({ ...f, model_altitude: e.target.value }))} className="flex-1" />
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={!form.lat || !form.lng}
+                              onClick={async () => {
+                                const lat = parseFloat(form.lat);
+                                const lng = parseFloat(form.lng);
+                                if (isNaN(lat) || isNaN(lng)) {
+                                  toast({ title: "Missing coordinates", description: "Set lat/lng first", variant: "destructive" });
+                                  return;
+                                }
+                                try {
+                                  const token = "pk.eyJ1Ijoic3JvZ2Vyczg2IiwiYSI6ImNtbWg0YXNiaTBjZjgycnB0c21mbzA1MDMifQ.snS_DuU14Far-Noo4WX_rA";
+                                  const res = await fetch(`https://api.mapbox.com/v4/mapbox.mapbox-terrain-v2/tilequery/${lng},${lat}.json?layers=contour&access_token=${token}`);
+                                  const data = await res.json();
+                                  const elevations = (data.features || []).map((f: any) => f.properties?.ele ?? 0);
+                                  const maxEle = elevations.length > 0 ? Math.max(...elevations) : 0;
+                                  const altitude = Math.round(maxEle + 50);
+                                  setForm((f) => ({ ...f, model_altitude: String(altitude) }));
+                                  toast({ title: `Altitude set to ${altitude}m above terrain` });
+                                } catch (err) {
+                                  toast({ title: "Failed to detect altitude", variant: "destructive" });
+                                }
+                              }}
+                            >
+                              <Mountain className="h-3.5 w-3.5 mr-1" />
+                              Auto
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {!form.lat || !form.lng ? "Set coordinates first to enable auto-detect" : "Auto-detect altitude from terrain"}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
                   </div>
 
                   <ModelPreview
