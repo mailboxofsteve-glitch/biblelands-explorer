@@ -57,8 +57,8 @@ export default function PresenterView({ mapRef, onExit }: PresenterViewProps) {
   // Keyboard nav
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); next(); }
-      else if (e.key === "ArrowLeft") { e.preventDefault(); prev(); }
+      if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === "PageDown" || e.key === " ") { e.preventDefault(); next(); }
+      else if (e.key === "ArrowLeft" || e.key === "ArrowUp" || e.key === "PageUp") { e.preventDefault(); prev(); }
       else if (e.key === "Escape") { e.preventDefault(); onExit(); }
     };
     window.addEventListener("keydown", handleKey);

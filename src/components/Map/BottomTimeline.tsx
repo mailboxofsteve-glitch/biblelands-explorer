@@ -194,7 +194,7 @@ export default function BottomTimeline({ presenting = false }: { presenting?: bo
 
       {/* Expanded era detail: year range slider + entry markers */}
       {expandedEra && eraRange && (
-        <div className="px-4 py-2 space-y-1">
+        <div className={`px-4 py-2 space-y-1 ${presenting ? "bg-black/10" : ""}`}>
           {/* Year labels */}
           <div className="flex justify-between text-xl text-muted-foreground" style={presenting ? { filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.8))" } : undefined}>
             <span>{formatYear(eraRange[0])}</span>
