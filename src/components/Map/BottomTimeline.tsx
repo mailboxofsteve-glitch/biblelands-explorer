@@ -152,8 +152,8 @@ export default function BottomTimeline({ presenting = false }: { presenting?: bo
   }, [yearFilter, eraRange]);
 
   return (
-    <div className={`w-full border-t border-border/40 select-none z-50 shrink-0 transition-colors duration-300 ${
-      presenting ? "bg-card/30 backdrop-blur-[2px]" : "bg-card/95 backdrop-blur-sm"
+    <div className={`w-full select-none z-50 shrink-0 transition-colors duration-300 ${
+      presenting ? "bg-black/15 backdrop-blur-[2px] border-t border-transparent" : "bg-card/95 backdrop-blur-sm border-t border-border/40"
     }`}>
       {/* Era bar */}
       <div className="flex w-full h-14 items-stretch">
@@ -164,9 +164,11 @@ export default function BottomTimeline({ presenting = false }: { presenting?: bo
             <button
               key={era.id}
               onClick={() => handleEraClick(era.id as EraId)}
-              className={`relative flex items-center justify-center transition-all duration-300 ease-in-out border-r last:border-r-0 border-border/20 overflow-hidden ${
+              className={`relative flex items-center justify-center transition-all duration-300 ease-in-out border-r last:border-r-0 overflow-hidden ${
+                presenting ? "border-transparent" : "border-border/20"
+              } ${
                 isExpanded
-                  ? presenting ? "flex-[5] bg-accent/5" : "flex-[5] bg-accent/10"
+                  ? presenting ? "flex-[5] bg-transparent" : "flex-[5] bg-accent/10"
                   : "flex-1 hover:bg-secondary/40"
               } ${isActive ? "text-accent font-semibold" : "text-muted-foreground"}`}
               style={presenting ? { textShadow: "0 1px 3px rgba(0,0,0,0.8)" } : undefined}
@@ -192,7 +194,7 @@ export default function BottomTimeline({ presenting = false }: { presenting?: bo
 
       {/* Expanded era detail: year range slider + entry markers */}
       {expandedEra && eraRange && (
-        <div className="px-4 py-2 space-y-1">
+        <div className={`px-4 py-2 space-y-1 ${presenting ? "bg-black/10" : ""}`}>
           {/* Year labels */}
           <div className="flex justify-between text-xl text-muted-foreground" style={presenting ? { filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.8))" } : undefined}>
             <span>{formatYear(eraRange[0])}</span>
