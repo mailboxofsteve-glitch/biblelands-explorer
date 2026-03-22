@@ -1,42 +1,34 @@
 
 
-## Translucent Timeline + Auto-hiding Toolbar in Classroom Mode
+## Fix Timeline Translucency + Add Presentation Remote Support
 
-### Overview
-Make the BottomTimeline see-through during classroom presentations so the map shows through, and make the PresentationHUD toolbar appear only on mouse hover.
+### 1. Timeline Not Visually See-Through
 
-### Changes
+The translucent code IS in the codebase (`bg-card/30`), but on a dark map with a dark card color (`hsl(30 20% 8%)`), 30% opacity of near-black still looks nearly opaque. Fix:
 
-**1. Pass `presenting` prop to BottomTimeline**
+**`src/components/Map/BottomTimeline.tsx`**:
+- Change `bg-card/30` to `bg-black/15` — a much lighter wash that's clearly see-through
+- On the expanded era detail section (line 195), add presenting-conditional: `bg-black/10` when presenting (currently inherits parent bg, which stacks opacity)
+- On era buttons: when presenting + expanded, change `bg-accent/5` to `bg-transparent`
+- Reduce border opacity when presenting: `border-border/20` → `border-transparent`
 
-In `MapPage.tsx` and `SharedLesson.tsx`, pass `presenting={presenting}` to `<BottomTimeline>`.
+### 2. Presentation Remote (Clicker) Support
 
-**2. BottomTimeline — translucent in presenting mode**
+Standard presentation remotes send `PageDown`/`PageUp` and `ArrowDown`/`ArrowUp` keypresses.
 
-Accept optional `presenting?: boolean` prop. When true:
-- Root container: change from `bg-card/95` to `bg-card/30 backdrop-blur-[2px]` — mostly transparent but enough contrast for text
-- Era bar buttons: reduce background opacity, add text-shadow for projector legibility
-- Expanded detail section: similarly transparent background
-- Year labels and entry count text: add `drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]` for readability on bright projector screens
-- Track and markers keep their existing colors (they're small enough to not block much)
+**`src/components/Map/PresentationHUD.tsx`** — In the keyboard handler (line 134):
+- Add `ArrowDown` and `PageDown` → call `next()` with `preventDefault()`
+- Add `ArrowUp` and `PageUp` → call `prev()` with `preventDefault()`
+- This maps all 4 common clicker buttons (up/down arrows + page up/down) to scene navigation
+- `preventDefault()` on all of them stops the window from scrolling
 
-**3. PresentationHUD — toolbar auto-hides**
-
-The bottom HUD bar (nav controls + labels/projector/notes toggles) should:
-- Default to `opacity-0 translate-y-2` (hidden, shifted down slightly)
-- On mouse enter of a hover zone at the bottom of the screen: `opacity-100 translate-y-0`
-- Use a wrapper `div` with `onMouseEnter`/`onMouseLeave` and CSS `transition-all duration-300`
-- The scene title stays always visible (it's small and useful context)
-- The exit button (top-right) stays always visible
-
-Implementation: wrap the nav controls `div` in a hover-detection container. Add state `hudVisible` toggled by mouse events. Apply opacity/transform classes conditionally.
+**`src/components/Map/PresenterView.tsx`** — Same change in its keyboard handler for consistency.
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/Map/BottomTimeline.tsx` | Add `presenting` prop; apply translucent styles when true |
-| `src/components/Map/PresentationHUD.tsx` | Auto-hide toolbar on idle, show on mouse hover |
-| `src/pages/MapPage.tsx` | Pass `presenting` to `<BottomTimeline>` |
-| `src/pages/SharedLesson.tsx` | Pass `presenting` to `<BottomTimeline>` |
+| `src/components/Map/BottomTimeline.tsx` | Make translucency more dramatic when presenting |
+| `src/components/Map/PresentationHUD.tsx` | Add ArrowUp/Down + PageUp/Down to keyboard nav |
+| `src/components/Map/PresenterView.tsx` | Add ArrowUp/Down + PageUp/Down to keyboard nav |
 
