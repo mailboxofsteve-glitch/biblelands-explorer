@@ -32,6 +32,7 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
 
   const [showNotes, setShowNotes] = useState(false);
   const [autoProgress, setAutoProgress] = useState(0);
+  const [hudVisible, setHudVisible] = useState(false);
   const animCancelRef = useRef<(() => void) | null>(null);
   const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -189,18 +190,25 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
       </button>
 
       {/* Bottom HUD */}
-      <div className="fixed bottom-44 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none">
-        {/* Scene title */}
+      <div
+        className="fixed bottom-44 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 pointer-events-none"
+        onMouseEnter={() => setHudVisible(true)}
+        onMouseLeave={() => setHudVisible(false)}
+        style={{ pointerEvents: "auto" }}
+      >
+        {/* Scene title — always visible */}
         {currentScene && (
-          <div className="pointer-events-auto bg-card/80 backdrop-blur-sm rounded-lg px-4 py-1.5 border border-border/30">
+          <div className="bg-card/80 backdrop-blur-sm rounded-lg px-4 py-1.5 border border-border/30">
             <p className="text-sm font-serif font-semibold text-foreground tracking-wide text-center">
               {currentScene.title}
             </p>
           </div>
         )}
 
-        {/* Nav controls */}
-        <div className="pointer-events-auto flex items-center gap-1 bg-card/80 backdrop-blur-sm rounded-lg border border-border/30 px-2 py-1.5">
+        {/* Nav controls — visible on hover */}
+        <div className={`flex items-center gap-1 bg-card/80 backdrop-blur-sm rounded-lg border border-border/30 px-2 py-1.5 transition-all duration-300 ${
+          hudVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
+        }`}>
           <button
             onClick={prev}
             disabled={idx <= 0}
@@ -267,7 +275,9 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
 
         {/* Notes panel */}
         {showNotes && currentScene && (
-          <div className="pointer-events-auto bg-card/85 backdrop-blur-sm rounded-lg border border-border/30 px-4 py-3 max-w-md w-[90vw]">
+          <div className={`bg-card/85 backdrop-blur-sm rounded-lg border border-border/30 px-4 py-3 max-w-md w-[90vw] transition-all duration-300 ${
+            hudVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
+          }`}>
             <p className="text-xs text-muted-foreground italic">
               {(currentScene as any).notes || "No notes for this scene."}
             </p>
