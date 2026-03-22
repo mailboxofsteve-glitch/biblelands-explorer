@@ -38,7 +38,7 @@ function formatYear(y: number): string {
   return y < 0 ? `${Math.abs(y)} BC` : `${y} AD`;
 }
 
-export default function BottomTimeline() {
+export default function BottomTimeline({ presenting = false }: { presenting?: boolean }) {
   const currentEra = useMapStore((s) => s.currentEra);
   const setEra = useMapStore((s) => s.setEra);
   const yearFilter = useMapStore((s) => s.yearFilter);
