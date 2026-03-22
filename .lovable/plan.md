@@ -1,38 +1,42 @@
 
 
-## Fix: Textboxes Not Showing on First Scene in Classroom Mode
+## Translucent Timeline + Auto-hiding Toolbar in Classroom Mode
 
-### Root Cause
+### Overview
+Make the BottomTimeline see-through during classroom presentations so the map shows through, and make the PresentationHUD toolbar appear only on mouse hover.
 
-Race condition between two effects in `useTextboxMarkers.ts`:
+### Changes
 
-1. **Cleanup effect** (line 64-68): Runs when `presenting` changes → clears all markers
-2. **Main effect** (line 15-62): Runs when `sceneTextboxes` changes → creates markers
+**1. Pass `presenting` prop to BottomTimeline**
 
-When entering Classroom Mode:
-- `presenting` flips to `true` → cleanup effect clears markers
-- `PresentationHUD` mounts → `goToScene(0)` fires in a `useEffect([], [])` → `loadScene` sets `sceneTextboxes`
-- The cleanup effect for `presenting` can fire **after** the main effect has already created markers for the first scene's textboxes, destroying them
+In `MapPage.tsx` and `SharedLesson.tsx`, pass `presenting={presenting}` to `<BottomTimeline>`.
 
-The cleanup effect on `[presenting]` is meant to force a full re-render of markers with new presenting styles, but it doesn't trigger a subsequent recreation — it just destroys.
+**2. BottomTimeline — translucent in presenting mode**
 
-### Fix (`src/hooks/useTextboxMarkers.ts`)
+Accept optional `presenting?: boolean` prop. When true:
+- Root container: change from `bg-card/95` to `bg-card/30 backdrop-blur-[2px]` — mostly transparent but enough contrast for text
+- Era bar buttons: reduce background opacity, add text-shadow for projector legibility
+- Expanded detail section: similarly transparent background
+- Year labels and entry count text: add `drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]` for readability on bright projector screens
+- Track and markers keep their existing colors (they're small enough to not block much)
 
-Remove the separate cleanup-on-presenting-change effect (lines 64-68). The main effect already has `presenting` in its dependency array, and it already removes+recreates every marker on each run. The separate cleanup effect is redundant and causes the race condition.
+**3. PresentationHUD — toolbar auto-hides**
 
-```
-// DELETE lines 64-68:
-// useEffect(() => {
-//   for (const marker of markersRef.current.values()) marker.remove();
-//   markersRef.current.clear();
-// }, [presenting]);
-```
+The bottom HUD bar (nav controls + labels/projector/notes toggles) should:
+- Default to `opacity-0 translate-y-2` (hidden, shifted down slightly)
+- On mouse enter of a hover zone at the bottom of the screen: `opacity-100 translate-y-0`
+- Use a wrapper `div` with `onMouseEnter`/`onMouseLeave` and CSS `transition-all duration-300`
+- The scene title stays always visible (it's small and useful context)
+- The exit button (top-right) stays always visible
 
-The main effect (lines 15-62) already handles the `presenting` change correctly — it removes existing markers and recreates them with the right `presenting` flag on every run.
+Implementation: wrap the nav controls `div` in a hover-detection container. Add state `hudVisible` toggled by mouse events. Apply opacity/transform classes conditionally.
 
 ### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/hooks/useTextboxMarkers.ts` | Remove redundant cleanup effect that races with marker creation |
+| `src/components/Map/BottomTimeline.tsx` | Add `presenting` prop; apply translucent styles when true |
+| `src/components/Map/PresentationHUD.tsx` | Auto-hide toolbar on idle, show on mouse hover |
+| `src/pages/MapPage.tsx` | Pass `presenting` to `<BottomTimeline>` |
+| `src/pages/SharedLesson.tsx` | Pass `presenting` to `<BottomTimeline>` |
 
