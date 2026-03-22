@@ -172,7 +172,7 @@ const SharedLesson = () => {
       </div>
 
       {/* Bottom timeline */}
-      <BottomTimeline />
+      <BottomTimeline presenting={presenting} />
     </div>
   );
 };

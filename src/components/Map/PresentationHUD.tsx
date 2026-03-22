@@ -275,7 +275,9 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
 
         {/* Notes panel */}
         {showNotes && currentScene && (
-          <div className="pointer-events-auto bg-card/85 backdrop-blur-sm rounded-lg border border-border/30 px-4 py-3 max-w-md w-[90vw]">
+          <div className={`bg-card/85 backdrop-blur-sm rounded-lg border border-border/30 px-4 py-3 max-w-md w-[90vw] transition-all duration-300 ${
+            hudVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
+          }`}>
             <p className="text-xs text-muted-foreground italic">
               {(currentScene as any).notes || "No notes for this scene."}
             </p>
