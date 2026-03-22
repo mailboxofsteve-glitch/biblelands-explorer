@@ -32,6 +32,7 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
 
   const [showNotes, setShowNotes] = useState(false);
   const [autoProgress, setAutoProgress] = useState(0);
+  const [hudVisible, setHudVisible] = useState(false);
   const animCancelRef = useRef<(() => void) | null>(null);
   const autoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
