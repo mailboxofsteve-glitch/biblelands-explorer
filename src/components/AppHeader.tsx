@@ -1,4 +1,5 @@
-import { BookOpen, LogOut, LogIn, Shield } from "lucide-react";
+import { LogOut, LogIn, Shield } from "lucide-react";
+import Logo from "@/components/Logo";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
