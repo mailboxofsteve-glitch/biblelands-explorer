@@ -4,7 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { BookOpen, LogIn } from "lucide-react";
+import { LogIn } from "lucide-react";
+import Logo from "@/components/Logo";
 import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
@@ -36,7 +37,7 @@ const Login = () => {
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-sm space-y-8">
         <div className="text-center space-y-2">
-          <BookOpen className="h-30 w-30 text-accent mx-auto" />
+          <Logo className="h-40 w-40 mx-auto" />
           <h1 className="text-3xl font-serif font-bold text-foreground">Sign In</h1>
           <p className="text-sm text-muted-foreground">Welcome back to BibleLands</p>
         </div>
