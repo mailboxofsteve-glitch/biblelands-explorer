@@ -1,4 +1,4 @@
-import { BookOpen } from "lucide-react";
+import Logo from "@/components/Logo";
 import AppHeader from "@/components/AppHeader";
 
 const Lessons = () => {
