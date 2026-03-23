@@ -1,4 +1,5 @@
-import { BookOpen, LogOut, LogIn, Shield } from "lucide-react";
+import { LogOut, LogIn, Shield } from "lucide-react";
+import Logo from "@/components/Logo";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,7 +29,7 @@ const AppHeader = () => {
           onClick={() => navigate(user ? "/dashboard" : "/")}
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
-          <BookOpen className="h-5 w-5 text-accent" />
+          <Logo className="h-5 w-5" />
           <span className="text-lg font-serif font-bold tracking-wide text-foreground">
             BibleLands
           </span>

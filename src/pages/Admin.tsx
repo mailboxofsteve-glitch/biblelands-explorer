@@ -13,7 +13,8 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { BookOpen, LogOut, MapPin, Layers, GraduationCap, Users, Plus, Pencil, Trash2, ArrowLeft, Map, ArrowUpDown, ArrowUp, ArrowDown, Upload, CheckSquare, Square, FileUp, Loader2, Download, Box, Mountain } from "lucide-react";
+import { LogOut, MapPin, Layers, GraduationCap, Users, Plus, Pencil, Trash2, ArrowLeft, Map, ArrowUpDown, ArrowUp, ArrowDown, Upload, CheckSquare, Square, FileUp, Loader2, Download, Box, Mountain } from "lucide-react";
+import Logo from "@/components/Logo";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Slider } from "@/components/ui/slider";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
@@ -1548,7 +1549,7 @@ const Admin = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b border-border/40 px-4 sm:px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <BookOpen className="h-6 w-6 text-accent" />
+          <Logo className="h-6 w-6" />
           <span className="text-xl font-serif font-bold tracking-wide text-foreground">BibleLands</span>
           <Badge variant="secondary" className="ml-2">Admin</Badge>
         </div>
