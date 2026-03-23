@@ -1549,7 +1549,7 @@ const Admin = () => {
     <div className="min-h-screen bg-background flex flex-col">
       <header className="border-b border-border/40 px-4 sm:px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <BookOpen className="h-6 w-6 text-accent" />
+          <Logo className="h-6 w-6" />
           <span className="text-xl font-serif font-bold tracking-wide text-foreground">BibleLands</span>
           <Badge variant="secondary" className="ml-2">Admin</Badge>
         </div>
