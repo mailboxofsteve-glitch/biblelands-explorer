@@ -29,7 +29,7 @@ const AppHeader = () => {
           onClick={() => navigate(user ? "/dashboard" : "/")}
           className="flex items-center gap-2 hover:opacity-80 transition-opacity"
         >
-          <Logo className="h-12 w-12" />
+          <Logo className="h-16 w-16" />
           <span className="text-lg font-serif font-bold tracking-wide text-foreground">
             BibleLands
           </span>
