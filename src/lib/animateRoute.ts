@@ -107,19 +107,27 @@ export function animateRoute(
   // Build arrow GeoJSON
   function buildArrowFeatures(offset: number): GeoJSON.Feature[] {
     const features: GeoJSON.Feature[] = [];
+    const fadeZone = ARROW_SPACING * 0.8; // fade window before/after wrap
+
     for (let i = 0; i < arrowCount; i++) {
       const rawIdx = (i * ARROW_SPACING + offset) % coords.length;
       const idx = Math.floor(rawIdx);
       const frac = rawIdx - idx;
+
+      // ✅ Clamp instead of wrap — prevents interpolating end→start
       const nextIdx = Math.min(idx + 1, coords.length - 1);
 
       // Interpolate position
       const lng = coords[idx][0] + (coords[nextIdx][0] - coords[idx][0]) * frac;
       const lat = coords[idx][1] + (coords[nextIdx][1] - coords[idx][1]) * frac;
 
+      // ✅ Fade out arrows near the end so the teleport back to start is invisible
+      const distFromEnd = coords.length - 1 - rawIdx;
+      const opacity = distFromEnd < fadeZone ? Math.max(0, distFromEnd / fadeZone) : 0.85;
+
       features.push({
         type: "Feature",
-        properties: { bearing: bearings[idx] },
+        properties: { bearing: bearings[idx], opacity },
         geometry: { type: "Point", coordinates: [lng, lat] },
       });
     }
