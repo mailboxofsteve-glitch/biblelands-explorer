@@ -221,7 +221,7 @@ export function animateRoute(
       "icon-ignore-placement": true,
     },
     paint: {
-      "icon-opacity": 0.85,
+      "icon-opacity": ["get", "opacity"],
     },
   });
 
