@@ -4,13 +4,7 @@ import { useOverlays } from "@/hooks/useOverlays";
 import { animateRoutesSimultaneously, cleanupAllAnimationLayers } from "@/lib/animateRoute";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
-import {
-  ChevronLeft,
-  ChevronRight,
-  X,
-  ClipboardList,
-  Sun,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, X, ClipboardList, Sun } from "lucide-react";
 import GroundViewButton from "./GroundViewButton";
 import type { MapCanvasHandle } from "./MapCanvas";
 import type { LessonScene } from "@/types";
@@ -62,7 +56,10 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
       const routes: { geojson: GeoJSON.GeoJSON; color: string }[] = [];
       for (const o of lineOverlays) {
         const gj = o.geojson as any;
-        const features = gj?.type === "FeatureCollection" ? gj.features : [gj?.type === "Feature" ? gj : { type: "Feature", geometry: gj, properties: {} }];
+        const features =
+          gj?.type === "FeatureCollection"
+            ? gj.features
+            : [gj?.type === "Feature" ? gj : { type: "Feature", geometry: gj, properties: {} }];
         for (const f of features) {
           if (f?.geometry?.type?.toLowerCase().includes("line")) {
             routes.push({ geojson: f as GeoJSON.GeoJSON, color: o.default_color });
@@ -74,7 +71,7 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
       const { cancel } = animateRoutesSimultaneously(map, routes, { loop: true });
       animCancelRef.current = cancel;
     },
-    [mapRef, overlays]
+    [mapRef, overlays],
   );
 
   const goToScene = useCallback(
@@ -123,7 +120,7 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
         }, intervalMs);
       }
     },
-    [mapRef, total, loadScene, scenes, triggerRouteAnimation]
+    [mapRef, total, loadScene, scenes, triggerRouteAnimation],
   );
 
   const next = useCallback(() => goToScene(idx + 1), [goToScene, idx]);
@@ -196,19 +193,12 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
         onMouseLeave={() => setHudVisible(false)}
         style={{ pointerEvents: "auto" }}
       >
-        {/* Scene title — always visible */}
-        {currentScene && (
-          <div className="bg-card/80 backdrop-blur-sm rounded-lg px-4 py-1.5 border border-border/30">
-            <p className="text-sm font-serif font-semibold text-foreground tracking-wide text-center">
-              {currentScene.title}
-            </p>
-          </div>
-        )}
-
         {/* Nav controls — visible on hover */}
-        <div className={`flex items-center gap-1 bg-card/80 backdrop-blur-sm rounded-lg border border-border/30 px-2 py-1.5 transition-all duration-300 ${
-          hudVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
-        }`}>
+        <div
+          className={`flex items-center gap-1 bg-card/80 backdrop-blur-sm rounded-lg border border-border/30 px-2 py-1.5 transition-all duration-300 ${
+            hudVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
+          }`}
+        >
           <button
             onClick={prev}
             disabled={idx <= 0}
@@ -233,11 +223,7 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
 
           <label className="flex items-center gap-1 cursor-pointer px-1" title="Show all labels">
             <span className="text-[10px] text-muted-foreground">Labels</span>
-            <Switch
-              checked={showAllLabels}
-              onCheckedChange={toggleShowAllLabels}
-              className="scale-[0.6]"
-            />
+            <Switch checked={showAllLabels} onCheckedChange={toggleShowAllLabels} className="scale-[0.6]" />
           </label>
 
           <div className="w-px h-5 bg-border/40 mx-1" />
@@ -275,9 +261,11 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
 
         {/* Notes panel */}
         {showNotes && currentScene && (
-          <div className={`bg-card/85 backdrop-blur-sm rounded-lg border border-border/30 px-4 py-3 max-w-md w-[90vw] transition-all duration-300 ${
-            hudVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
-          }`}>
+          <div
+            className={`bg-card/85 backdrop-blur-sm rounded-lg border border-border/30 px-4 py-3 max-w-md w-[90vw] transition-all duration-300 ${
+              hudVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
+            }`}
+          >
             <p className="text-xs text-muted-foreground italic">
               {(currentScene as any).notes || "No notes for this scene."}
             </p>
@@ -288,10 +276,7 @@ export default function PresentationHUD({ mapRef, onExit }: PresentationHUDProps
       {/* Auto-advance progress bar */}
       {autoProgress > 0 && autoProgress < 100 && (
         <div className="fixed bottom-0 left-0 right-0 z-50">
-          <Progress
-            value={autoProgress}
-            className="h-1 rounded-none bg-transparent"
-          />
+          <Progress value={autoProgress} className="h-1 rounded-none bg-transparent" />
         </div>
       )}
     </>
