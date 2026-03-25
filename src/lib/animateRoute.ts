@@ -60,15 +60,9 @@ function bearing(a: [number, number], b: [number, number]): number {
 export function animateRoute(
   map: mapboxgl.Map,
   geojson: GeoJSON.GeoJSON,
-  options: AnimateRouteOptions = {}
+  options: AnimateRouteOptions = {},
 ): AnimationState {
-  const {
-    color = "#e6a817",
-    duration,
-    lineWidth = 3,
-    segmentIndices,
-    onComplete,
-  } = options;
+  const { color = "#e6a817", duration, lineWidth = 3, segmentIndices, onComplete } = options;
 
   const id = `anim-route-${++animCounter}`;
   const sourceId = `${id}-src`;
@@ -117,7 +111,7 @@ export function animateRoute(
       const rawIdx = (i * ARROW_SPACING + offset) % coords.length;
       const idx = Math.floor(rawIdx);
       const frac = rawIdx - idx;
-      const nextIdx = (idx + 1) % coords.length;
+      const nextIdx = Math.min(idx + 1, coords.length - 1);
 
       // Interpolate position
       const lng = coords[idx][0] + (coords[nextIdx][0] - coords[idx][0]) * frac;
@@ -271,10 +265,7 @@ export function animateRoute(
 
 /* ── Coordinate extraction ──────────────────────────── */
 
-function extractCoordinates(
-  geojson: GeoJSON.GeoJSON,
-  segmentIndices?: number[]
-): [number, number][] {
+function extractCoordinates(geojson: GeoJSON.GeoJSON, segmentIndices?: number[]): [number, number][] {
   const features: GeoJSON.Feature[] = [];
 
   if (geojson.type === "FeatureCollection") {
@@ -307,10 +298,7 @@ function extractCoordinates(
 
 /* ── Coordinate densification ───────────────────────── */
 
-function densifyCoordinates(
-  coords: [number, number][],
-  maxGap: number = 0.1
-): [number, number][] {
+function densifyCoordinates(coords: [number, number][], maxGap: number = 0.1): [number, number][] {
   if (coords.length < 2) return coords;
 
   const result: [number, number][] = [coords[0]];
@@ -342,9 +330,7 @@ export function cleanupAllAnimationLayers(map: mapboxgl.Map) {
   const style = map.getStyle();
   if (!style?.layers) return;
 
-  const layerIds = style.layers
-    .filter((l) => l.id.startsWith("anim-route-"))
-    .map((l) => l.id);
+  const layerIds = style.layers.filter((l) => l.id.startsWith("anim-route-")).map((l) => l.id);
 
   for (const id of layerIds) {
     if (map.getLayer(id)) map.removeLayer(id);
@@ -363,13 +349,11 @@ export function cleanupAllAnimationLayers(map: mapboxgl.Map) {
 export function animateRoutesSimultaneously(
   map: mapboxgl.Map,
   routes: { geojson: GeoJSON.GeoJSON; color: string }[],
-  options: { loop?: boolean; onAllComplete?: () => void } = {}
+  options: { loop?: boolean; onAllComplete?: () => void } = {},
 ): { cancel: () => void } {
-  const anims = routes.map(route =>
-    animateRoute(map, route.geojson, { color: route.color, loop: options.loop })
-  );
+  const anims = routes.map((route) => animateRoute(map, route.geojson, { color: route.color, loop: options.loop }));
   return {
-    cancel: () => anims.forEach(a => a.cancel()),
+    cancel: () => anims.forEach((a) => a.cancel()),
   };
 }
 
@@ -378,7 +362,7 @@ export function animateRoutesSimultaneously(
 export function animateRoutesSequentially(
   map: mapboxgl.Map,
   routes: { geojson: GeoJSON.GeoJSON; color: string }[],
-  options: { duration?: number; pauseMs?: number; loop?: boolean; onAllComplete?: () => void } = {}
+  options: { duration?: number; pauseMs?: number; loop?: boolean; onAllComplete?: () => void } = {},
 ): { cancel: () => void } {
   const { duration = 3000, pauseMs = 400, loop = false, onAllComplete } = options;
   let currentIndex = 0;
