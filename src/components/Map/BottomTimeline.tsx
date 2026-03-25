@@ -277,19 +277,25 @@ export default function BottomTimeline({ presenting = false }: { presenting?: bo
             />
           </div>
 
-          {/* Entry count */}
-          {sortedEntries.length > 0 && (
-            <div
-              className="text-lg text-muted-foreground text-center"
-              style={presenting ? { filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.8))" } : undefined}
-            >
-              {
-                sortedEntries.filter((e) => !yearFilter || (e.year_start != null && e.year_start <= yearFilter[1]))
-                  .length
-              }
-              / {sortedEntries.length} dated entries visible
-            </div>
-          )}
+          {/* Entry count / Scene name */}
+          {presenting
+            ? currentScene && (
+                <div
+                  className="text-base font-serif font-semibold text-foreground text-center tracking-wide"
+                  style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.8))" }}
+                >
+                  {currentScene.title}
+                </div>
+              )
+            : sortedEntries.length > 0 && (
+                <div className="text-lg text-muted-foreground text-center">
+                  {
+                    sortedEntries.filter((e) => !yearFilter || (e.year_start != null && e.year_start <= yearFilter[1]))
+                      .length
+                  }
+                  / {sortedEntries.length} dated entries visible
+                </div>
+              )}
         </div>
       )}
     </div>
