@@ -45,6 +45,10 @@ export default function BottomTimeline({ presenting = false }: { presenting?: bo
   const setYearFilter = useMapStore((s) => s.setYearFilter);
   const clearYearFilter = useMapStore((s) => s.clearYearFilter);
 
+  const scenes = useMapStore((s) => s.scenes);
+  const currentSceneIndex = useMapStore((s) => s.currentSceneIndex);
+  const currentScene = currentSceneIndex != null ? scenes[currentSceneIndex] : null;
+
   const [expandedEra, setExpandedEra] = useState<EraId | null>(currentEra);
   const [entries, setEntries] = useState<TimelineEntry[]>([]);
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -143,7 +147,7 @@ export default function BottomTimeline({ presenting = false }: { presenting?: bo
 
   const sortedEntries = useMemo(
     () => [...entries].sort((a, b) => (a.year_start ?? 0) - (b.year_start ?? 0)),
-    [entries]
+    [entries],
   );
 
   const sliderPct = useMemo(() => {
@@ -152,9 +156,13 @@ export default function BottomTimeline({ presenting = false }: { presenting?: bo
   }, [yearFilter, eraRange]);
 
   return (
-    <div className={`w-full select-none z-50 shrink-0 transition-colors duration-300 ${
-      presenting ? "bg-black/15 backdrop-blur-[2px] border-t border-transparent" : "bg-card/95 backdrop-blur-sm border-t border-border/40"
-    }`}>
+    <div
+      className={`w-full select-none z-50 shrink-0 transition-colors duration-300 ${
+        presenting
+          ? "bg-black/15 backdrop-blur-[2px] border-t border-transparent"
+          : "bg-card/95 backdrop-blur-sm border-t border-border/40"
+      }`}
+    >
       {/* Era bar */}
       <div className="flex w-full h-14 items-stretch">
         {ERAS.map((era) => {
@@ -168,7 +176,9 @@ export default function BottomTimeline({ presenting = false }: { presenting?: bo
                 presenting ? "border-transparent" : "border-border/20"
               } ${
                 isExpanded
-                  ? presenting ? "flex-[5] bg-transparent" : "flex-[5] bg-accent/10"
+                  ? presenting
+                    ? "flex-[5] bg-transparent"
+                    : "flex-[5] bg-accent/10"
                   : "flex-1 hover:bg-secondary/40"
               } ${isActive ? "text-accent font-semibold" : "text-muted-foreground"}`}
               style={presenting ? { textShadow: "0 1px 3px rgba(0,0,0,0.8)" } : undefined}
@@ -184,9 +194,7 @@ export default function BottomTimeline({ presenting = false }: { presenting?: bo
                   <Icon size={16} />
                 );
               })()}
-              {isActive && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />
-              )}
+              {isActive && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent" />}
             </button>
           );
         })}
@@ -196,7 +204,10 @@ export default function BottomTimeline({ presenting = false }: { presenting?: bo
       {expandedEra && eraRange && (
         <div className={`px-4 py-2 space-y-1 ${presenting ? "bg-black/10" : ""}`}>
           {/* Year labels */}
-          <div className="flex justify-between text-xl text-muted-foreground" style={presenting ? { filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.8))" } : undefined}>
+          <div
+            className="flex justify-between text-xl text-muted-foreground"
+            style={presenting ? { filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.8))" } : undefined}
+          >
             <span>{formatYear(eraRange[0])}</span>
             {yearFilter && (
               <span className="text-accent font-medium">
@@ -239,10 +250,8 @@ export default function BottomTimeline({ presenting = false }: { presenting?: bo
             {/* Entry markers */}
             {sortedEntries.map((entry) => {
               if (entry.year_start == null) return null;
-              const pct =
-                ((entry.year_start - eraRange[0]) / (eraRange[1] - eraRange[0])) * 100;
-              const isFiltered =
-                yearFilter && entry.year_start > yearFilter[1];
+              const pct = ((entry.year_start - eraRange[0]) / (eraRange[1] - eraRange[0])) * 100;
+              const isFiltered = yearFilter && entry.year_start > yearFilter[1];
               return (
                 <div
                   key={entry.id}
@@ -254,9 +263,7 @@ export default function BottomTimeline({ presenting = false }: { presenting?: bo
                 >
                   <div
                     className={`w-4 h-4 rounded-full ${
-                      entry.type === "location"
-                        ? "bg-primary"
-                        : "bg-accent"
+                      entry.type === "location" ? "bg-primary" : "bg-accent"
                     } ring-2 ring-background`}
                   />
                 </div>
@@ -272,10 +279,14 @@ export default function BottomTimeline({ presenting = false }: { presenting?: bo
 
           {/* Entry count */}
           {sortedEntries.length > 0 && (
-            <div className="text-lg text-muted-foreground text-center" style={presenting ? { filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.8))" } : undefined}>
-              {sortedEntries.filter(
-                (e) => !yearFilter || (e.year_start != null && e.year_start <= yearFilter[1])
-              ).length}
+            <div
+              className="text-lg text-muted-foreground text-center"
+              style={presenting ? { filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.8))" } : undefined}
+            >
+              {
+                sortedEntries.filter((e) => !yearFilter || (e.year_start != null && e.year_start <= yearFilter[1]))
+                  .length
+              }
               / {sortedEntries.length} dated entries visible
             </div>
           )}
