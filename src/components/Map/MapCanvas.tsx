@@ -265,6 +265,9 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
         }
       />
       <MapSkinToggle skin={skin} onToggle={toggleSkin} />
+      {classroomPreviewOpen && (
+        <ClassroomPreviewOverlay onClose={() => setClassroomPreviewOpen(false)} />
+      )}
     </div>
   );
 });
