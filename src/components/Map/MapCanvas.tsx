@@ -59,6 +59,7 @@ export type MapSkin = keyof typeof STYLES;
 
 export interface MapCanvasHandle {
   getMap: () => mapboxgl.Map | null;
+  toggleClassroomPreview: () => void;
 }
 
 const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: boolean }>(({ lessonId, presenting = false }, ref) => {
