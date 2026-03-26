@@ -81,6 +81,7 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
 
   useImperativeHandle(ref, () => ({
     getMap: () => mapRef.current,
+    toggleClassroomPreview: () => setClassroomPreviewOpen((v) => !v),
   }));
 
   // Initialize map
