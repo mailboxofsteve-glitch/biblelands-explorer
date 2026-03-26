@@ -67,6 +67,7 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [skin, setSkin] = useState<MapSkin>("ancient");
+  const [classroomPreviewOpen, setClassroomPreviewOpen] = useState(false);
 
   const { allOverlays } = useOverlays();
   const { pins } = usePins();
