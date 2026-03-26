@@ -9,7 +9,7 @@ import {
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import MapSkinToggle from "./MapSkinToggle";
-import ClassroomPreviewOverlay from "@/components/Map/ClassroomPreviewOverlay";
+import { ClassroomPreviewOverlay } from "@/components/Map/ClassroomPreviewOverlay";
 import { useOverlays } from "@/hooks/useOverlays";
 import { useOverlayLayers } from "@/hooks/useOverlayLayers";
 import { usePins } from "@/hooks/usePins";
