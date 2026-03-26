@@ -9,6 +9,7 @@ import {
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import MapSkinToggle from "./MapSkinToggle";
+import { ClassroomPreviewOverlay } from "@/components/Map/ClassroomPreviewOverlay";
 import { useOverlays } from "@/hooks/useOverlays";
 import { useOverlayLayers } from "@/hooks/useOverlayLayers";
 import { usePins } from "@/hooks/usePins";
@@ -58,6 +59,7 @@ export type MapSkin = keyof typeof STYLES;
 
 export interface MapCanvasHandle {
   getMap: () => mapboxgl.Map | null;
+  toggleClassroomPreview: () => void;
 }
 
 const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: boolean }>(({ lessonId, presenting = false }, ref) => {
@@ -65,6 +67,7 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [skin, setSkin] = useState<MapSkin>("ancient");
+  const [classroomPreviewOpen, setClassroomPreviewOpen] = useState(false);
 
   const { allOverlays } = useOverlays();
   const { pins } = usePins();
@@ -78,6 +81,7 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
 
   useImperativeHandle(ref, () => ({
     getMap: () => mapRef.current,
+    toggleClassroomPreview: () => setClassroomPreviewOpen((v) => !v),
   }));
 
   // Initialize map
@@ -261,6 +265,9 @@ const MapCanvas = forwardRef<MapCanvasHandle, { lessonId?: string; presenting?: 
         }
       />
       <MapSkinToggle skin={skin} onToggle={toggleSkin} />
+      {classroomPreviewOpen && (
+        <ClassroomPreviewOverlay onClose={() => setClassroomPreviewOpen(false)} />
+      )}
     </div>
   );
 });
